@@ -20,6 +20,8 @@ import androidx.preference.PreferenceManager;
 
 import com.winlator.container.Container;
 import com.winlator.container.ContainerManager;
+import com.winlator.container.Shortcut;
+import com.winlator.core.WineUtils;
 
 import org.json.JSONObject;
 
@@ -138,7 +140,21 @@ public class GothicLauncherFragment extends Fragment {
         if (!isAdded()) return;
         Intent intent = new Intent(requireContext(), XServerDisplayActivity.class);
         intent.putExtra("container_id", container.id);
-        intent.putExtra("shortcut_path", shortcut.getAbsolutePath());
+
+        // Uruchamiamy dokładnie tak samo jak przy pierwszym starcie po wyborze EXE
+        // (exec_path), bo ta ścieżka działa. Parsowanie samego .desktop zostaje jako zapas.
+        String execUnixPath = null;
+        try {
+            Shortcut parsed = new Shortcut(container, shortcut);
+            String dosPath = parsed.path;
+            if (dosPath != null && dosPath.toLowerCase(Locale.ROOT).endsWith(".exe")) {
+                String unixPath = WineUtils.dosToUnixPath(dosPath, container);
+                if (unixPath != null && !unixPath.isEmpty() && new File(unixPath).isFile()) execUnixPath = unixPath;
+            }
+        } catch (Exception ignored) {}
+
+        if (execUnixPath != null) intent.putExtra("exec_path", execUnixPath);
+        else intent.putExtra("shortcut_path", shortcut.getAbsolutePath());
         startActivity(intent);
     }
 
