@@ -6,6 +6,7 @@ import android.graphics.BitmapFactory;
 import com.winlator.core.FileUtils;
 import com.winlator.core.StringUtils;
 import com.winlator.core.WineUtils;
+import com.winlator.win32.MSLink;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -106,6 +107,17 @@ public class Shortcut {
                 File linkFile = new File(file.getParentFile(), file.getName().replace(".desktop", ".lnk"));
                 if (linkFile.isFile()) {
                     path = WineUtils.unixToDOSPath(linkFile.getAbsolutePath(), container);
+                }
+            }
+
+            // Resolve Winlator's generated .lnk to its actual executable. Launching the
+            // executable directly (with its containing directory as /dir) avoids depending
+            // on Wine's start.exe shortcut handling, which can leave the container shell open.
+            if (path.toLowerCase(Locale.ROOT).endsWith(".lnk")) {
+                File linkFile = new File(WineUtils.dosToUnixPath(path, container));
+                MSLink.LinkInfo linkInfo = MSLink.extractLinkInfo(linkFile);
+                if (linkInfo != null && linkInfo.targetPath != null && !linkInfo.targetPath.isEmpty()) {
+                    path = linkInfo.targetPath;
                 }
             }
 
