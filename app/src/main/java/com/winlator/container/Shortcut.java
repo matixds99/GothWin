@@ -12,6 +12,7 @@ import org.json.JSONObject;
 
 import java.io.File;
 import java.util.Iterator;
+import java.util.Locale;
 
 public class Shortcut {
     public final Container container;
@@ -52,14 +53,14 @@ public class Shortcut {
                     index = line.indexOf("=");
                     if (index == -1) continue;
                     String key = line.substring(0, index);
-                    String value = line.substring(index+1);
+                    String value = line.substring(index + 1);
 
                     if (section.equals("Desktop Entry")) {
                         if (key.equals("Exec")) execArgs = value;
                         if (key.equals("Icon")) {
                             for (short iconSize : iconSizes) {
-                                iconFile = new File(container.getIconsDir(iconSize), value+".png");
-                                if (iconFile.isFile()){
+                                iconFile = new File(container.getIconsDir(iconSize), value + ".png");
+                                if (iconFile.isFile()) {
                                     icon = BitmapFactory.decodeFile(iconFile.getPath());
                                     break;
                                 }
@@ -71,7 +72,7 @@ public class Shortcut {
                         try {
                             extraData.put(key, value);
                         }
-                        catch (JSONException e) {}
+                        catch (JSONException ignored) {}
                     }
                 }
             }
@@ -81,9 +82,32 @@ public class Shortcut {
             this.iconFile = iconFile;
             this.wmClass = wmClass;
 
-            String path = !execArgs.isEmpty() ? StringUtils.unescapeDOSPath(execArgs.substring(execArgs.lastIndexOf("wine ") + 4)) : "";
-            index = path.indexOf("start.exe ");
-            if (index != -1) path = path.substring(index+10);
+            String path = "";
+            if (!execArgs.isEmpty()) {
+                String decodedExec = StringUtils.unescapeDOSPath(execArgs).trim();
+                String lowerExec = decodedExec.toLowerCase(Locale.ROOT);
+                int startIndex = lowerExec.indexOf("start.exe");
+                if (startIndex >= 0) {
+                    // Desktop shortcuts created by the file manager launch the Windows
+                    // .lnk through "wine start.exe <target>". Keep only that target.
+                    path = decodedExec.substring(startIndex + "start.exe".length()).trim();
+                }
+                else {
+                    int wineIndex = lowerExec.lastIndexOf("wine ");
+                    path = wineIndex >= 0 ? decodedExec.substring(wineIndex + "wine ".length()).trim() : decodedExec;
+                }
+
+                if (path.length() >= 2 && path.startsWith("\"") && path.endsWith("\"")) {
+                    path = path.substring(1, path.length() - 1);
+                }
+            }
+
+            if (path.isEmpty()) {
+                File linkFile = new File(file.getParentFile(), file.getName().replace(".desktop", ".lnk"));
+                if (linkFile.isFile()) {
+                    path = WineUtils.unixToDOSPath(linkFile.getAbsolutePath(), container);
+                }
+            }
 
             this.path = path;
             Container.checkObsoleteOrMissingProperties(extraData);
@@ -117,7 +141,7 @@ public class Shortcut {
         String content = "[Desktop Entry]\n";
         for (String line : FileUtils.readLines(file)) {
             if (line.contains("[Extra Data]")) break;
-            if (!line.contains("[Desktop Entry]") && !line.isEmpty()) content += line+"\n";
+            if (!line.contains("[Desktop Entry]") && !line.isEmpty()) content += line + "\n";
         }
 
         if (extraData.length() > 0) {
@@ -128,7 +152,7 @@ public class Shortcut {
                 try {
                     content += key + "=" + extraData.getString(key) + "\n";
                 }
-                catch (JSONException e) {}
+                catch (JSONException ignored) {}
             }
         }
 
@@ -136,7 +160,7 @@ public class Shortcut {
     }
 
     public boolean isLinkPath() {
-        return path.endsWith(".lnk") || path.contains("://");
+        return path != null && (path.toLowerCase(Locale.ROOT).endsWith(".lnk") || path.contains("://"));
     }
 
     public File getLinkFile() {
