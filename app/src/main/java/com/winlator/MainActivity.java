@@ -54,6 +54,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         setContentView(R.layout.main_activity);
 
         drawerLayout = findViewById(R.id.DrawerLayout);
+        // Boczne menu Winlatora jest wyłączone – aplikacja pokazuje tylko launcher gry.
+        drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
         NavigationView navigationView = findViewById(R.id.NavigationView);
         navigationView.setNavigationItemSelectedListener(this);
 
@@ -202,5 +204,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         drawerLayout.closeDrawer(GravityCompat.START);
         currentFragment = fragment;
+
+        // Szary pasek "Winlator" ukrywamy na ekranie launchera; pozostałe ekrany
+        // (np. menedżer plików kontenera) nadal go potrzebują.
+        ActionBar actionBar = getSupportActionBar();
+        if (actionBar != null) {
+            if (fragment instanceof GothicLauncherFragment) actionBar.hide();
+            else actionBar.show();
+        }
     }
 }
