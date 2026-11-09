@@ -17,6 +17,7 @@ import java.util.Locale;
 /** File manager variant that creates and immediately launches Gothic's direct-EXE shortcut. */
 public class GothicContainerFileManagerFragment extends ContainerFileManagerFragment {
     private String selectedExecutablePath;
+    private boolean instructionShown;
 
     public GothicContainerFileManagerFragment() {
         super();
@@ -28,6 +29,15 @@ public class GothicContainerFileManagerFragment extends ContainerFileManagerFrag
 
     public GothicContainerFileManagerFragment(int containerId, String startPath) {
         super(containerId, startPath);
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (!instructionShown && isAdded() && getContext() != null) {
+            instructionShown = true;
+            Toast.makeText(requireContext(), "Utwórz skrót do gry, wybierając plik .exe", Toast.LENGTH_LONG).show();
+        }
     }
 
     @Override
@@ -56,8 +66,6 @@ public class GothicContainerFileManagerFragment extends ContainerFileManagerFrag
             return;
         }
 
-        // The general file manager writes a standard start.exe command. For Gothic, write
-        // the proven direct-Wine form and provide the executable directory and window class.
         String executableDosPath = WineUtils.unixToDOSPath(selectedExecutablePath, container);
         if (executableDosPath.isEmpty() || !executableDosPath.toLowerCase(Locale.ROOT).endsWith(".exe")) {
             Toast.makeText(requireContext(), "Nieprawidłowa ścieżka do Gothic EXE", Toast.LENGTH_LONG).show();
@@ -87,8 +95,8 @@ public class GothicContainerFileManagerFragment extends ContainerFileManagerFrag
         Toast.makeText(requireContext(), "Skrót Gothic II utworzony — uruchamiam grę", Toast.LENGTH_SHORT).show();
         Intent intent = new Intent(requireContext(), XServerDisplayActivity.class);
         intent.putExtra("container_id", getContainerId());
-        // Use the known selected EXE directly for this first launch, too; don't re-parse
-        // the generated .desktop entry and accidentally fall back to the file manager.
+        // Launch the exact selected EXE through Winlator's normal exec_path path rather
+        // than reparsing the newly written desktop shortcut for the initial launch.
         intent.putExtra("exec_path", executableUnixPath);
         startActivity(intent);
     }
