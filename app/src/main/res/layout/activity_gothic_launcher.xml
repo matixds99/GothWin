@@ -78,10 +78,17 @@
                 android:background="@drawable/bg_gothic_hero"
                 android:clipToOutline="true">
 
+                <ImageView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:contentDescription="@null"
+                    android:scaleType="centerCrop"
+                    android:src="@drawable/gothic_hero_bg" />
+
                 <View
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:background="@drawable/bg_launcher_art_overlay" />
+                    android:background="@drawable/bg_gothic_hero_scrim" />
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -109,18 +116,9 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:letterSpacing="0.08"
-                        android:text="GOTHIC II"
+                        android:text="GOTHIC"
                         android:textColor="#F6F0E4"
                         android:textSize="34sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="2dp"
-                        android:text="NEW BALANCE"
-                        android:textColor="#D0B77E"
-                        android:textSize="12sp"
                         android:textStyle="bold" />
                 </LinearLayout>
             </FrameLayout>
@@ -139,7 +137,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="5dp"
                 android:lineSpacingExtra="3dp"
-                android:text="Uruchom swoją konfigurację Gothic II: New Balance w środowisku Wine + Box64."
+                android:text="Uruchom swoją konfigurację Gothic w środowisku Wine + Box64."
                 android:textColor="#9AA4B1"
                 android:textSize="14sp" />
 
@@ -167,7 +165,7 @@
                 android:layout_marginTop="14dp"
                 android:background="@drawable/bg_launcher_primary_button"
                 android:minHeight="0dp"
-                android:text="▶   URUCHOM GOTHIC II"
+                android:text="▶   URUCHOM GOTHIC"
                 android:textAllCaps="false"
                 android:textColor="#17140F"
                 android:textSize="15sp"
