@@ -146,7 +146,17 @@ public class ContainerFileManagerFragment extends BaseFileManagerFragment<FileIn
         return name.isEmpty() ? "Program" : name;
     }
 
-    /** Called after both the Windows .lnk and Winlator .desktop shortcut are created. */
+    /** Whether this shortcut should create a Windows .lnk wrapper alongside its desktop entry. */
+    protected boolean createWindowsLinkForDesktopShortcut() {
+        return true;
+    }
+
+    /** Whether this specialized launcher may replace its own existing desktop shortcut. */
+    protected boolean replaceExistingDesktopShortcut() {
+        return false;
+    }
+
+    /** Called after the desktop shortcut has been written. */
     protected void onDesktopShortcutCreated(File desktopShortcut) {
         Context context = getContext();
         if (context != null) Toast.makeText(context, "Dodano skrót: " + FileUtils.getBasename(desktopShortcut.getName()), Toast.LENGTH_SHORT).show();
@@ -172,34 +182,45 @@ public class ContainerFileManagerFragment extends BaseFileManagerFragment<FileIn
 
         File desktopFile = new File(desktopDir, shortcutName + ".desktop");
         File linkFile = new File(desktopDir, shortcutName + ".lnk");
-        if (desktopFile.exists() || linkFile.exists()) {
+        boolean createWindowsLink = createWindowsLinkForDesktopShortcut();
+        boolean replaceExisting = replaceExistingDesktopShortcut();
+        boolean desktopFileExisted = desktopFile.exists();
+        boolean linkFileExisted = linkFile.exists();
+        if ((desktopFileExisted || (createWindowsLink && linkFileExisted)) && !replaceExisting) {
             Toast.makeText(context, "Skrót o tej nazwie już istnieje", Toast.LENGTH_SHORT).show();
             return;
         }
 
         try {
             String exeDosPath = WineUtils.unixToDOSPath(exeFile.getAbsolutePath(), container);
-            MSLink.LinkInfo linkInfo = new MSLink.LinkInfo();
-            linkInfo.targetPath = exeDosPath;
-            linkInfo.isDirectory = false;
-            if (!MSLink.createFile(linkInfo, linkFile)) {
-                Toast.makeText(context, "Nie udało się utworzyć skrótu Windows", Toast.LENGTH_LONG).show();
-                return;
+            String execTarget = exeDosPath;
+            if (createWindowsLink) {
+                MSLink.LinkInfo linkInfo = new MSLink.LinkInfo();
+                linkInfo.targetPath = exeDosPath;
+                linkInfo.isDirectory = false;
+                if (!MSLink.createFile(linkInfo, linkFile)) {
+                    Toast.makeText(context, "Nie udało się utworzyć skrótu Windows", Toast.LENGTH_LONG).show();
+                    return;
+                }
+                execTarget = WineUtils.unixToDOSPath(linkFile.getAbsolutePath(), container);
             }
 
-            String linkDosPath = WineUtils.unixToDOSPath(linkFile.getAbsolutePath(), container);
+            // Keep the familiar start.exe invocation, but point it directly at the selected
+            // EXE for launchers that do not use the intermediate Windows .lnk file.
             String desktopEntry = "[Desktop Entry]\n"
                     + "Name=" + shortcutName + "\n"
-                    + "Exec=wine start.exe " + StringUtils.escapeDOSPath(linkDosPath) + "\n"
+                    + "Exec=wine start.exe " + StringUtils.escapeDOSPath(execTarget) + "\n"
                     + "Type=Application\n"
                     + "StartupNotify=true\n";
             try (FileOutputStream output = new FileOutputStream(desktopFile)) {
                 output.write(desktopEntry.getBytes("UTF-8"));
             }
+
+            if (!createWindowsLink && linkFile.isFile()) linkFile.delete();
             onDesktopShortcutCreated(desktopFile);
         } catch (Exception e) {
-            linkFile.delete();
-            desktopFile.delete();
+            if (createWindowsLink && !linkFileExisted) linkFile.delete();
+            if (!desktopFileExisted) desktopFile.delete();
             Toast.makeText(context, "Błąd tworzenia skrótu: " + e.getMessage(), Toast.LENGTH_LONG).show();
         }
     }

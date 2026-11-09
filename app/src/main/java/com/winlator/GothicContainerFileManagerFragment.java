@@ -27,6 +27,16 @@ public class GothicContainerFileManagerFragment extends ContainerFileManagerFrag
     }
 
     @Override
+    protected boolean createWindowsLinkForDesktopShortcut() {
+        return false;
+    }
+
+    @Override
+    protected boolean replaceExistingDesktopShortcut() {
+        return true;
+    }
+
+    @Override
     protected void onDesktopShortcutCreated(File desktopShortcut) {
         if (!isAdded() || getContext() == null) return;
         Toast.makeText(requireContext(), "Skrót Gothic II utworzony — uruchamiam grę", Toast.LENGTH_SHORT).show();
