@@ -3,6 +3,7 @@ package com.winlator;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -92,28 +93,28 @@ public class GothicLauncherFragment extends Fragment {
         if (container == null) {
             btnConfigure.setText("Konfiguruj");
             btnConfigure.setEnabled(true);
-            btnConfigure.setTextColor(Color.parseColor("#8AB4F8"));
+            btnConfigure.setTextColor(Color.parseColor("#D8C79F"));
             btnAction.setEnabled(false);
             btnAction.setText("Utwórz kontener gry");
-            btnAction.setBackgroundColor(Color.parseColor("#252A34"));
-            tvGameStatus.setText("Wymagana wstępna konfiguracja");
-            tvGameStatus.setTextColor(Color.parseColor("#E57373"));
+            btnAction.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#343944")));
+            tvGameStatus.setText("Najpierw skonfiguruj środowisko gry.");
+            tvGameStatus.setTextColor(Color.parseColor("#E5B765"));
         } else {
-            btnConfigure.setText("✔ Gotowy");
+            btnConfigure.setText("✓ Gotowy");
             btnConfigure.setEnabled(false);
-            btnConfigure.setTextColor(Color.parseColor("#4CAF50"));
+            btnConfigure.setTextColor(Color.parseColor("#82C99B"));
             btnAction.setEnabled(true);
 
             if (shortcut == null) {
-                btnAction.setText("Otwórz menedżer plików (wybierz EXE)");
-                btnAction.setBackgroundColor(Color.parseColor("#1565C0"));
-                tvGameStatus.setText("W menedżerze plików otwórz menu pliku EXE i wybierz „Dodaj skrót”");
-                tvGameStatus.setTextColor(Color.parseColor("#FFB74D"));
+                btnAction.setText("Wybierz plik EXE gry");
+                btnAction.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#426D9D")));
+                tvGameStatus.setText("Środowisko gotowe · dodaj skrót do pliku EXE, aby rozpocząć.");
+                tvGameStatus.setTextColor(Color.parseColor("#E5B765"));
             } else {
-                btnAction.setText("▶ URUCHOM GOTHIC II");
-                btnAction.setBackgroundColor(Color.parseColor("#2E7D32"));
-                tvGameStatus.setText("Skrót gotowy: " + shortcut.getName());
-                tvGameStatus.setTextColor(Color.parseColor("#81C784"));
+                btnAction.setText("▶   URUCHOM GOTHIC II");
+                btnAction.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#92703B")));
+                tvGameStatus.setText("GRA GOTOWA   ·   Skrót: " + shortcut.getName());
+                tvGameStatus.setTextColor(Color.parseColor("#82C99B"));
             }
         }
     }
