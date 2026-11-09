@@ -92,6 +92,9 @@ public class GothicContainerFileManagerFragment extends ContainerFileManagerFrag
             return;
         }
 
+        androidx.preference.PreferenceManager.getDefaultSharedPreferences(requireContext()).edit()
+            .putString("gothic_exe_unix_path", executableUnixPath).apply();
+
         Toast.makeText(requireContext(), "Skrót Gothic II utworzony — uruchamiam grę", Toast.LENGTH_SHORT).show();
         Intent intent = new Intent(requireContext(), XServerDisplayActivity.class);
         intent.putExtra("container_id", getContainerId());
