@@ -1,313 +1,250 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#090B10"
-    android:fillViewport="true"
-    android:clipToPadding="false">
+    android:background="#071822"
+    android:orientation="vertical"
+    android:paddingStart="24dp"
+    android:paddingTop="18dp"
+    android:paddingEnd="24dp"
+    android:paddingBottom="24dp">
 
     <LinearLayout
+        android:id="@+id/headerLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:paddingStart="22dp"
-        android:paddingTop="24dp"
-        android:paddingEnd="22dp"
-        android:paddingBottom="32dp">
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
 
         <LinearLayout
-            android:id="@+id/headerLayout"
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1.3"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="OpenGothic"
+                android:textColor="#F3F4F7"
+                android:textSize="32sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Twoja biblioteka"
+                android:textColor="#98A2AF"
+                android:textSize="18sp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1.2"
+            android:gravity="center"
+            android:orientation="horizontal">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="118dp"
+                android:layout_marginEnd="12dp"
+                android:layout_weight="1"
+                android:background="@drawable/bg_cover_a"
+                android:gravity="center_vertical"
+                android:orientation="vertical"
+                android:paddingStart="18dp"
+                android:paddingEnd="18dp">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:letterSpacing="0.08"
+                    android:text="SUMMER"
+                    android:textColor="#F7E7D0"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:letterSpacing="0.08"
+                    android:text="HIDEOUT"
+                    android:textColor="#E3BF7B"
+                    android:textSize="26sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:gravity="center_vertical"
             android:orientation="horizontal">
 
             <TextView
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:background="@drawable/bg_launcher_mark"
-                android:gravity="center"
-                android:text="W"
-                android:textColor="#F3E9D1"
-                android:textSize="22sp"
-                android:textStyle="bold" />
-
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="13dp"
-                android:layout_weight="1"
-                android:orientation="vertical">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:letterSpacing="0.12"
-                    android:text="WINLATOR  /  PLAY"
-                    android:textColor="#8893A4"
-                    android:textSize="10sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="3dp"
-                    android:text="Twoja biblioteka"
-                    android:textColor="#F2F4F8"
-                    android:textSize="17sp"
-                    android:textStyle="bold" />
-            </LinearLayout>
-
-            <Button
                 android:id="@+id/btnConfigure"
                 android:layout_width="wrap_content"
-                android:layout_height="40dp"
-                android:background="@drawable/bg_launcher_secondary_button"
-                android:minWidth="0dp"
-                android:minHeight="0dp"
-                android:paddingStart="14dp"
-                android:paddingEnd="14dp"
-                android:text="Konfiguruj"
-                android:textAllCaps="false"
-                android:textColor="#D8C79F"
-                android:textSize="12sp"
+                android:layout_height="44dp"
+                android:background="@drawable/bg_pill"
+                android:gravity="center"
+                android:paddingStart="22dp"
+                android:paddingEnd="22dp"
+                android:text="Discord"
+                android:textColor="#F0F1F4"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="44dp"
+                android:layout_marginStart="12dp"
+                android:background="@drawable/bg_pill_gold"
+                android:gravity="center"
+                android:paddingStart="22dp"
+                android:paddingEnd="22dp"
+                android:text="Dostępna aktualizacja"
+                android:textColor="#161A20"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="44dp"
+                android:layout_marginStart="12dp"
+                android:background="@drawable/bg_pill"
+                android:gravity="center"
+                android:paddingStart="18dp"
+                android:paddingEnd="18dp"
+                android:text="Mody"
+                android:textColor="#F0F1F4"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="44dp"
+                android:layout_marginStart="12dp"
+                android:background="@drawable/bg_pill"
+                android:gravity="center"
+                android:paddingStart="18dp"
+                android:paddingEnd="18dp"
+                android:text="Zaloguj"
+                android:textColor="#F0F1F4"
+                android:textSize="16sp"
                 android:textStyle="bold" />
         </LinearLayout>
+    </LinearLayout>
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="30dp"
-            android:letterSpacing="0.16"
-            android:text="GOTOWE DO GRY"
-            android:textColor="#C4A66A"
-            android:textSize="10sp"
-            android:textStyle="bold" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="5dp"
-            android:text="Witaj z powrotem"
-            android:textColor="#F3F4F6"
-            android:textSize="27sp"
-            android:textStyle="bold" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:text="Twoje gry Windows, gotowe na Androidzie."
-            android:textColor="#8D96A5"
-            android:textSize="14sp" />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginTop="26dp"
+        android:layout_weight="1"
+        android:baselineAligned="false"
+        android:orientation="horizontal">
 
         <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
-            android:background="@drawable/bg_gothic_hero"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_marginEnd="18dp"
+            android:layout_weight="1"
+            android:background="@drawable/bg_card_left"
             android:orientation="vertical"
             android:padding="18dp">
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/bg_launcher_chip"
-                    android:paddingStart="10dp"
-                    android:paddingTop="6dp"
-                    android:paddingEnd="10dp"
-                    android:paddingBottom="6dp"
-                    android:text="MOD  /  NEW BALANCE"
-                    android:textColor="#E6C98D"
-                    android:textSize="10sp"
-                    android:textStyle="bold" />
-
-                <View
-                    android:layout_width="0dp"
-                    android:layout_height="1dp"
-                    android:layout_weight="1" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="GAME PROFILE  01"
-                    android:textColor="#77808D"
-                    android:textSize="9sp"
-                    android:textStyle="bold" />
-            </LinearLayout>
-
-            <FrameLayout
-                android:layout_width="match_parent"
-                android:layout_height="190dp"
-                android:layout_marginTop="16dp"
-                android:background="@drawable/bg_gothic_art"
-                android:clipToOutline="true">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:gravity="center"
-                    android:letterSpacing="0.08"
-                    android:text="GOTHIC\nII"
-                    android:textColor="#F4EFE4"
-                    android:textSize="48sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="bottom|start"
-                    android:layout_marginStart="16dp"
-                    android:layout_marginBottom="14dp"
-                    android:letterSpacing="0.13"
-                    android:text="THE CHRONICLES OF MYRTANA"
-                    android:textColor="#C6B58F"
-                    android:textSize="9sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="bottom|end"
-                    android:layout_marginEnd="16dp"
-                    android:layout_marginBottom="14dp"
-                    android:text="02"
-                    android:textColor="#D0B77E"
-                    android:textSize="12sp"
-                    android:textStyle="bold" />
-            </FrameLayout>
-
             <TextView
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="19dp"
-                android:text="Gothic II"
-                android:textColor="#F3F4F6"
-                android:textSize="25sp"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:lineSpacingExtra="-14dp"
+                android:text="Gothic"
+                android:textColor="#F2F2F2"
+                android:textSize="74sp"
                 android:textStyle="bold" />
 
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="3dp"
-                android:text="New Balance  •  Edycja społeczności"
-                android:textColor="#9BA3AF"
-                android:textSize="13sp" />
-
-            <TextView
-                android:id="@+id/tvGameStatus"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:background="@drawable/bg_launcher_status"
-                android:paddingStart="12dp"
-                android:paddingTop="11dp"
-                android:paddingEnd="12dp"
-                android:paddingBottom="11dp"
-                android:text="Sprawdzanie konfiguracji…"
-                android:textColor="#B7C0CD"
-                android:textSize="12sp" />
-
-            <Button
-                android:id="@+id/btnAction"
-                android:layout_width="match_parent"
-                android:layout_height="56dp"
-                android:layout_marginTop="14dp"
-                android:background="@drawable/bg_launcher_primary_button"
-                android:minHeight="0dp"
-                android:text="Uruchom grę"
-                android:textAllCaps="false"
-                android:textColor="#FFFFFF"
-                android:textSize="15sp"
+                android:layout_marginTop="6dp"
+                android:background="@drawable/bg_card_action"
+                android:gravity="center"
+                android:paddingTop="16dp"
+                android:paddingBottom="16dp"
+                android:text="Nowy folder"
+                android:textColor="#F2F2F2"
+                android:textSize="20sp"
                 android:textStyle="bold" />
         </LinearLayout>
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="26dp"
-            android:letterSpacing="0.12"
-            android:text="ŚRODOWISKO URUCHOMIENIOWE"
-            android:textColor="#8993A2"
-            android:textSize="10sp"
-            android:textStyle="bold" />
 
         <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="11dp"
-            android:orientation="horizontal">
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_marginEnd="18dp"
+            android:layout_weight="1"
+            android:background="@drawable/bg_card_center"
+            android:orientation="vertical"
+            android:padding="18dp">
 
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginEnd="6dp"
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
                 android:layout_weight="1"
-                android:background="@drawable/bg_launcher_status"
-                android:orientation="vertical"
-                android:padding="14dp">
+                android:gravity="center"
+                android:lineSpacingExtra="-12dp"
+                android:text="DIE\nNACHT\nGothic II\nRaben"
+                android:textColor="#F6F3EE"
+                android:textSize="34sp"
+                android:textStyle="bold" />
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="KOMPATYBILNOŚĆ"
-                    android:textColor="#778292"
-                    android:textSize="9sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="7dp"
-                    android:text="WINE  +  BOX64"
-                    android:textColor="#DDE2E9"
-                    android:textSize="12sp"
-                    android:textStyle="bold" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="0dp"
+            <TextView
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="6dp"
-                android:layout_weight="1"
-                android:background="@drawable/bg_launcher_status"
-                android:orientation="vertical"
-                android:padding="14dp">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="PROFIL GRY"
-                    android:textColor="#778292"
-                    android:textSize="9sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="7dp"
-                    android:text="1280 × 720"
-                    android:textColor="#DDE2E9"
-                    android:textSize="12sp"
-                    android:textStyle="bold" />
-            </LinearLayout>
+                android:layout_marginTop="8dp"
+                android:background="@drawable/bg_card_action"
+                android:gravity="center"
+                android:paddingTop="18dp"
+                android:paddingBottom="18dp"
+                android:text="Graj"
+                android:textColor="#111518"
+                android:textSize="26sp"
+                android:textStyle="bold" />
         </LinearLayout>
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="22dp"
-            android:gravity="center"
-            android:text="WINLATOR  •  WINDOWS GAMING, ANYWHERE"
-            android:textColor="#525B68"
-            android:textSize="9sp"
-            android:textStyle="bold" />
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="@drawable/bg_card_right"
+            android:orientation="vertical"
+            android:padding="18dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:lineSpacingExtra="-10dp"
+                android:text="The Chronicles of\nMyrtana"
+                android:textColor="#F2EDE6"
+                android:textSize="30sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/bg_card_action"
+                android:gravity="center"
+                android:paddingTop="16dp"
+                android:paddingBottom="16dp"
+                android:text="Wybierz folder z grą"
+                android:textColor="#F2F2F2"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+        </LinearLayout>
     </LinearLayout>
-</ScrollView>
+</LinearLayout>
