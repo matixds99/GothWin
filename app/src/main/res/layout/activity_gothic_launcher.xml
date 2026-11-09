@@ -52,7 +52,7 @@
                 android:id="@+id/btnConfigure"
                 android:layout_width="wrap_content"
                 android:layout_height="42dp"
-                android:background="@drawable/bg_launcher_secondary_button.xml"
+                android:background="@drawable/bg_launcher_secondary_button"
                 android:minWidth="0dp"
                 android:minHeight="0dp"
                 android:paddingStart="15dp"
@@ -88,7 +88,7 @@
                     android:layout_height="wrap_content"
                     android:layout_gravity="top|start"
                     android:layout_margin="16dp"
-                    android:background="@drawable/bg_launcher_chip.xml"
+                    android:background="@drawable/bg_launcher_chip"
                     android:paddingStart="11dp"
                     android:paddingTop="7dp"
                     android:paddingEnd="11dp"
@@ -148,7 +148,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                android:background="@drawable/bg_launcher_status.xml"
+                android:background="@drawable/bg_launcher_status"
                 android:drawablePadding="10dp"
                 android:gravity="center_vertical"
                 android:minHeight="48dp"
@@ -165,7 +165,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="58dp"
                 android:layout_marginTop="14dp"
-                android:background="@drawable/bg_launcher_primary_button.xml"
+                android:background="@drawable/bg_launcher_primary_button"
                 android:minHeight="0dp"
                 android:text="▶   URUCHOM GOTHIC II"
                 android:textAllCaps="false"
@@ -195,7 +195,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="6dp"
                 android:layout_weight="1"
-                android:background="@drawable/bg_launcher_status.xml"
+                android:background="@drawable/bg_launcher_status"
                 android:orientation="vertical"
                 android:padding="13dp">
 
@@ -222,7 +222,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="6dp"
                 android:layout_weight="1"
-                android:background="@drawable/bg_launcher_status.xml"
+                android:background="@drawable/bg_launcher_status"
                 android:orientation="vertical"
                 android:padding="13dp">
 
