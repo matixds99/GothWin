@@ -113,7 +113,7 @@ public class GothicLauncherFragment extends Fragment {
                 tvGameStatus.setText("Środowisko gotowe · dodaj skrót do pliku EXE, aby rozpocząć.");
                 tvGameStatus.setTextColor(Color.parseColor("#E5B765"));
             } else {
-                btnAction.setText("▶   URUCHOM GOTHIC II");
+                btnAction.setText("▶   URUCHOM GOTHIC");
                 btnAction.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#92703B")));
                 tvGameStatus.setText("GRA GOTOWA   ·   Skrót: " + shortcut.getName());
                 tvGameStatus.setTextColor(Color.parseColor("#82C99B"));
