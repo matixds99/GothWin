@@ -143,18 +143,23 @@ public class GothicLauncherFragment extends Fragment {
 
         // Uruchamiamy dokładnie tak samo jak przy pierwszym starcie po wyborze EXE
         // (exec_path), bo ta ścieżka działa. Parsowanie samego .desktop zostaje jako zapas.
-        String execUnixPath = null;
-        try {
-            Shortcut parsed = new Shortcut(container, shortcut);
-            String dosPath = parsed.path;
-            if (dosPath != null && dosPath.toLowerCase(Locale.ROOT).endsWith(".exe")) {
-                String unixPath = WineUtils.dosToUnixPath(dosPath, container);
-                if (unixPath != null && !unixPath.isEmpty() && new File(unixPath).isFile()) execUnixPath = unixPath;
-            }
-        } catch (Exception ignored) {}
+        String execUnixPath = preferences.getString("gothic_exe_unix_path", null);
+        if (execUnixPath != null && !new File(execUnixPath).isFile()) execUnixPath = null;
+
+        if (execUnixPath == null) {
+            try {
+                Shortcut parsed = new Shortcut(container, shortcut);
+                String dosPath = parsed.path;
+                if (dosPath != null && dosPath.toLowerCase(Locale.ROOT).endsWith(".exe")) {
+                    String unixPath = WineUtils.dosToUnixPath(dosPath, container);
+                    if (unixPath != null && !unixPath.isEmpty()) execUnixPath = unixPath;
+                }
+            } catch (Exception ignored) {}
+        }
 
         if (execUnixPath != null) intent.putExtra("exec_path", execUnixPath);
         else intent.putExtra("shortcut_path", shortcut.getAbsolutePath());
+        Toast.makeText(requireContext(), execUnixPath != null ? "Start: exec_path" : "Start: shortcut_path", Toast.LENGTH_SHORT).show();
         startActivity(intent);
     }
 
