@@ -29,6 +29,10 @@ GothWin umożliwia uruchamianie aplikacji i gier przeznaczonych dla systemu Wind
 4. Skonfiguruj kontener według własnych preferencji i uruchom swoje gry.
 
 ---
+## Kompatybilność:
+Głównym silnikiem jest Winlator więc najbardziej kompatybilnym telefonem jest z procesorem Snapdragon. Kontener z ustawieniami ustawiony i testowany na S8 gen Elite 5.
+
+---
 
 ## 🙏 Podziękowania i credits
 
