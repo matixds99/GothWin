@@ -442,7 +442,7 @@ public class GothicSettingsFragment extends Fragment {
         button.setText(label);
         button.setTextColor(Color.parseColor("#E4D2AA"));
         button.setTextSize(12);
-        button.setTextAllCaps(false);
+        button.setAllCaps(false);
         button.setMinWidth(0);
         button.setPadding(dp(4), 0, dp(4), 0);
         button.setBackgroundResource(R.drawable.bg_launcher_secondary_button);
