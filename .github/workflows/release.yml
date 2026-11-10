@@ -1,0 +1,52 @@
+name: Release
+
+on:
+  workflow_dispatch: # Ręczne uruchomienie z poziomu GitHub Actions
+    inputs:
+      tag:
+        description: 'Tag wydania, np. v1.0.0'
+        required: true
+        default: 'v1.0.0'
+      prerelease:
+        description: 'Oznacz jako wersję testową (pre-release)'
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Pobranie kodu źródłowego
+      uses: actions/checkout@v4
+
+    - name: Konfiguracja środowiska Java
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: gradle
+
+    - name: Nadanie uprawnień do uruchamiania Gradle
+      run: chmod +x ./gradlew
+
+    - name: Budowanie pliku APK (Debug)
+      run: ./gradlew assembleDebug
+
+    - name: Zmiana nazwy pliku APK
+      run: cp app/build/outputs/apk/debug/*.apk "GothWin-${{ inputs.tag }}.apk"
+
+    - name: Utworzenie wydania z plikiem APK
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        FLAGS=""
+        if [ "${{ inputs.prerelease }}" = "true" ]; then FLAGS="--prerelease"; fi
+        gh release create "${{ inputs.tag }}" "GothWin-${{ inputs.tag }}.apk" \
+          --title "GothWin ${{ inputs.tag }}" \
+          --generate-notes \
+          --target "${{ github.sha }}" \
+          $FLAGS
