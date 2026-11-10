@@ -48,6 +48,18 @@
                     android:textStyle="bold" />
             </LinearLayout>
 
+            <ImageButton
+                android:id="@+id/btnSettings"
+                android:layout_width="42dp"
+                android:layout_height="42dp"
+                android:layout_marginEnd="10dp"
+                android:background="@drawable/bg_launcher_secondary_button"
+                android:contentDescription="Ustawienia"
+                android:padding="9dp"
+                android:scaleType="fitCenter"
+                android:src="@drawable/ic_gothic_settings"
+                android:visibility="gone" />
+
             <Button
                 android:id="@+id/btnConfigure"
                 android:layout_width="wrap_content"
