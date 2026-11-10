@@ -424,6 +424,10 @@ public class ContainerFileManagerFragment extends BaseFileManagerFragment<FileIn
             this.data = data;
         }
 
+        private boolean isDeviceDrive(FileInfo item) {
+            return "D:".equalsIgnoreCase(item.name);
+        }
+
         @NonNull
         @Override
         public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -438,7 +442,8 @@ public class ContainerFileManagerFragment extends BaseFileManagerFragment<FileIn
             FileInfo item = data.get(position);
             FileInfo.Type type = item.type;
             if (item.type == FileInfo.Type.DRIVE) {
-                holder.title.setText(context.getString(R.string.drive) + " (" + item.name + ")");
+                boolean device = isDeviceDrive(item);
+                holder.title.setText(context.getString(device ? R.string.device : R.string.drive) + " (" + item.name + ")");
             } else {
                 MSLink.LinkInfo linkInfo = item.getLinkinfo();
                 if (linkInfo != null && linkInfo.isDirectory) type = FileInfo.Type.DIRECTORY;
@@ -462,10 +467,11 @@ public class ContainerFileManagerFragment extends BaseFileManagerFragment<FileIn
                 holder.imageView.setTag(null);
             }
             if (isExecutablePicker()) {
-                holder.imageView.setImageResource(type == FileInfo.Type.DRIVE ? R.drawable.ic_picker_drive
+                holder.imageView.setImageResource(type == FileInfo.Type.DRIVE
+                        ? (isDeviceDrive(item) ? R.drawable.ic_picker_phone : R.drawable.ic_picker_drive)
                         : type == FileInfo.Type.DIRECTORY ? R.drawable.ic_picker_folder : R.drawable.ic_picker_file);
                 if (type == FileInfo.Type.DRIVE) {
-                    holder.subtitle.setText(R.string.drive);
+                    holder.subtitle.setText(isDeviceDrive(item) ? R.string.device : R.string.drive);
                     holder.subtitle.setVisibility(View.VISIBLE);
                 }
             } else if (type == FileInfo.Type.FILE) {

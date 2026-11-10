@@ -140,6 +140,7 @@
     <string name="win_components" translatable="false">Win Components</string>
     <string name="drives">Drives</string>
     <string name="drive">Drive</string>
+    <string name="device">Device</string>
     <string name="force_fullscreen">Force Fullscreen</string>
     <string name="range">Range</string>
     <string name="enable">Enable</string>

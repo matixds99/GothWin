@@ -8,6 +8,7 @@
     <string name="picker_paste">Wklej</string>
     <string name="picker_select_exe">Wybierz plik .exe.</string>
     <string name="drive">Dysk</string>
+    <string name="device">Urządzenie</string>
     <string name="home">Lokalizacje</string>
     <string name="new_folder">Nowy folder</string>
     <string name="items">elementów</string>
