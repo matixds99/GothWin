@@ -106,6 +106,9 @@ public class GothicContainerFileManagerFragment extends ContainerFileManagerFrag
         Toast.makeText(requireContext(), "Skrót Gothic II utworzony — uruchamiam grę", Toast.LENGTH_SHORT).show();
         Intent intent = new Intent(requireContext(), XServerDisplayActivity.class);
         intent.putExtra("container_id", getContainerId());
+        intent.putExtra(GothicSettingsFragment.EXTRA_CONTROLS_PROFILE,
+                androidx.preference.PreferenceManager.getDefaultSharedPreferences(requireContext())
+                        .getInt(GothicSettingsFragment.PREF_CONTROLS_PROFILE, 0));
         // Launch the exact selected EXE through Winlator's normal exec_path path rather
         // than reparsing the newly written desktop shortcut for the initial launch.
         intent.putExtra("exec_path", executableUnixPath);

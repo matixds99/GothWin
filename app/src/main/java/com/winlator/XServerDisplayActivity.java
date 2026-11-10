@@ -621,7 +621,14 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
             rootView.addView(frameRating);
         }
 
-        if (shortcut != null) {
+        if (getIntent().hasExtra(GothicSettingsFragment.EXTRA_CONTROLS_PROFILE)) {
+            int profileId = getIntent().getIntExtra(GothicSettingsFragment.EXTRA_CONTROLS_PROFILE, 0);
+            if (profileId > 0) {
+                ControlsProfile profile = inputControlsManager.getProfile(profileId);
+                if (profile != null) showInputControls(profile);
+                else android.widget.Toast.makeText(this, R.string.gothic_missing_controls, android.widget.Toast.LENGTH_LONG).show();
+            }
+        } else if (shortcut != null) {
             String controlsProfile = shortcut.getExtra("controlsProfile");
             if (!controlsProfile.isEmpty()) {
                 ControlsProfile profile = inputControlsManager.getProfile(Integer.parseInt(controlsProfile));

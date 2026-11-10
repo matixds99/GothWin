@@ -59,6 +59,10 @@ public class InputControlsFragment extends Fragment {
         this.selectedProfileId = selectedProfileId;
     }
 
+    public int getSelectedProfileId() {
+        return currentProfile != null ? currentProfile.id : 0;
+    }
+
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

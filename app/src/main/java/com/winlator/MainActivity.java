@@ -120,6 +120,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @Override
     public void onBackPressed() {
+        if (editInputControls) {
+            finishInputControlsEditing();
+            return;
+        }
         if (currentFragment instanceof GothicLauncherFragment) {
             finish();
             return;
@@ -134,6 +138,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
         }
         showFragment(new GothicLauncherFragment());
+    }
+
+    private void finishInputControlsEditing() {
+        Intent result = new Intent();
+        int profileId = currentFragment instanceof InputControlsFragment
+                ? ((InputControlsFragment) currentFragment).getSelectedProfileId() : 0;
+        result.putExtra("selected_profile_id", profileId);
+        setResult(RESULT_OK, result);
+        finish();
     }
 
     public void setOpenFileCallback(Callback<Uri> openFileCallback) {
@@ -159,8 +172,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             return super.onOptionsItemSelected(menuItem);
         } else {
             if (editInputControls) {
-                setResult(RESULT_OK);
-                finish();
+                finishInputControlsEditing();
             } else {
                 if (currentFragment instanceof BaseFileManagerFragment) {
                     BaseFileManagerFragment fileManagerFragment = (BaseFileManagerFragment)currentFragment;

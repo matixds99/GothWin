@@ -15,4 +15,17 @@
     <string name="no_matching_files">Nie znaleziono plików ani folderów</string>
     <string name="no_items_to_display">Brak elementów do wyświetlenia</string>
     <string name="select_a_folder_to_browse">Lokalizacje</string>
+    <string name="gothic_add_preset">Dodaj</string>
+    <string name="gothic_edit_preset">Edytuj</string>
+    <string name="gothic_duplicate_preset">Duplikuj</string>
+    <string name="gothic_builtin_preset_readonly">Wbudowanych presetów nie można edytować. Zduplikuj preset, aby go zmienić.</string>
+    <string name="gothic_missing_preset">Wybrany preset Box64 już nie istnieje.</string>
+    <string name="gothic_missing_profile_name">Niedostępny: %1$s</string>
+    <string name="gothic_preset_override_warning">Kontener nadpisuje zmienne presetu: %1$s. Usunąć te nadpisania i użyć wartości wybranego presetu?</string>
+    <string name="gothic_controls_section">STEROWANIE</string>
+    <string name="gothic_controls_profile">Profil sterowania</string>
+    <string name="gothic_no_controls">Brak</string>
+    <string name="gothic_manage_controls">Zarządzaj profilami sterowania</string>
+    <string name="gothic_missing_controls">Wybrany profil sterowania nie istnieje lub jest szablonem. Wybierz inny profil.</string>
+    <string name="gothic_editors_save_immediately">Zmiany presetów i profili zapisują się od razu. Naciśnij Zapisz, aby zastosować wybór do Gothic.</string>
 </resources>

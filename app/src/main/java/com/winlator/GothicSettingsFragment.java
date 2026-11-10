@@ -1,6 +1,8 @@
 package com.winlator;
 
+import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
@@ -23,6 +25,7 @@ import androidx.fragment.app.Fragment;
 import androidx.preference.PreferenceManager;
 
 import com.winlator.box64.Box64Preset;
+import com.winlator.box64.Box64EditPresetDialog;
 import com.winlator.box64.Box64PresetManager;
 import com.winlator.container.AudioDrivers;
 import com.winlator.container.Container;
@@ -33,6 +36,9 @@ import com.winlator.core.EnvVars;
 import com.winlator.core.GPUHelper;
 import com.winlator.core.GeneralComponents;
 import com.winlator.core.KeyValueSet;
+import com.winlator.contentdialog.ContentDialog;
+import com.winlator.inputcontrols.ControlsProfile;
+import com.winlator.inputcontrols.InputControlsManager;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -42,6 +48,8 @@ import java.util.List;
 public class GothicSettingsFragment extends Fragment {
     private static final String PREF_CONTAINER_ID = "gothic_container_id";
     public static final String PREF_STRETCH_SCREEN = "gothic_stretch_screen";
+    public static final String PREF_CONTROLS_PROFILE = "gothic_controls_profile";
+    public static final String EXTRA_CONTROLS_PROFILE = "gothic_controls_profile";
 
     private static final String[] RESOLUTIONS = {"800x600", "960x540", "1280x720", "1600x900", "1920x1080"};
     private static final String[] AUDIO_IDS = {AudioDrivers.ALSA, AudioDrivers.PULSEAUDIO};
@@ -61,10 +69,13 @@ public class GothicSettingsFragment extends Fragment {
     private Spinner sDirectSound;
     private Spinner sDirectMusic;
     private Spinner sBox64Preset;
+    private Spinner sControlsProfile;
     private Switch swEsync;
 
     private ArrayList<Box64Preset> box64Presets;
+    private ArrayList<ControlsProfile> controlsProfiles;
     private ArrayList<String> dxvkVersions;
+    private boolean selectedPresetEdited;
 
     @Nullable
     @Override
@@ -137,17 +148,123 @@ public class GothicSettingsFragment extends Fragment {
         // --- WYDAJNOŚĆ ---
         addSection("WYDAJNOŚĆ");
 
-        box64Presets = Box64PresetManager.getPresets(context);
-        ArrayList<String> presetNames = new ArrayList<>();
-        int presetIndex = 0;
-        for (int i = 0; i < box64Presets.size(); i++) {
-            presetNames.add(box64Presets.get(i).name);
-            if (box64Presets.get(i).id.equals(container.getBox64Preset())) presetIndex = i;
-        }
-        sBox64Preset = addSpinnerRow("Preset Box64", presetNames, presetIndex);
+        sBox64Preset = addSpinnerRow("Preset Box64", new ArrayList<>(), 0);
+        loadBox64Presets(container.getBox64Preset());
+        addActionRow(getString(R.string.gothic_add_preset), () -> editBox64Preset(null),
+                getString(R.string.gothic_edit_preset), () -> editBox64Preset(getSelectedBox64PresetId()),
+                getString(R.string.gothic_duplicate_preset), this::duplicateBox64Preset);
 
         swEsync = addSwitchRow("WINEESYNC", "Synchronizacja Wine przez eventfd",
             new EnvVars(container.getEnvVars()).get("WINEESYNC").equals("1"));
+
+        addSection(getString(R.string.gothic_controls_section));
+        sControlsProfile = addSpinnerRow(getString(R.string.gothic_controls_profile), new ArrayList<>(), 0);
+        loadControlsProfiles(preferences.getInt(PREF_CONTROLS_PROFILE, 0));
+        addActionRow(getString(R.string.gothic_manage_controls), this::manageControlsProfiles, null, null, null, null);
+        addHint(getString(R.string.gothic_editors_save_immediately));
+    }
+
+    private String getSelectedBox64PresetId() {
+        int position = sBox64Preset.getSelectedItemPosition();
+        return position >= 0 && position < box64Presets.size() ? box64Presets.get(position).id : null;
+    }
+
+    private void loadBox64Presets(String selectedId) {
+        box64Presets = Box64PresetManager.getPresets(requireContext());
+        ArrayList<String> names = new ArrayList<>();
+        int selected = -1;
+        for (int i = 0; i < box64Presets.size(); i++) {
+            Box64Preset preset = box64Presets.get(i);
+            names.add(preset.name);
+            if (preset.id.equals(selectedId)) selected = i;
+        }
+        if (selected < 0 && selectedId != null) {
+            selected = names.size();
+            box64Presets.add(new Box64Preset(selectedId, getString(R.string.gothic_missing_profile_name, selectedId)));
+            names.add(box64Presets.get(selected).name);
+            Toast.makeText(requireContext(), R.string.gothic_missing_preset, Toast.LENGTH_LONG).show();
+        }
+        sBox64Preset.setAdapter(new DarkAdapter(requireContext(), names));
+        sBox64Preset.setSelection(Math.max(0, selected));
+    }
+
+    private void editBox64Preset(@Nullable String presetId) {
+        if (presetId != null) {
+            Box64Preset preset = Box64PresetManager.getPreset(requireContext(), presetId);
+            if (preset == null) {
+                Toast.makeText(requireContext(), R.string.gothic_missing_preset, Toast.LENGTH_LONG).show();
+                return;
+            }
+            if (!preset.isCustom()) {
+                Toast.makeText(requireContext(), R.string.gothic_builtin_preset_readonly, Toast.LENGTH_LONG).show();
+            }
+        }
+        String newId = Box64Preset.CUSTOM + "-" + Box64PresetManager.getNextPresetId(requireContext());
+        Box64EditPresetDialog dialog = new Box64EditPresetDialog(requireContext(), presetId);
+        dialog.setOnConfirmCallback(() -> {
+            String selectedId = presetId != null ? presetId : newId;
+            if (presetId != null && presetId.equals(container.getBox64Preset())
+                    && Box64PresetManager.getPreset(requireContext(), presetId).isCustom()) {
+                selectedPresetEdited = true;
+            }
+            loadBox64Presets(selectedId);
+        });
+        dialog.show();
+    }
+
+    private void duplicateBox64Preset() {
+        String selectedId = getSelectedBox64PresetId();
+        if (selectedId == null || Box64PresetManager.getPreset(requireContext(), selectedId) == null) {
+            Toast.makeText(requireContext(), R.string.gothic_missing_preset, Toast.LENGTH_LONG).show();
+            return;
+        }
+        String newId = Box64Preset.CUSTOM + "-" + Box64PresetManager.getNextPresetId(requireContext());
+        Box64PresetManager.duplicatePreset(requireContext(), selectedId);
+        loadBox64Presets(newId);
+    }
+
+    private int getSelectedControlsProfileId() {
+        int position = sControlsProfile.getSelectedItemPosition();
+        return position > 0 && position <= controlsProfiles.size() ? controlsProfiles.get(position - 1).id : 0;
+    }
+
+    private void loadControlsProfiles(int selectedId) {
+        controlsProfiles = new InputControlsManager(requireContext()).getProfiles(true);
+        ArrayList<String> names = new ArrayList<>();
+        names.add(getString(R.string.gothic_no_controls));
+        int selected = 0;
+        for (int i = 0; i < controlsProfiles.size(); i++) {
+            ControlsProfile profile = controlsProfiles.get(i);
+            names.add(profile.getName());
+            if (profile.id == selectedId) selected = i + 1;
+        }
+        if (selectedId > 0 && selected == 0) {
+            ControlsProfile missingProfile = new ControlsProfile(requireContext(), selectedId);
+            missingProfile.setName(getString(R.string.gothic_missing_profile_name, String.valueOf(selectedId)));
+            controlsProfiles.add(missingProfile);
+            names.add(missingProfile.getName());
+            selected = controlsProfiles.size();
+            Toast.makeText(requireContext(), R.string.gothic_missing_controls, Toast.LENGTH_LONG).show();
+        }
+        sControlsProfile.setAdapter(new DarkAdapter(requireContext(), names));
+        sControlsProfile.setSelection(selected);
+    }
+
+    private void manageControlsProfiles() {
+        Intent intent = new Intent(requireContext(), MainActivity.class);
+        intent.putExtra("edit_input_controls", true);
+        intent.putExtra("selected_profile_id", getSelectedControlsProfileId());
+        startActivityForResult(intent, MainActivity.EDIT_INPUT_CONTROLS_REQUEST_CODE);
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == MainActivity.EDIT_INPUT_CONTROLS_REQUEST_CODE && sControlsProfile != null) {
+            int selectedId = resultCode == Activity.RESULT_OK && data != null
+                    ? data.getIntExtra("selected_profile_id", 0) : getSelectedControlsProfileId();
+            loadControlsProfiles(selectedId);
+        }
     }
 
     private KeyValueSet getDxvkConfigSet() {
@@ -159,6 +276,43 @@ public class GothicSettingsFragment extends Fragment {
     private void save() {
         if (container == null) return;
 
+        String presetId = getSelectedBox64PresetId();
+        if (presetId == null || Box64PresetManager.getPreset(requireContext(), presetId) == null) {
+            Toast.makeText(requireContext(), R.string.gothic_missing_preset, Toast.LENGTH_LONG).show();
+            return;
+        }
+        int controlsId = getSelectedControlsProfileId();
+        if (controlsId > 0) {
+            boolean found = false;
+            for (ControlsProfile profile : new InputControlsManager(requireContext()).getProfiles(true)) {
+                if (profile.id == controlsId) {
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                Toast.makeText(requireContext(), R.string.gothic_missing_controls, Toast.LENGTH_LONG).show();
+                return;
+            }
+        }
+
+        EnvVars overrides = new EnvVars(container.getEnvVars());
+        EnvVars presetVars = Box64PresetManager.getEnvVars(requireContext(), presetId);
+        ArrayList<String> conflictingVars = new ArrayList<>();
+        if (!presetId.equals(container.getBox64Preset()) || selectedPresetEdited) {
+            for (String name : presetVars) if (overrides.has(name)) conflictingVars.add(name);
+        }
+        if (!conflictingVars.isEmpty()) {
+            ContentDialog dialog = new ContentDialog(requireContext());
+            dialog.setMessage(getString(R.string.gothic_preset_override_warning, String.join(", ", conflictingVars)));
+            dialog.setOnConfirmCallback(() -> saveSettings(presetId, conflictingVars));
+            dialog.show();
+        } else {
+            saveSettings(presetId, conflictingVars);
+        }
+    }
+
+    private void saveSettings(String presetId, List<String> conflictingVars) {
         container.setScreenSize(sResolution.getSelectedItem().toString());
 
         String[] drivers = GraphicsDrivers.parseIdentifiers(container.getGraphicsDriver());
@@ -180,14 +334,16 @@ public class GothicSettingsFragment extends Fragment {
         wincomponents.put("directmusic", sDirectMusic.getSelectedItemPosition());
         container.setWinComponents(wincomponents.toString());
 
-        container.setBox64Preset(box64Presets.get(sBox64Preset.getSelectedItemPosition()).id);
+        container.setBox64Preset(presetId);
 
         EnvVars envVars = new EnvVars(container.getEnvVars());
+        for (String name : conflictingVars) envVars.remove(name);
         envVars.put("WINEESYNC", swEsync.isChecked() ? "1" : "0");
         container.setEnvVars(envVars.toString());
 
         container.saveData();
-        preferences.edit().putBoolean(PREF_STRETCH_SCREEN, swStretch.isChecked()).apply();
+        preferences.edit().putBoolean(PREF_STRETCH_SCREEN, swStretch.isChecked())
+                .putInt(PREF_CONTROLS_PROFILE, getSelectedControlsProfileId()).apply();
 
         Toast.makeText(requireContext(), "Zapisano ustawienia", Toast.LENGTH_SHORT).show();
         goBack();
@@ -266,6 +422,45 @@ public class GothicSettingsFragment extends Fragment {
         sw.setChecked(checked);
         row.addView(sw, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         return sw;
+    }
+
+    private void addActionRow(String first, Runnable firstAction, @Nullable String second,
+                              @Nullable Runnable secondAction, @Nullable String third, @Nullable Runnable thirdAction) {
+        LinearLayout row = new LinearLayout(requireContext());
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        LinearLayout.LayoutParams rowParams = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        rowParams.topMargin = dp(6);
+        llSettings.addView(row, rowParams);
+        addActionButton(row, first, firstAction);
+        if (second != null && secondAction != null) addActionButton(row, second, secondAction);
+        if (third != null && thirdAction != null) addActionButton(row, third, thirdAction);
+    }
+
+    private void addActionButton(LinearLayout row, String label, Runnable action) {
+        Button button = new Button(requireContext());
+        button.setText(label);
+        button.setTextColor(Color.parseColor("#E4D2AA"));
+        button.setTextSize(12);
+        button.setTextAllCaps(false);
+        button.setMinWidth(0);
+        button.setPadding(dp(4), 0, dp(4), 0);
+        button.setBackgroundResource(R.drawable.bg_launcher_secondary_button);
+        button.setOnClickListener(v -> action.run());
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(0, dp(44), 1f);
+        params.setMargins(dp(2), 0, dp(2), 0);
+        row.addView(button, params);
+    }
+
+    private void addHint(String text) {
+        TextView hint = new TextView(requireContext());
+        hint.setText(text);
+        hint.setTextColor(Color.parseColor("#A4AFBC"));
+        hint.setTextSize(12);
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        params.topMargin = dp(8);
+        llSettings.addView(hint, params);
     }
 
     /** Adapter spinnera w ciemnych kolorach launchera. */

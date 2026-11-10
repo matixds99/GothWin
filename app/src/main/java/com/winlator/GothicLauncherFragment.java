@@ -156,6 +156,8 @@ public class GothicLauncherFragment extends Fragment {
         Intent intent = new Intent(requireContext(), XServerDisplayActivity.class);
         intent.putExtra("container_id", container.id);
         intent.putExtra("stretch_screen", preferences.getBoolean(GothicSettingsFragment.PREF_STRETCH_SCREEN, true));
+        intent.putExtra(GothicSettingsFragment.EXTRA_CONTROLS_PROFILE,
+                preferences.getInt(GothicSettingsFragment.PREF_CONTROLS_PROFILE, 0));
 
         // Uruchamiamy dokładnie tak samo jak przy pierwszym starcie po wyborze EXE
         // (exec_path), bo ta ścieżka działa. Parsowanie samego .desktop zostaje jako zapas.
