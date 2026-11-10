@@ -587,6 +587,8 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
         renderer.setCursorColor(preferences.getInt("cursor_color", 0xffffff));
         renderer.setCursorScale(preferences.getFloat("cursor_scale", 1.0f));
         renderer.setForceWindowsFullscreen(shortcut != null && shortcut.getExtra("forceFullscreen", "0").equals("1"));
+        // Rozciągnięty ekran: obraz gry wypełnia cały ekran telefonu (jak przycisk "Toggle Fullscreen").
+        if (getIntent().getBooleanExtra("stretch_screen", false)) renderer.toggleFullscreen();
 
         xServer.setRenderer(renderer);
         rootView.addView(xServerView);
