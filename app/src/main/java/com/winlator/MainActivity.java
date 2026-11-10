@@ -209,7 +209,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         // (np. menedżer plików kontenera) nadal go potrzebują.
         ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) {
-            if (fragment instanceof GothicLauncherFragment) actionBar.hide();
+            if (fragment instanceof GothicLauncherFragment || fragment instanceof GothicSettingsFragment) actionBar.hide();
             else actionBar.show();
         }
     }
