@@ -18,7 +18,6 @@ import android.widget.ArrayAdapter;
 import android.widget.CheckBox;
 import android.widget.FrameLayout;
 import android.widget.Spinner;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -40,6 +39,7 @@ import com.winlator.contentdialog.AudioDriverConfigDialog;
 import com.winlator.contentdialog.ContentDialog;
 import com.winlator.contentdialog.DXVKConfigDialog;
 import com.winlator.contentdialog.DebugDialog;
+import com.winlator.contentdialog.FpsHudDialog;
 import com.winlator.contentdialog.ScreenEffectDialog;
 import com.winlator.contentdialog.TurnipConfigDialog;
 import com.winlator.contentdialog.VKD3DConfigDialog;
@@ -380,10 +380,7 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
                 break;
             case R.id.menu_item_fps_hud:
                 if (frameRating != null) {
-                    FrameRating.Mode[] modes = FrameRating.Mode.values();
-                    FrameRating.Mode next = modes[(frameRating.getMode().ordinal() + 1) % modes.length];
-                    frameRating.setMode(next);
-                    Toast.makeText(this, getString(R.string.fps_hud) + ": " + next.name(), Toast.LENGTH_SHORT).show();
+                    (new FpsHudDialog(this, frameRating)).show();
                 }
                 drawerLayout.closeDrawers();
                 break;
@@ -597,6 +594,9 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
         if (container != null) {
             frameRating = new FrameRating(this);
             frameRating.setMode(FrameRating.Mode.values()[container.getHUDMode()]);
+            if (preferences.contains(FpsHudDialog.PREF_HUD_PANELS)) {
+                FpsHudDialog.applyMask(frameRating, preferences.getInt(FpsHudDialog.PREF_HUD_PANELS, 1));
+            }
             frameRating.setVisibility(View.GONE);
             rootView.addView(frameRating);
         }

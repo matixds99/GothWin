@@ -388,4 +388,9 @@
     <string name="fps_hud">FPS HUD</string>
     <string name="menu">Menu</string>
     <string name="fps_limit">FPS limit (0 = off)</string>
+    <string name="hud_show_fps">Show FPS</string>
+    <string name="hud_show_gpu">Show GPU</string>
+    <string name="hud_show_ram">Show RAM</string>
+    <string name="hud_show_cpu">Show CPU</string>
+    <string name="hud_show_battery">Show battery (level, temperature)</string>
 </resources>

@@ -30,7 +30,6 @@ public class FrameRating extends FrameLayout implements Runnable {
     private final LinearLayout ramPanel;
     private final LinearLayout cpuPanel;
     private final LinearLayout batteryPanel;
-    private Mode mode = Mode.SIMPLE;
     private ActivityManager activityManager;
     private ActivityManager.MemoryInfo memoryInfo;
     private String cpuInfo = null;
@@ -58,52 +57,51 @@ public class FrameRating extends FrameLayout implements Runnable {
         setupPanels();
     }
 
+    private boolean showFps = true;
+    private boolean showGpu = false;
+    private boolean showRam = false;
+    private boolean showCpu = false;
+    private boolean showBattery = false;
+
     private void setupPanels() {
-        switch (mode) {
-            case DISABLED:
-                fpsPanel.setVisibility(GONE);
-                gpuPanel.setVisibility(GONE);
-                ramPanel.setVisibility(GONE);
-                cpuPanel.setVisibility(GONE);
-                batteryPanel.setVisibility(GONE);
-                
-                activityManager = null;
-                memoryInfo = null;
-                break;
-            case SIMPLE:
-                fpsPanel.setVisibility(VISIBLE);
-                gpuPanel.setVisibility(GONE);
-                ramPanel.setVisibility(GONE);
-                cpuPanel.setVisibility(GONE);
-                batteryPanel.setVisibility(GONE);
+        fpsPanel.setVisibility(showFps ? VISIBLE : GONE);
+        gpuPanel.setVisibility(showGpu ? VISIBLE : GONE);
+        ramPanel.setVisibility(showRam ? VISIBLE : GONE);
+        cpuPanel.setVisibility(showCpu ? VISIBLE : GONE);
+        batteryPanel.setVisibility(showBattery ? VISIBLE : GONE);
 
-                activityManager = null;
-                memoryInfo = null;
-                break;
-            case FULL:
-                fpsPanel.setVisibility(VISIBLE);
-                gpuPanel.setVisibility(VISIBLE);
-                ramPanel.setVisibility(VISIBLE);
-                cpuPanel.setVisibility(VISIBLE);
-                batteryPanel.setVisibility(VISIBLE);
-
-                Context context = getContext();
-                activityManager = (ActivityManager)context.getSystemService(Context.ACTIVITY_SERVICE);
-                memoryInfo = new ActivityManager.MemoryInfo();
-                break;
+        if (showRam) {
+            activityManager = (ActivityManager)getContext().getSystemService(Context.ACTIVITY_SERVICE);
+            memoryInfo = new ActivityManager.MemoryInfo();
+        }
+        else {
+            activityManager = null;
+            memoryInfo = null;
         }
     }
 
-    public Mode getMode() {
-        return mode;
+    public boolean isAnyPanelEnabled() {
+        return showFps || showGpu || showRam || showCpu || showBattery;
+    }
+
+    public boolean[] getPanels() {
+        return new boolean[]{showFps, showGpu, showRam, showCpu, showBattery};
+    }
+
+    public void setPanels(boolean fps, boolean gpu, boolean ram, boolean cpu, boolean battery) {
+        showFps = fps;
+        showGpu = gpu;
+        showRam = ram;
+        showCpu = cpu;
+        showBattery = battery;
+        setupPanels();
+        tick = 2;
+        if (!isAnyPanelEnabled()) setVisibility(GONE);
+        else if (lastTime != 0) post(this);
     }
 
     public void setMode(Mode mode) {
-        this.mode = mode;
-        setupPanels();
-        tick = 2;
-        if (mode == Mode.DISABLED) setVisibility(GONE);
-        else if (lastTime != 0) post(this);
+        setPanels(mode != Mode.DISABLED, mode == Mode.FULL, mode == Mode.FULL, mode == Mode.FULL, mode == Mode.FULL);
     }
 
     public void setGPUInfo(String gpuInfo) {
@@ -119,7 +117,7 @@ public class FrameRating extends FrameLayout implements Runnable {
     }
 
     public void update() {
-        if (mode == Mode.DISABLED) return;
+        if (!isAnyPanelEnabled()) return;
         long time = SystemClock.elapsedRealtime();
         if (time >= lastTime + 500) {
             lastFPS = ((float)(frameCount * 1000) / (time - lastTime));
@@ -133,18 +131,21 @@ public class FrameRating extends FrameLayout implements Runnable {
 
     @Override
     public void run() {
-        if (mode == Mode.DISABLED) return;
+        if (!isAnyPanelEnabled()) return;
         if (getVisibility() == GONE) setVisibility(View.VISIBLE);
         ((TextView)fpsPanel.getChildAt(1)).setText(String.format(Locale.ENGLISH, "%.1f", lastFPS));
 
-        if (mode == Mode.FULL && ++tick >= 2) {
+        if (++tick >= 2) {
             tick = 0;
-            ((TextView)gpuPanel.getChildAt(1)).setText(gpuInfo);
-            updateBattery();
-            activityManager.getMemoryInfo(memoryInfo);
-            long usedMem = memoryInfo.totalMem - memoryInfo.availMem;
-            String ramText = StringUtils.formatBytes(usedMem, false)+"/"+StringUtils.formatBytes(memoryInfo.totalMem);
-            ((TextView)ramPanel.getChildAt(1)).setText(ramText);
+            if (showGpu) ((TextView)gpuPanel.getChildAt(1)).setText(gpuInfo);
+            if (showBattery) updateBattery();
+            if (showRam && activityManager != null) {
+                activityManager.getMemoryInfo(memoryInfo);
+                long usedMem = memoryInfo.totalMem - memoryInfo.availMem;
+                String ramText = StringUtils.formatBytes(usedMem, false)+"/"+StringUtils.formatBytes(memoryInfo.totalMem);
+                ((TextView)ramPanel.getChildAt(1)).setText(ramText);
+            }
+            if (!showCpu) return;
 
             if (cpuInfo == null) {
                 cpuInfo = "Box64 v"+ Box64Utils.extractBinVersion(cpuPanel.getContext());

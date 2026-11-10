@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <CheckBox
+        android:id="@+id/CBHudFps"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/hud_show_fps" />
+
+    <CheckBox
+        android:id="@+id/CBHudGpu"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/hud_show_gpu" />
+
+    <CheckBox
+        android:id="@+id/CBHudRam"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/hud_show_ram" />
+
+    <CheckBox
+        android:id="@+id/CBHudCpu"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/hud_show_cpu" />
+
+    <CheckBox
+        android:id="@+id/CBHudBattery"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/hud_show_battery" />
+</LinearLayout>

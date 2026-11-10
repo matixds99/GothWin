@@ -32,4 +32,9 @@
     <string name="fps_hud">FPS HUD</string>
     <string name="menu">Menu</string>
     <string name="fps_limit">Limit klatek (0 = wyłączony)</string>
+    <string name="hud_show_fps">Pokaż FPS</string>
+    <string name="hud_show_gpu">Pokaż GPU</string>
+    <string name="hud_show_ram">Pokaż RAM</string>
+    <string name="hud_show_cpu">Pokaż CPU</string>
+    <string name="hud_show_battery">Pokaż baterię (poziom, temperatura)</string>
 </resources>
