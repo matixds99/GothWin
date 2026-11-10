@@ -77,10 +77,40 @@ public class ContainerFileManagerFragment extends BaseFileManagerFragment<FileIn
         if (container == null) return;
 
         viewStyle = ViewStyle.valueOf(preferences.getString("container_file_manager_view_style", "GRID"));
+        if (isExecutablePicker()) viewStyle = ViewStyle.LIST;
         if (startPath != null) {
             setCurrentWorkingPath(WineUtils.unixToDOSPath(startPath, container));
             startPath = null;
         }
+    }
+
+    @Nullable
+    @Override
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup parent, @Nullable Bundle savedInstanceState) {
+        View root = super.onCreateView(inflater, parent, savedInstanceState);
+        if (isExecutablePicker() && root != null) {
+            fileSearchEditText.setText(searchQuery);
+            root.findViewById(R.id.BTPickerBack).setOnClickListener(v -> requireActivity().onBackPressed());
+            root.findViewById(R.id.BTPickerHome).setOnClickListener(v -> {
+                clearPickerSearch();
+                folderStack.clear();
+                refreshContent();
+            });
+            root.findViewById(R.id.BTPickerNewFolder).setOnClickListener(v -> createFolder());
+        }
+        return root;
+    }
+
+    private void clearPickerSearch() {
+        if (isExecutablePicker() && fileSearchEditText != null && fileSearchEditText.length() > 0) {
+            fileSearchEditText.setText("");
+        }
+    }
+
+    @Override
+    public boolean onOptionsMenuClicked() {
+        if (isExecutablePicker() && !folderStack.isEmpty()) clearPickerSearch();
+        return super.onOptionsMenuClicked();
     }
 
     @Override
@@ -93,7 +123,12 @@ public class ContainerFileManagerFragment extends BaseFileManagerFragment<FileIn
         if (isExecutablePicker()) {
             String currentPath = getCurrentWorkingPath();
             pickerLocationTextView.setText(currentPath.isEmpty()
-                    ? getString(R.string.select_a_folder_to_browse) : currentPath);
+                    ? getString(R.string.picker_locations) : currentPath);
+            if (getView() != null) {
+                View newFolderButton = getView().findViewById(R.id.BTPickerNewFolder);
+                newFolderButton.setEnabled(!folderStack.isEmpty());
+                newFolderButton.setAlpha(folderStack.isEmpty() ? 0.4f : 1f);
+            }
         }
         List<FileInfo> visibleFiles = files;
         if (!searchQuery.trim().isEmpty()) {
@@ -118,6 +153,7 @@ public class ContainerFileManagerFragment extends BaseFileManagerFragment<FileIn
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater menuInflater) {
+        if (isExecutablePicker()) return;
         menuInflater.inflate(R.menu.container_file_manager_menu, menu);
         refreshViewStyleMenuItem(menu.findItem(R.id.menu_item_view_style));
     }
@@ -391,7 +427,8 @@ public class ContainerFileManagerFragment extends BaseFileManagerFragment<FileIn
         @NonNull
         @Override
         public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            int resource = viewStyle == ViewStyle.LIST ? R.layout.file_list_item : R.layout.file_grid_item;
+            int resource = isExecutablePicker() ? R.layout.gothic_executable_picker_item
+                    : viewStyle == ViewStyle.LIST ? R.layout.file_list_item : R.layout.file_grid_item;
             return new ViewHolder(LayoutInflater.from(parent.getContext()).inflate(resource, parent, false));
         }
 
@@ -419,11 +456,21 @@ public class ContainerFileManagerFragment extends BaseFileManagerFragment<FileIn
                 holder.subtitle.setVisibility(View.VISIBLE);
             }
 
-            if (type == FileInfo.Type.FILE) {
+            LoadIconTask previousTask = (LoadIconTask) holder.imageView.getTag();
+            if (previousTask != null) {
+                previousTask.cancel();
+                holder.imageView.setTag(null);
+            }
+            if (isExecutablePicker()) {
+                holder.imageView.setImageResource(type == FileInfo.Type.DRIVE ? R.drawable.ic_picker_drive
+                        : type == FileInfo.Type.DIRECTORY ? R.drawable.ic_picker_folder : R.drawable.ic_picker_file);
+                if (type == FileInfo.Type.DRIVE) {
+                    holder.subtitle.setText(R.string.drive);
+                    holder.subtitle.setVisibility(View.VISIBLE);
+                }
+            } else if (type == FileInfo.Type.FILE) {
                 holder.imageView.setImageResource(R.drawable.container_file);
-                LoadIconTask task = (LoadIconTask) holder.imageView.getTag();
-                if (task != null) task.cancel();
-                task = new LoadIconTask(ContainerFileManagerFragment.this, holder.imageView);
+                LoadIconTask task = new LoadIconTask(ContainerFileManagerFragment.this, holder.imageView);
                 holder.imageView.setTag(task);
                 task.loadAsync(item);
             } else {
@@ -509,6 +556,7 @@ public class ContainerFileManagerFragment extends BaseFileManagerFragment<FileIn
             intent.putExtra("exec_path", file.path);
             activity.startActivity(intent);
         } else {
+            clearPickerSearch();
             folderStack.push(file);
             refreshContent();
         }

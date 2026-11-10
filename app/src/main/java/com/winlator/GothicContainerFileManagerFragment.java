@@ -9,6 +9,7 @@ import com.winlator.container.FileInfo;
 import com.winlator.core.FileUtils;
 import com.winlator.core.StringUtils;
 import com.winlator.core.WineUtils;
+import com.winlator.win32.MSLink;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -37,11 +38,13 @@ public class GothicContainerFileManagerFragment extends ContainerFileManagerFrag
 
     @Override
     protected void onFileClicked(FileInfo file) {
-        if (file.type == FileInfo.Type.FILE
-                && file.name.toLowerCase(Locale.ROOT).endsWith(".exe")) {
+        MSLink.LinkInfo link = file.getLinkinfo();
+        if (file.type != FileInfo.Type.FILE || (link != null && link.isDirectory)) {
+            super.onFileClicked(file);
+        } else if (file.name.toLowerCase(Locale.ROOT).endsWith(".exe")) {
             createDesktopShortcut(file);
         } else {
-            super.onFileClicked(file);
+            Toast.makeText(requireContext(), R.string.picker_select_exe, Toast.LENGTH_SHORT).show();
         }
     }
 

@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#051006"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:id="@+id/ExecutablePickerHeader"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingLeft="16dp"
+        android:paddingRight="16dp"
+        android:paddingTop="12dp">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/picker_title"
+            android:textColor="#F0F7EE"
+            android:textSize="24sp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:layout_marginTop="8dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:id="@+id/BTPickerBack"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:clickable="true"
+                android:contentDescription="@string/picker_back"
+                android:focusable="true"
+                android:padding="12dp"
+                android:src="@drawable/icon_action_bar_back"
+                android:tint="#76F544" />
+
+            <TextView
+                android:id="@+id/TVPickerLocation"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:ellipsize="middle"
+                android:maxLines="1"
+                android:text="@string/picker_locations"
+                android:textColor="#F0F7EE"
+                android:textSize="16sp" />
+
+            <ImageView
+                android:id="@+id/BTPickerHome"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:clickable="true"
+                android:contentDescription="@string/home"
+                android:focusable="true"
+                android:padding="12dp"
+                android:src="@drawable/icon_action_bar_home"
+                android:tint="#76F544" />
+
+            <ImageView
+                android:id="@+id/BTPickerNewFolder"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:clickable="true"
+                android:contentDescription="@string/new_folder"
+                android:focusable="true"
+                android:padding="12dp"
+                android:src="@drawable/icon_action_bar_new_folder"
+                android:tint="#76F544" />
+        </LinearLayout>
+
+        <EditText
+            android:id="@+id/ETFileSearch"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/bg_picker_search"
+            android:drawableLeft="@drawable/ic_picker_search"
+            android:drawablePadding="12dp"
+            android:hint="@string/search_this_folder"
+            android:imeOptions="actionDone"
+            android:inputType="text"
+            android:maxLines="1"
+            android:paddingLeft="14dp"
+            android:paddingRight="14dp"
+            android:singleLine="true"
+            android:textColor="#F0F7EE"
+            android:textColorHint="#93C38A"
+            android:textSize="15sp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:layout_marginBottom="8dp"
+            android:text="@string/picker_hint"
+            android:textColor="#A3BDA0"
+            android:textSize="13sp" />
+    </LinearLayout>
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/RecyclerView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipToPadding="false"
+            android:paddingLeft="16dp"
+            android:paddingRight="16dp"
+            android:paddingBottom="16dp"
+            android:scrollbars="vertical" />
+
+        <TextView
+            android:id="@+id/TVEmptyText"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:padding="24dp"
+            android:text="@string/no_items_to_display"
+            android:textColor="#B6C5B2"
+            android:textSize="16sp"
+            android:visibility="gone" />
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/BTPaste"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="right|bottom"
+            android:layout_margin="16dp"
+            android:contentDescription="@string/picker_paste"
+            android:src="@drawable/icon_paste"
+            android:tint="#FFFFFF"
+            android:visibility="gone" />
+    </FrameLayout>
+</LinearLayout>

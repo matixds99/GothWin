@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="picker_title">Menedżer plików</string>
+    <string name="picker_hint">Wybierz plik .exe gry, aby utworzyć skrót i ją uruchomić.</string>
+    <string name="picker_locations">Lokalizacje</string>
+    <string name="picker_back">Wstecz</string>
+    <string name="picker_item_menu">Opcje pliku</string>
+    <string name="picker_paste">Wklej</string>
+    <string name="picker_select_exe">Wybierz plik .exe.</string>
+    <string name="drive">Dysk</string>
+    <string name="home">Lokalizacje</string>
+    <string name="new_folder">Nowy folder</string>
+    <string name="items">elementów</string>
+    <string name="search_this_folder">Szukaj w tym folderze</string>
+    <string name="no_matching_files">Nie znaleziono plików ani folderów</string>
+    <string name="no_items_to_display">Brak elementów do wyświetlenia</string>
+    <string name="select_a_folder_to_browse">Lokalizacje</string>
+</resources>

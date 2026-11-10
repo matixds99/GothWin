@@ -76,8 +76,10 @@ public abstract class BaseFileManagerFragment<T> extends Fragment {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View rootView = inflater.inflate(R.layout.base_file_manager_fragment, container, false);
+        View rootView = inflater.inflate(isExecutablePicker()
+                ? R.layout.gothic_executable_picker : R.layout.base_file_manager_fragment, container, false);
         recyclerView = rootView.findViewById(R.id.RecyclerView);
+        viewStyleNeedsUpdate = true;
         emptyTextView = rootView.findViewById(R.id.TVEmptyText);
         View pickerHeader = rootView.findViewById(R.id.ExecutablePickerHeader);
         pickerLocationTextView = rootView.findViewById(R.id.TVPickerLocation);
@@ -160,7 +162,7 @@ public abstract class BaseFileManagerFragment<T> extends Fragment {
             recyclerView.removeItemDecoration(itemDecoration);
             if (viewStyle == ViewStyle.LIST) {
                 recyclerView.setLayoutManager(new LinearLayoutManager(context));
-                recyclerView.addItemDecoration(itemDecoration);
+                if (!isExecutablePicker()) recyclerView.addItemDecoration(itemDecoration);
             }
             else if (viewStyle == ViewStyle.GRID) {
                 int spanCount = Math.max(2, (int)(AppUtils.getScreenWidth() / UnitUtils.dpToPx(200)));
