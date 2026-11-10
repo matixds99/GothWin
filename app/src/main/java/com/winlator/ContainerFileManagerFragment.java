@@ -496,21 +496,21 @@ public class ContainerFileManagerFragment extends BaseFileManagerFragment<FileIn
             });
             listItemMenu.show();
         }
+    }
 
-        private void openFile(FileInfo file) {
-            Activity activity = getActivity();
-            if (activity == null) return;
-            MSLink.LinkInfo linkInfo = file.getLinkinfo();
-            boolean isFile = linkInfo != null ? !linkInfo.isDirectory : file.type == FileInfo.Type.FILE;
-            if (isFile) {
-                Intent intent = new Intent(activity, XServerDisplayActivity.class);
-                intent.putExtra("container_id", container.id);
-                intent.putExtra("exec_path", file.path);
-                activity.startActivity(intent);
-            } else {
-                folderStack.push(file);
-                refreshContent();
-            }
+    private void openFile(FileInfo file) {
+        Activity activity = getActivity();
+        if (activity == null) return;
+        MSLink.LinkInfo linkInfo = file.getLinkinfo();
+        boolean isFile = linkInfo != null ? !linkInfo.isDirectory : file.type == FileInfo.Type.FILE;
+        if (isFile) {
+            Intent intent = new Intent(activity, XServerDisplayActivity.class);
+            intent.putExtra("container_id", container.id);
+            intent.putExtra("exec_path", file.path);
+            activity.startActivity(intent);
+        } else {
+            folderStack.push(file);
+            refreshContent();
         }
     }
 
