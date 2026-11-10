@@ -10,6 +10,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -18,9 +19,16 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.preference.PreferenceManager;
 
+import com.winlator.box64.Box64Preset;
+import com.winlator.container.AudioDrivers;
 import com.winlator.container.Container;
 import com.winlator.container.ContainerManager;
+import com.winlator.container.DXWrappers;
+import com.winlator.container.GraphicsDrivers;
 import com.winlator.container.Shortcut;
+import com.winlator.core.EnvVars;
+import com.winlator.core.GeneralComponents;
+import com.winlator.core.KeyValueSet;
 import com.winlator.core.WineUtils;
 
 import org.json.JSONObject;
@@ -36,6 +44,7 @@ public class GothicLauncherFragment extends Fragment {
 
     private SharedPreferences preferences;
     private Button btnConfigure;
+    private ImageButton btnSettings;
     private Button btnAction;
     private TextView tvGameStatus;
 
@@ -47,10 +56,14 @@ public class GothicLauncherFragment extends Fragment {
         preferences = PreferenceManager.getDefaultSharedPreferences(requireContext());
 
         btnConfigure = view.findViewById(R.id.btnConfigure);
+        btnSettings = view.findViewById(R.id.btnSettings);
         btnAction = view.findViewById(R.id.btnAction);
         tvGameStatus = view.findViewById(R.id.tvGameStatus);
 
         btnConfigure.setOnClickListener(v -> createGothicContainer());
+        btnSettings.setOnClickListener(v -> {
+            if (getActivity() instanceof MainActivity) ((MainActivity)getActivity()).showFragment(new GothicSettingsFragment());
+        });
         btnAction.setOnClickListener(v -> onMainAction());
         updateUIStates();
         return view;
@@ -92,6 +105,8 @@ public class GothicLauncherFragment extends Fragment {
 
         Container container = getGothicContainer();
         File shortcut = findGameShortcut(container);
+        // Zębatka ustawień jest dostępna dopiero, gdy kontener istnieje.
+        if (btnSettings != null) btnSettings.setVisibility(container != null ? View.VISIBLE : View.GONE);
         if (container == null) {
             btnConfigure.setText("Konfiguruj");
             btnConfigure.setEnabled(true);
@@ -140,6 +155,7 @@ public class GothicLauncherFragment extends Fragment {
         if (!isAdded()) return;
         Intent intent = new Intent(requireContext(), XServerDisplayActivity.class);
         intent.putExtra("container_id", container.id);
+        intent.putExtra("stretch_screen", preferences.getBoolean(GothicSettingsFragment.PREF_STRETCH_SCREEN, true));
 
         // Uruchamiamy dokładnie tak samo jak przy pierwszym starcie po wyborze EXE
         // (exec_path), bo ta ścieżka działa. Parsowanie samego .desktop zostaje jako zapas.
@@ -176,7 +192,28 @@ public class GothicLauncherFragment extends Fragment {
             JSONObject data = new JSONObject();
             data.put("name", "Gothic II - New Balance");
             data.put("screenSize", "1280x720");
-            data.put("envVars", "BOX64_DYNAREC_BIGBLOCK=2 BOX64_DYNAREC_STRONG_MEM=0");
+            data.put("audioDriver", AudioDrivers.PULSEAUDIO);
+            data.put("graphicsDriver", GraphicsDrivers.VORTEK + "," + GraphicsDrivers.DEFAULT_OPENGL_DRIVER);
+            data.put("box64Preset", Box64Preset.PERFORMANCE);
+
+            // DXVK 2.3.1 nie jest w paczce aplikacji (są tylko 1.10.3 i 2.4.1), więc ustawiamy
+            // go tylko wtedy, gdy został wcześniej doinstalowany; inaczej zostaje wersja domyślna.
+            data.put("dxwrapper", DXWrappers.DXVK);
+            File dxvk231 = new File(GeneralComponents.getComponentDir(GeneralComponents.Type.DXVK, context), "dxvk-2.3.1.tzst");
+            if (dxvk231.isFile()) data.put("dxwrapperConfig", "version=2.3.1,framerate=0");
+
+            // DirectSound i DirectMusic: natywne Windows (1); pozostałe składniki domyślne.
+            KeyValueSet wincomponents = new KeyValueSet(Container.DEFAULT_WINCOMPONENTS);
+            wincomponents.put("directsound", "1");
+            wincomponents.put("directmusic", "1");
+            data.put("wincomponents", wincomponents.toString());
+
+            // Domyślne zmienne Winlatora + WINEESYNC wyłączone + ustawienia Box64.
+            EnvVars envVars = new EnvVars(Container.DEFAULT_ENV_VARS);
+            envVars.put("WINEESYNC", "0");
+            envVars.put("BOX64_DYNAREC_BIGBLOCK", "2");
+            envVars.put("BOX64_DYNAREC_STRONG_MEM", "0");
+            data.put("envVars", envVars.toString());
 
             manager.createContainerAsync(data, container -> {
                 if (!isAdded()) return;
