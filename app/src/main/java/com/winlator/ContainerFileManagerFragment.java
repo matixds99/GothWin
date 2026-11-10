@@ -50,6 +50,7 @@ public class ContainerFileManagerFragment extends BaseFileManagerFragment<FileIn
 
     private final int containerId;
     private String startPath;
+    private String searchQuery = "";
     private Container container;
 
     public ContainerFileManagerFragment() {
@@ -89,9 +90,30 @@ public class ContainerFileManagerFragment extends BaseFileManagerFragment<FileIn
 
         FileInfo parent = !folderStack.isEmpty() ? folderStack.peek() : null;
         ArrayList<FileInfo> files = manager.loadFiles(container, parent);
-        recyclerView.setAdapter(new FileInfoAdapter(files));
-        emptyTextView.setVisibility(files.isEmpty() ? View.VISIBLE : View.GONE);
+        if (isExecutablePicker()) {
+            String currentPath = getCurrentWorkingPath();
+            pickerLocationTextView.setText(currentPath.isEmpty()
+                    ? getString(R.string.select_a_folder_to_browse) : currentPath);
+        }
+        List<FileInfo> visibleFiles = files;
+        if (!searchQuery.trim().isEmpty()) {
+            String query = searchQuery.trim().toLowerCase(Locale.ROOT);
+            visibleFiles = new ArrayList<>();
+            for (FileInfo file : files) {
+                if (file.getDisplayName().toLowerCase(Locale.ROOT).contains(query)) visibleFiles.add(file);
+            }
+        }
+        recyclerView.setAdapter(new FileInfoAdapter(visibleFiles));
+        emptyTextView.setText(searchQuery.trim().isEmpty()
+                ? R.string.no_items_to_display : R.string.no_matching_files);
+        emptyTextView.setVisibility(visibleFiles.isEmpty() ? View.VISIBLE : View.GONE);
         updateActionBarTitle();
+    }
+
+    @Override
+    protected void onFileSearchChanged(String query) {
+        searchQuery = query;
+        refreshContent();
     }
 
     @Override
@@ -163,7 +185,7 @@ public class ContainerFileManagerFragment extends BaseFileManagerFragment<FileIn
         refreshContent();
     }
 
-    private void createDesktopShortcut(FileInfo file) {
+    protected void createDesktopShortcut(FileInfo file) {
         Context context = getContext();
         if (context == null || container == null) return;
 
@@ -277,7 +299,7 @@ public class ContainerFileManagerFragment extends BaseFileManagerFragment<FileIn
         updateActionBarTitle();
     }
 
-    private String getCurrentWorkingPath() {
+    protected String getCurrentWorkingPath() {
         if (folderStack.isEmpty()) return "";
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < folderStack.size(); i++) {
@@ -286,6 +308,10 @@ public class ContainerFileManagerFragment extends BaseFileManagerFragment<FileIn
         }
         if (folderStack.size() == 1) sb.append("\\");
         return sb.toString();
+    }
+
+    protected void onFileClicked(FileInfo file) {
+        openFile(file);
     }
 
     private void updateActionBarTitle() {
@@ -404,8 +430,11 @@ public class ContainerFileManagerFragment extends BaseFileManagerFragment<FileIn
                 holder.imageView.setImageResource((Integer) getIconForFile(item));
             }
 
-            holder.imageView.setOnClickListener(v -> openFile(item));
-            holder.runButton.setOnClickListener(v -> openFile(item));
+            holder.itemView.setOnClickListener(v -> ContainerFileManagerFragment.this.onFileClicked(item));
+            holder.imageView.setOnClickListener(v -> onFileClicked(item));
+            holder.runButton.setOnClickListener(v -> onFileClicked(item));
+            holder.title.setOnClickListener(v -> onFileClicked(item));
+            holder.subtitle.setOnClickListener(v -> onFileClicked(item));
             holder.menuButton.setOnClickListener(v -> showListItemMenu(v, item));
         }
 

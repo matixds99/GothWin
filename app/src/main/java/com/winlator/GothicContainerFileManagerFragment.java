@@ -17,7 +17,6 @@ import java.util.Locale;
 /** File manager variant that creates and immediately launches Gothic's direct-EXE shortcut. */
 public class GothicContainerFileManagerFragment extends ContainerFileManagerFragment {
     private String selectedExecutablePath;
-    private boolean instructionShown;
 
     public GothicContainerFileManagerFragment() {
         super();
@@ -32,11 +31,17 @@ public class GothicContainerFileManagerFragment extends ContainerFileManagerFrag
     }
 
     @Override
-    public void onResume() {
-        super.onResume();
-        if (!instructionShown && isAdded() && getContext() != null) {
-            instructionShown = true;
-            Toast.makeText(requireContext(), "Utwórz skrót do gry, wybierając plik .exe", Toast.LENGTH_LONG).show();
+    protected boolean isExecutablePicker() {
+        return true;
+    }
+
+    @Override
+    protected void onFileClicked(FileInfo file) {
+        if (file.type == FileInfo.Type.FILE
+                && file.name.toLowerCase(Locale.ROOT).endsWith(".exe")) {
+            createDesktopShortcut(file);
+        } else {
+            super.onFileClicked(file);
         }
     }
 

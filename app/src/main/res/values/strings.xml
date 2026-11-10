@@ -9,6 +9,11 @@
     <string name="containers">Containers</string>
     <string name="input_controls">Input Controls</string>
     <string name="no_items_to_display">No items to display</string>
+    <string name="choose_game_executable">Choose game executable</string>
+    <string name="choose_game_executable_description">Browse to the game folder, then tap its .exe file to create a shortcut and launch it.</string>
+    <string name="select_a_folder_to_browse">Select a folder to browse</string>
+    <string name="search_this_folder">Search this folder</string>
+    <string name="no_matching_files">No matching files or folders</string>
     <string name="new_container">New Container</string>
     <string name="edit_container">Edit Container</string>
     <string name="creating_container">Creating Container...</string>

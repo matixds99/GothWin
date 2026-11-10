@@ -8,6 +8,7 @@ import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.EditText;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -39,6 +40,8 @@ public abstract class BaseFileManagerFragment<T> extends Fragment {
     protected PreloaderDialog preloaderDialog;
     protected RecyclerView recyclerView;
     protected TextView emptyTextView;
+    protected TextView pickerLocationTextView;
+    protected EditText fileSearchEditText;
     protected FloatingActionButton pasteButton;
     protected ViewStyle viewStyle = ViewStyle.GRID;
     protected boolean viewStyleNeedsUpdate = true;
@@ -76,6 +79,22 @@ public abstract class BaseFileManagerFragment<T> extends Fragment {
         View rootView = inflater.inflate(R.layout.base_file_manager_fragment, container, false);
         recyclerView = rootView.findViewById(R.id.RecyclerView);
         emptyTextView = rootView.findViewById(R.id.TVEmptyText);
+        View pickerHeader = rootView.findViewById(R.id.ExecutablePickerHeader);
+        pickerLocationTextView = rootView.findViewById(R.id.TVPickerLocation);
+        fileSearchEditText = rootView.findViewById(R.id.ETFileSearch);
+        pickerHeader.setVisibility(isExecutablePicker() ? View.VISIBLE : View.GONE);
+        fileSearchEditText.addTextChangedListener(new android.text.TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                onFileSearchChanged(s.toString());
+            }
+
+            @Override
+            public void afterTextChanged(android.text.Editable s) {}
+        });
 
         pasteButton = rootView.findViewById(R.id.BTPaste);
         pasteButton.setOnClickListener((v) -> pasteFiles());
@@ -201,4 +220,10 @@ public abstract class BaseFileManagerFragment<T> extends Fragment {
     }
 
     protected abstract String getHomeTitle();
+
+    protected boolean isExecutablePicker() {
+        return false;
+    }
+
+    protected void onFileSearchChanged(String query) {}
 }
