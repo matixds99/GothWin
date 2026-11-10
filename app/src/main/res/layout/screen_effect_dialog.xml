@@ -118,6 +118,20 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/enable_crt_shader" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="@string/fps_limit" />
+
+            <com.winlator.widget.SeekBar
+                android:id="@+id/SBFpsLimit"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:step="5"
+                app:minValue="0"
+                app:maxValue="120" />
         </LinearLayout>
     </LinearLayout>
 </LinearLayout>

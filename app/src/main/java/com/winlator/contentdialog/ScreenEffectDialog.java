@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashSet;
 
 public class ScreenEffectDialog extends ContentDialog {
+    public static final String PREF_FPS_LIMIT = "fps_limit";
     private final XServerDisplayActivity activity;
     private final SharedPreferences preferences;
     private final Spinner sProfile;
@@ -32,6 +33,7 @@ public class ScreenEffectDialog extends ContentDialog {
     private final SeekBar sbGamma;
     private final CheckBox cbEnableFXAA;
     private final CheckBox cbEnableCRTShader;
+    private final SeekBar sbFpsLimit;
 
     public ScreenEffectDialog(XServerDisplayActivity activity) {
         super(activity, R.layout.screen_effect_dialog);
@@ -53,6 +55,8 @@ public class ScreenEffectDialog extends ContentDialog {
         sbGamma = findViewById(R.id.SBGamma);
         cbEnableFXAA = findViewById(R.id.CBEnableFXAA);
         cbEnableCRTShader = findViewById(R.id.CBEnableCRTShader);
+        sbFpsLimit = findViewById(R.id.SBFpsLimit);
+        sbFpsLimit.setValue(renderer.getFpsLimit());
 
         sbBrightness.setValue(colorEffect.getBrightness() * 100);
         sbContrast.setValue(colorEffect.getContrast() * 100);
@@ -87,6 +91,10 @@ public class ScreenEffectDialog extends ContentDialog {
         });
 
         setOnConfirmCallback(() -> {
+            int fpsLimit = Math.round(sbFpsLimit.getValue());
+            renderer.setFpsLimit(fpsLimit);
+            preferences.edit().putInt(PREF_FPS_LIMIT, fpsLimit).apply();
+
             float brightness = sbBrightness.getValue();
             float contrast = sbContrast.getValue();
             float gamma = sbGamma.getValue();
@@ -125,6 +133,7 @@ public class ScreenEffectDialog extends ContentDialog {
 
         cbEnableFXAA.setChecked(false);
         cbEnableCRTShader.setChecked(false);
+        sbFpsLimit.setValue(0);
     }
 
     private void saveProfile(Spinner sProfile) {

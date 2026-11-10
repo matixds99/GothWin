@@ -40,6 +40,8 @@ import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
 public class GLRenderer implements GLSurfaceView.Renderer, WindowManager.OnWindowModificationListener, Pointer.OnPointerMotionListener {
+    private volatile int fpsLimit = 0;
+    private long lastFrameNanos = 0;
     public final XServerView xServerView;
     private final XServer xServer;
     protected final VertexAttribute quadVertices = new VertexAttribute("position", 2);
@@ -105,8 +107,34 @@ public class GLRenderer implements GLSurfaceView.Renderer, WindowManager.OnWindo
         viewportNeedsUpdate = true;
     }
 
+    public int getFpsLimit() {
+        return fpsLimit;
+    }
+
+    // 0 oznacza brak limitu
+    public void setFpsLimit(int fpsLimit) {
+        this.fpsLimit = Math.max(0, fpsLimit);
+    }
+
+    private void limitFrameRate() {
+        int limit = fpsLimit;
+        if (limit <= 0) return;
+        long frameNanos = 1000000000L / limit;
+        long remaining = lastFrameNanos + frameNanos - System.nanoTime();
+        if (remaining > 0) {
+            try {
+                Thread.sleep(remaining / 1000000L, (int)(remaining % 1000000L));
+            }
+            catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
+        lastFrameNanos = System.nanoTime();
+    }
+
     @Override
     public void onDrawFrame(GL10 gl) {
+        limitFrameRate();
         if (toggleFullscreen) {
             fullscreen = !fullscreen;
             toggleFullscreen = false;

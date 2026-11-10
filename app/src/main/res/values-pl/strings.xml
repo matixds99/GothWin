@@ -31,4 +31,5 @@
     <string name="gothic_editors_save_immediately">Zmiany presetów i profili zapisują się od razu. Naciśnij Zapisz, aby zastosować wybór do Gothic.</string>
     <string name="fps_hud">FPS HUD</string>
     <string name="menu">Menu</string>
+    <string name="fps_limit">Limit klatek (0 = wyłączony)</string>
 </resources>
