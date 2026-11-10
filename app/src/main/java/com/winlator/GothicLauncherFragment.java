@@ -45,6 +45,7 @@ public class GothicLauncherFragment extends Fragment {
     private SharedPreferences preferences;
     private Button btnConfigure;
     private ImageButton btnSettings;
+    private ImageButton btnChangeLocation;
     private Button btnAction;
     private TextView tvGameStatus;
 
@@ -57,12 +58,17 @@ public class GothicLauncherFragment extends Fragment {
 
         btnConfigure = view.findViewById(R.id.btnConfigure);
         btnSettings = view.findViewById(R.id.btnSettings);
+        btnChangeLocation = view.findViewById(R.id.btnChangeLocation);
         btnAction = view.findViewById(R.id.btnAction);
         tvGameStatus = view.findViewById(R.id.tvGameStatus);
 
         btnConfigure.setOnClickListener(v -> createGothicContainer());
         btnSettings.setOnClickListener(v -> {
             if (getActivity() instanceof MainActivity) ((MainActivity)getActivity()).showFragment(new GothicSettingsFragment());
+        });
+        btnChangeLocation.setOnClickListener(v -> {
+            Container container = getGothicContainer();
+            if (container != null) openContainerFileManager(container.id);
         });
         btnAction.setOnClickListener(v -> onMainAction());
         updateUIStates();
@@ -107,6 +113,7 @@ public class GothicLauncherFragment extends Fragment {
         File shortcut = findGameShortcut(container);
         // Zębatka ustawień jest dostępna dopiero, gdy kontener istnieje.
         if (btnSettings != null) btnSettings.setVisibility(container != null ? View.VISIBLE : View.GONE);
+        if (btnChangeLocation != null) btnChangeLocation.setVisibility(container != null ? View.VISIBLE : View.GONE);
         if (container == null) {
             btnConfigure.setText("Konfiguruj");
             btnConfigure.setEnabled(true);
