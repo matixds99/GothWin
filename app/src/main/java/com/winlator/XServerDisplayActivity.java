@@ -377,44 +377,13 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
                 (new TaskManagerDialog(this)).show();
                 drawerLayout.closeDrawers();
                 break;
-            case R.id.menu_item_active_windows:
-                (new ActiveWindowsDialog(this)).show();
-                drawerLayout.closeDrawers();
-                break;
-            case R.id.menu_item_magnifier:
-                if (magnifierView == null) {
-                    final FrameLayout container = findViewById(R.id.FLXServerDisplay);
-                    magnifierView = new MagnifierView(this);
-                    magnifierView.setZoomButtonCallback((value) -> {
-                        renderer.setMagnifierZoom(Mathf.clamp(renderer.getMagnifierZoom() + value, 1.0f, 3.0f));
-                        magnifierView.setZoomValue(renderer.getMagnifierZoom());
-                    });
-                    magnifierView.setZoomValue(renderer.getMagnifierZoom());
-                    magnifierView.setHideButtonCallback(() -> {
-                        container.removeView(magnifierView);
-                        magnifierView = null;
-                    });
-                    container.addView(magnifierView);
-                }
-                drawerLayout.closeDrawers();
-                break;
             case R.id.menu_item_screen_effect:
                 (new ScreenEffectDialog(this)).show();
-                drawerLayout.closeDrawers();
-                break;
-            case R.id.menu_item_pip_mode:
-                PictureInPictureParams pipParams = (new PictureInPictureParams.Builder())
-                    .setAspectRatio(screenInfo.aspectRatio())
-                    .build();
-                enterPictureInPictureMode(pipParams);
                 drawerLayout.closeDrawers();
                 break;
             case R.id.menu_item_logs:
                 debugDialog.show();
                 drawerLayout.closeDrawers();
-                break;
-            case R.id.menu_item_touchpad_help:
-                showTouchpadHelpDialog();
                 break;
             case R.id.menu_item_exit:
                 exit();
