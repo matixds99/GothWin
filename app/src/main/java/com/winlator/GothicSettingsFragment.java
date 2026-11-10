@@ -154,7 +154,7 @@ public class GothicSettingsFragment extends Fragment {
                 getString(R.string.gothic_edit_preset), () -> editBox64Preset(getSelectedBox64PresetId()),
                 getString(R.string.gothic_duplicate_preset), this::duplicateBox64Preset);
 
-        swEsync = addSwitchRow("WINEESYNC", "Synchronizacja Wine przez eventfd",
+        swEsync = addSwitchRow("WINEESYNC", "Zostaw wyłączone. Potrzebne do Union SDK",
             new EnvVars(container.getEnvVars()).get("WINEESYNC").equals("1"));
 
         addSection(getString(R.string.gothic_controls_section));
