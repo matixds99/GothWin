@@ -48,6 +48,16 @@ Dziękuję wszystkim osobom zaangażowanym w te projekty.
 
 ---
 
+## ⚖️ Prawa autorskie i znaki towarowe
+
+GothWin jest projektem nieoficjalnym i niekomercyjnym. Nie jest powiązany z THQ Nordic GmbH ani przez nią wspierany.
+
+**Gothic** oraz związane z nim nazwy, logotypy, grafiki i wizerunki mogą być używane w tym projekcie wyłącznie w celach informacyjnych, w odniesieniu do gry uruchamianej przez użytkownika. Wszelkie prawa do serii Gothic i jej materiałów należą do **THQ Nordic GmbH** oraz ich prawowitych właścicieli.
+
+GothWin nie zawiera plików gry. Do uruchomienia wymagana jest legalnie posiadana kopia Gothica. Na prośbę właściciela praw wskazane materiały zostaną niezwłocznie usunięte.
+
+---
+
 ## 📄 Licencja
 
 GothWin jest pochodną projektu Winlator i zachowuje jego licencję – **GNU Lesser General Public License v2.1**. Pełny tekst znajdziesz w pliku [LICENSE](LICENSE). Licencje wykorzystywanych komponentów firm trzecich pozostają bez zmian.
