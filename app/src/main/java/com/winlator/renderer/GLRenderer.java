@@ -41,7 +41,7 @@ import javax.microedition.khronos.opengles.GL10;
 
 public class GLRenderer implements GLSurfaceView.Renderer, WindowManager.OnWindowModificationListener, Pointer.OnPointerMotionListener {
     private volatile int fpsLimit = 0;
-    private long lastFrameNanos = 0;
+    private long nextFrameNanos = 0;
     public final XServerView xServerView;
     private final XServer xServer;
     protected final VertexAttribute quadVertices = new VertexAttribute("position", 2);
@@ -116,11 +116,19 @@ public class GLRenderer implements GLSurfaceView.Renderer, WindowManager.OnWindo
         this.fpsLimit = Math.max(0, fpsLimit);
     }
 
-    private void limitFrameRate() {
+    /** Wywoływane w wątku klienta X przy każdej klatce gry; wstrzymanie go ogranicza FPS gry. */
+    public void limitFrameRate() {
         int limit = fpsLimit;
-        if (limit <= 0) return;
+        if (limit <= 0) {
+            nextFrameNanos = 0;
+            return;
+        }
+
         long frameNanos = 1000000000L / limit;
-        long remaining = lastFrameNanos + frameNanos - System.nanoTime();
+        long now = System.nanoTime();
+        if (nextFrameNanos == 0 || now - nextFrameNanos > frameNanos) nextFrameNanos = now;
+
+        long remaining = nextFrameNanos - now;
         if (remaining > 0) {
             try {
                 Thread.sleep(remaining / 1000000L, (int)(remaining % 1000000L));
@@ -129,12 +137,11 @@ public class GLRenderer implements GLSurfaceView.Renderer, WindowManager.OnWindo
                 Thread.currentThread().interrupt();
             }
         }
-        lastFrameNanos = System.nanoTime();
+        nextFrameNanos += frameNanos;
     }
 
     @Override
     public void onDrawFrame(GL10 gl) {
-        limitFrameRate();
         if (toggleFullscreen) {
             fullscreen = !fullscreen;
             toggleFullscreen = false;

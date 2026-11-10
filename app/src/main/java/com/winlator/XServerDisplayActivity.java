@@ -240,7 +240,10 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
         xServer.windowManager.addOnWindowModificationListener(new WindowManager.OnWindowModificationListener() {
             @Override
             public void onUpdateWindowContent(Window window) {
-                if (window.id == frameRatingWindowId) frameRating.update();
+                if (window.id == frameRatingWindowId) {
+                    xServerView.getRenderer().limitFrameRate();
+                    if (frameRating != null) frameRating.update();
+                }
             }
 
             @Override
