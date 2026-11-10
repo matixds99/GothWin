@@ -18,6 +18,7 @@ import android.widget.ArrayAdapter;
 import android.widget.CheckBox;
 import android.widget.FrameLayout;
 import android.widget.Spinner;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -377,6 +378,15 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
                 (new TaskManagerDialog(this)).show();
                 drawerLayout.closeDrawers();
                 break;
+            case R.id.menu_item_fps_hud:
+                if (frameRating != null) {
+                    FrameRating.Mode[] modes = FrameRating.Mode.values();
+                    FrameRating.Mode next = modes[(frameRating.getMode().ordinal() + 1) % modes.length];
+                    frameRating.setMode(next);
+                    Toast.makeText(this, getString(R.string.fps_hud) + ": " + next.name(), Toast.LENGTH_SHORT).show();
+                }
+                drawerLayout.closeDrawers();
+                break;
             case R.id.menu_item_screen_effect:
                 (new ScreenEffectDialog(this)).show();
                 drawerLayout.closeDrawers();
@@ -477,7 +487,7 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
         GuestProgramLauncherComponent guestProgramLauncherComponent = new GuestProgramLauncherComponent();
 
         if (container != null) {
-            if (container.getHUDMode() == FrameRating.Mode.FULL.ordinal()) envVars.put("X11_WND_GPU_INFO", "1");
+            envVars.put("X11_WND_GPU_INFO", "1");
 
             String desktopName = shortcut != null || getIntent().hasExtra("exec_path") ? "nogui" : "shell";
             String guestExecutable = "wine explorer /desktop="+desktopName+","+xServer.screenInfo+" "+getWineStartCommand();
@@ -583,7 +593,7 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
         inputControlsView.setVisibility(View.GONE);
         rootView.addView(inputControlsView);
 
-        if (container != null && container.getHUDMode() != FrameRating.Mode.DISABLED.ordinal()) {
+        if (container != null) {
             frameRating = new FrameRating(this);
             frameRating.setMode(FrameRating.Mode.values()[container.getHUDMode()]);
             frameRating.setVisibility(View.GONE);
@@ -1089,10 +1099,8 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
             }
 
             if (frameRatingWindow != null) {
-                if (frameRating.getMode() == FrameRating.Mode.FULL) {
-                    Property gpuInfo = frameRatingWindow.getProperty(Atom._NET_WM_GPU_INFO);
-                    frameRating.setGPUInfo(gpuInfo != null ? new String(gpuInfo.data.array()) : "N/A");
-                }
+                Property gpuInfo = frameRatingWindow.getProperty(Atom._NET_WM_GPU_INFO);
+                frameRating.setGPUInfo(gpuInfo != null ? new String(gpuInfo.data.array()) : "N/A");
                 frameRatingWindowId = frameRatingWindow.id;
                 frameRating.reset();
             }

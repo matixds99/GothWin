@@ -6,6 +6,7 @@
         <item android:icon="@drawable/icon_input_controls" android:id="@+id/menu_item_input_controls" android:title="@string/input_controls" />
         <item android:icon="@drawable/icon_fullscreen" android:id="@+id/menu_item_toggle_fullscreen" android:title="@string/toggle_fullscreen" />
         <item android:icon="@drawable/icon_task_manager" android:id="@+id/menu_item_task_manager" android:title="@string/task_manager" />
+        <item android:icon="@drawable/icon_fps_hud" android:id="@+id/menu_item_fps_hud" android:title="@string/fps_hud" />
         <item android:icon="@drawable/icon_screen_effect" android:id="@+id/menu_item_screen_effect" android:title="@string/screen_effect" />
         <item android:icon="@drawable/icon_debug" android:id="@+id/menu_item_logs" android:title="@string/logs" />
         <item android:icon="@drawable/icon_exit" android:id="@+id/menu_item_exit" android:title="@string/exit" />

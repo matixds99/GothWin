@@ -385,4 +385,6 @@
     <string name="save_mem_on_run_from_steam">Save memory on run from Steam</string>
     <string name="present_mode">Present Mode</string>
 <string name="create_shortcut">Dodaj skrót</string>
+    <string name="fps_hud">FPS HUD</string>
+    <string name="menu">Menu</string>
 </resources>

@@ -77,7 +77,7 @@ public class InputControlsManager {
                 File targetFile = null;
                 for (File file : files) {
                     ControlsProfile targetProfile = loadProfile(context, file);
-                    if (originProfile.id == targetProfile.id && originProfile.getName().equals(targetProfile.getName())) {
+                    if (originProfile.id == targetProfile.id) {
                         targetFile = file;
                         break;
                     }

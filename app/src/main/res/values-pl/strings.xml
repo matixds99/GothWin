@@ -29,4 +29,6 @@
     <string name="gothic_manage_controls">Zarządzaj profilami sterowania</string>
     <string name="gothic_missing_controls">Wybrany profil sterowania nie istnieje lub jest szablonem. Wybierz inny profil.</string>
     <string name="gothic_editors_save_immediately">Zmiany presetów i profili zapisują się od razu. Naciśnij Zapisz, aby zastosować wybór do Gothic.</string>
+    <string name="fps_hud">FPS HUD</string>
+    <string name="menu">Menu</string>
 </resources>
