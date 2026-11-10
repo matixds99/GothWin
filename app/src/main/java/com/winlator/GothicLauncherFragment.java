@@ -48,6 +48,7 @@ public class GothicLauncherFragment extends Fragment {
     private ImageButton btnChangeLocation;
     private Button btnAction;
     private TextView tvGameStatus;
+    private TextView tvResolution;
 
     @Nullable
     @Override
@@ -61,6 +62,7 @@ public class GothicLauncherFragment extends Fragment {
         btnChangeLocation = view.findViewById(R.id.btnChangeLocation);
         btnAction = view.findViewById(R.id.btnAction);
         tvGameStatus = view.findViewById(R.id.tvGameStatus);
+        tvResolution = view.findViewById(R.id.tvResolution);
 
         btnConfigure.setOnClickListener(v -> createGothicContainer());
         btnSettings.setOnClickListener(v -> {
@@ -111,6 +113,9 @@ public class GothicLauncherFragment extends Fragment {
 
         Container container = getGothicContainer();
         File shortcut = findGameShortcut(container);
+        if (tvResolution != null && container != null) {
+            tvResolution.setText(container.getScreenSize().replace("x", " × "));
+        }
         // Zębatka ustawień jest dostępna dopiero, gdy kontener istnieje.
         if (btnSettings != null) btnSettings.setVisibility(container != null ? View.VISIBLE : View.GONE);
         if (btnChangeLocation != null) btnChangeLocation.setVisibility(container != null ? View.VISIBLE : View.GONE);
