@@ -36,12 +36,26 @@ public class GothicContainerFileManagerFragment extends ContainerFileManagerFrag
         return true;
     }
 
+    private static final java.util.List<String> ALLOWED_EXECUTABLES = java.util.Arrays.asList(
+        "gothic.exe", "gothic2.exe", "gothicstarter.exe", "gothicstarter_mod.exe");
+
+    private static boolean isAllowedExecutable(String name) {
+        return ALLOWED_EXECUTABLES.contains(name.toLowerCase(Locale.ROOT));
+    }
+
+    @Override
+    protected boolean isPickerFileVisible(FileInfo file) {
+        MSLink.LinkInfo link = file.getLinkinfo();
+        if (file.type != FileInfo.Type.FILE || (link != null && link.isDirectory)) return true;
+        return isAllowedExecutable(file.name);
+    }
+
     @Override
     protected void onFileClicked(FileInfo file) {
         MSLink.LinkInfo link = file.getLinkinfo();
         if (file.type != FileInfo.Type.FILE || (link != null && link.isDirectory)) {
             super.onFileClicked(file);
-        } else if (file.name.toLowerCase(Locale.ROOT).endsWith(".exe")) {
+        } else if (isAllowedExecutable(file.name)) {
             createDesktopShortcut(file);
         } else {
             Toast.makeText(requireContext(), R.string.picker_select_exe, Toast.LENGTH_SHORT).show();

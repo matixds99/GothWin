@@ -96,7 +96,9 @@ public class ContainerFileManagerFragment extends BaseFileManagerFragment<FileIn
                 folderStack.clear();
                 refreshContent();
             });
-            root.findViewById(R.id.BTPickerNewFolder).setOnClickListener(v -> createFolder());
+            root.findViewById(R.id.BTPickerNewFolder).setVisibility(View.GONE);
+            View pasteButton = root.findViewById(R.id.BTPaste);
+            if (pasteButton != null) pasteButton.setVisibility(View.GONE);
         }
         return root;
     }
@@ -124,13 +126,13 @@ public class ContainerFileManagerFragment extends BaseFileManagerFragment<FileIn
             String currentPath = getCurrentWorkingPath();
             pickerLocationTextView.setText(currentPath.isEmpty()
                     ? getString(R.string.picker_locations) : currentPath);
-            if (getView() != null) {
-                View newFolderButton = getView().findViewById(R.id.BTPickerNewFolder);
-                newFolderButton.setEnabled(!folderStack.isEmpty());
-                newFolderButton.setAlpha(folderStack.isEmpty() ? 0.4f : 1f);
-            }
         }
         List<FileInfo> visibleFiles = files;
+        if (isExecutablePicker()) {
+            visibleFiles = new ArrayList<>();
+            for (FileInfo file : files) if (isPickerFileVisible(file)) visibleFiles.add(file);
+            files = new ArrayList<>(visibleFiles);
+        }
         if (!searchQuery.trim().isEmpty()) {
             String query = searchQuery.trim().toLowerCase(Locale.ROOT);
             visibleFiles = new ArrayList<>();
@@ -143,6 +145,10 @@ public class ContainerFileManagerFragment extends BaseFileManagerFragment<FileIn
                 ? R.string.no_items_to_display : R.string.no_matching_files);
         emptyTextView.setVisibility(visibleFiles.isEmpty() ? View.VISIBLE : View.GONE);
         updateActionBarTitle();
+    }
+
+    protected boolean isPickerFileVisible(FileInfo file) {
+        return true;
     }
 
     @Override
@@ -488,7 +494,8 @@ public class ContainerFileManagerFragment extends BaseFileManagerFragment<FileIn
             holder.runButton.setOnClickListener(v -> onFileClicked(item));
             holder.title.setOnClickListener(v -> onFileClicked(item));
             holder.subtitle.setOnClickListener(v -> onFileClicked(item));
-            holder.menuButton.setOnClickListener(v -> showListItemMenu(v, item));
+            if (isExecutablePicker()) holder.menuButton.setVisibility(View.GONE);
+            else holder.menuButton.setOnClickListener(v -> showListItemMenu(v, item));
         }
 
         @Override

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="picker_title">Menedżer plików</string>
-    <string name="picker_hint">Wybierz plik .exe gry, aby utworzyć skrót i ją uruchomić.</string>
+    <string name="picker_hint">Przejdź do folderu gry i dotknij Gothic.exe, Gothic2.exe, GothicStarter.exe lub GothicStarter_mod.exe – skrót utworzy się od razu.</string>
     <string name="picker_locations">Lokalizacje</string>
     <string name="picker_back">Wstecz</string>
     <string name="picker_item_menu">Opcje pliku</string>

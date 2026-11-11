@@ -15,7 +15,7 @@
     <string name="search_this_folder">Search this folder</string>
     <string name="no_matching_files">No matching files or folders</string>
     <string name="picker_title">File manager</string>
-    <string name="picker_hint">Choose the game’s .exe file to create a shortcut and launch it.</string>
+    <string name="picker_hint">Browse to the game folder and tap Gothic.exe, Gothic2.exe, GothicStarter.exe or GothicStarter_mod.exe to create the shortcut instantly.</string>
     <string name="picker_locations">Locations</string>
     <string name="picker_back">Back</string>
     <string name="picker_item_menu">File options</string>
