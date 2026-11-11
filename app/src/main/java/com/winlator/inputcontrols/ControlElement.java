@@ -96,6 +96,7 @@ public class ControlElement {
     private CubicBezierInterpolator interpolator;
     private Object touchTime;
     private Path[] paths;
+    private boolean radialOpenedByThisTouch;
 
     public ControlElement(InputControlsView inputControlsView) {
         this.inputControlsView = inputControlsView;
@@ -662,11 +663,12 @@ public class ControlElement {
             }
             case RADIAL_MENU: {
                 float startAngle = 0;
-                float cx = boundingBox.centerX();
-                float cy = boundingBox.centerY();
-                float innerRadius = boundingBox.width() * 0.5f + snappingSize * 0.5f;
-                float outerRadius = boundingBox.width() + snappingSize * scale;
-                float radius = boundingBox.width() * 0.5f;
+                RadialMenuGeometry geometry = getRadialGeometry();
+                float cx = geometry.cx;
+                float cy = geometry.cy;
+                float innerRadius = geometry.innerRadius;
+                float outerRadius = geometry.outerRadius;
+                float radius = geometry.buttonRadius;
                 int oldColor = paint.getColor();
 
                 if (paths == null) {
@@ -729,7 +731,8 @@ public class ControlElement {
                             if (textAngle > 90 && textAngle <= 270) textAngle += 180;
                             canvas.rotate(textAngle);
                             String text = getBindingTextAt(j++);
-                            paint.setTextSize(Math.min(getTextSizeForWidth(paint, text, touchAreaRadius * 2), minTextSize));
+                            if (geometry.dense) paint.setTextSize(geometry.denseTextSize());
+                            else paint.setTextSize(Math.min(getTextSizeForWidth(paint, text, touchAreaRadius * 2), minTextSize));
                             paint.setColor(propertyFlags.isSet(FLAG_PRESSED) ? darkColor : lightColor);
                             canvas.drawText(text, 0, -((paint.descent() + paint.ascent()) * 0.5f), paint);
                             canvas.restore();
@@ -739,6 +742,9 @@ public class ControlElement {
                     }
 
                     drawIcon(canvas, cx, cy, boundingBox.width() * 0.4f, boundingBox.width() * 0.4f, 17, false);
+                }
+                else if (iconId > 0) {
+                    drawIcon(canvas, cx, cy, boundingBox.width(), boundingBox.height(), iconId, true);
                 }
                 else {
                     paint.setStyle(Paint.Style.FILL_AND_STROKE);
@@ -766,6 +772,12 @@ public class ControlElement {
         Rect dstRect = new Rect((int)(cx - halfSize), (int)(cy - halfSize), (int)(cx + halfSize), (int)(cy + halfSize));
         canvas.drawBitmap(icon, srcRect, dstRect, paint);
         paint.setColorFilter(null);
+    }
+
+    private RadialMenuGeometry getRadialGeometry() {
+        Rect box = getBoundingBox();
+        return RadialMenuGeometry.compute(box.centerX(), box.centerY(), box.width() * 0.5f, inputControlsView.getSnappingSize(), scale,
+            bindings.length, inputControlsView.getMaxWidth(), inputControlsView.getMaxHeight(), propertyFlags.isSet(FLAG_VISIBLE));
     }
 
     public JSONObject toJSONObject() {
@@ -801,8 +813,7 @@ public class ControlElement {
 
     public boolean containsPoint(float x, float y) {
         if (type == Type.RADIAL_MENU && propertyFlags.isSet(FLAG_VISIBLE)) {
-            float outerRadius = boundingBox.width() + inputControlsView.getSnappingSize() * scale;
-            return Mathf.distance(boundingBox.centerX(), boundingBox.centerY(), x, y) < outerRadius;
+            return getRadialGeometry().containsOpen(x, y);
         }
         else return getBoundingBox().contains((int)(x + 0.5f), (int)(y + 0.5f));
     }
@@ -841,12 +852,19 @@ public class ControlElement {
                 return true;
             }
             else if (type == Type.RADIAL_MENU) {
+                radialOpenedByThisTouch = false;
                 if (propertyFlags.isSet(FLAG_VISIBLE)) {
-                    if (Mathf.distance(boundingBox.centerX(), boundingBox.centerY(), x, y) < (boundingBox.width() * 0.5f)) {
+                    if (getRadialGeometry().isInCenterButton(x, y)) {
                         propertyFlags.unset(FLAG_VISIBLE);
+                        paths = null;
                     }
                 }
-                else propertyFlags.set(FLAG_VISIBLE);
+                else {
+                    propertyFlags.set(FLAG_VISIBLE);
+                    paths = null;
+                    // A big wheel may open away from the button; releasing the opening tap must not pick a slice.
+                    radialOpenedByThisTouch = getRadialGeometry().isShifted(boundingBox.centerX(), boundingBox.centerY());
+                }
                 inputControlsView.invalidate();
                 return true;
             }
@@ -1007,7 +1025,8 @@ public class ControlElement {
                 }
             }
             else if (type == Type.RADIAL_MENU) {
-                if (propertyFlags.isSet(FLAG_VISIBLE)) handleRadialMenuClick(x, y);
+                if (radialOpenedByThisTouch) radialOpenedByThisTouch = false;
+                else if (propertyFlags.isSet(FLAG_VISIBLE)) handleRadialMenuClick(x, y);
                 inputControlsView.invalidate();
             }
             else if (type == Type.RANGE_BUTTON || type == Type.D_PAD || type == Type.STICK || type == Type.TRACKPAD) {
@@ -1034,43 +1053,12 @@ public class ControlElement {
     }
 
     private void handleRadialMenuClick(float x, float y) {
-        int snappingSize = inputControlsView.getSnappingSize();
-        float cx = boundingBox.centerX();
-        float cy = boundingBox.centerY();
-        float innerRadius = boundingBox.width() * 0.5f + snappingSize * 0.5f;
-        float outerRadius = boundingBox.width() + snappingSize * scale;
-        float startAngle = 0;
-        Binding clickedBinding = Binding.NONE;
-
-        for (int i = 0, j = 0; i <= bindings.length; i++) {
-            float t = (float)i / bindings.length;
-            float endAngle = (float)(t * Math.PI * 2 + Math.PI * 1.5f);
-
-            if (i > 0) {
-                float middleAngle = (startAngle + endAngle) * 0.5f;
-                float touchAreaCenter = (innerRadius + outerRadius) * 0.5f;
-                float touchAreaX = (short)(cx + Math.cos(middleAngle) * touchAreaCenter);
-                float touchAreaY = (short)(cy + Math.sin(middleAngle) * touchAreaCenter);
-
-                float lineAx = (float)(cx + Math.cos(startAngle) * touchAreaCenter);
-                float lineAy = (float)(cy + Math.sin(startAngle) * touchAreaCenter);
-                float lineBx = (float)(cx + Math.cos(endAngle) * touchAreaCenter);
-                float lineBy = (float)(cy + Math.sin(endAngle) * touchAreaCenter);
-
-                if (Mathf.distance(touchAreaX, touchAreaY, x, y) <= Mathf.distance(lineAx, lineAy, lineBx, lineBy) * 0.5f &&
-                    Mathf.distance(cx, cy, x, y) > innerRadius &&
-                    Mathf.distance(cx, cy, x, y) <= outerRadius) {
-                    clickedBinding = bindings[j];
-                    break;
-                }
-                j++;
-            }
-
-            startAngle = endAngle;
-        }
+        int slice = getRadialGeometry().sliceAt(x, y);
+        Binding clickedBinding = slice >= 0 && slice < bindings.length ? bindings[slice] : Binding.NONE;
 
         if (clickedBinding != Binding.NONE) {
             propertyFlags.unset(FLAG_VISIBLE);
+            paths = null;
             final Binding finalBinding = clickedBinding;
             inputControlsView.handleInputEvent(finalBinding, true);
             inputControlsView.postDelayed(() -> inputControlsView.handleInputEvent(finalBinding, false), 30);

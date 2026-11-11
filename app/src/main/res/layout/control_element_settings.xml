@@ -151,7 +151,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 app:minValue="3"
-                app:maxValue="6" />
+                app:maxValue="26" />
         </LinearLayout>
 
         <LinearLayout
