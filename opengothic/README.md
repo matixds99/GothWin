@@ -1,9 +1,12 @@
 # Poprawki OpenGothic (New Balance) – gałąź test
 
-Pliki do podmiany w projekcie `borsuczyna/opengothic-android`:
+Pliki do podmiany 1:1 w projekcie `borsuczyna/opengothic-android` (ta sama ścieżka co tutaj):
 
-| Plik | Gdzie wrzucić | Co naprawia |
-|---|---|---|
-| `common/world/triggers/cscamera.cpp` | podmień 1:1 | czarny ekran w scenie z Xardasem (kamera `EVT_START_CAM`) |
-| `common/world/triggers/cscamera.h` | podmień 1:1 | j.w. |
-| `common/game/rx_opencraft_snippet.cpp` | **wklej** do `gamescript.cpp` (instrukcja w pliku) | stoły alchemiczne, runiczne i inne (`RX_OpenCraft`) |
+| Plik | Co zawiera |
+|---|---|
+| `common/world/triggers/cscamera.cpp` | poprawka czarnego ekranu w scenie z Xardasem (kamera `EVT_START_CAM`) |
+| `common/world/triggers/cscamera.h` | j.w. |
+| `common/game/gamescript.cpp` | Twoja wersja (obsługa NB od Copilota) + `RX_OPENCRAFT`: stoły alchemiczne, runiczne itd. otwierają stare menu z przepisami |
+| `common/world/objects/npc.cpp` | Twoja wersja (zmienne NB postaci, `RX_GETNPCVAR`/`RX_SETNPCVAR`) – bez zmian |
+
+`npc.cpp` wymaga Twojego `npc.h` (pola `newBalanceNpcVars`, `newBalanceGetNpcVar`/`newBalanceSetNpcVar`), którego tu nie ma.
