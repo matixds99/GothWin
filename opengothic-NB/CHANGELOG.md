@@ -12,7 +12,14 @@ Status:
 ### 0. Obsługa skryptów New Balance (Copilot, przed tym logiem) – ✅
 - **Pliki:** `common/game/gamescript.cpp`, `common/world/objects/npc.cpp`
 - **Co:** zastępniki funkcji `RX_*` z pluginu Union (zmienne NB postaci, maski, teksty, losowanie, wywołania zwrotne, cykl `RX_Main_CycleTrigger` co sekundę). Dzięki nim działają teksty i ticki.
-- **AI potworów (`npc.cpp`):** zmienne NB postaci (`RX_GETNPCVAR`/`RX_SETNPCVAR`, zapisywane w save'ach) naprawiły AI potworów. Wilki, gobliny i inne potwory znów atakują bohatera.
+- **Zmienne NB postaci (`npc.cpp`):** `RX_GETNPCVAR`/`RX_SETNPCVAR`, zapisywane też w save'ach.
+
+### 0a. AI potworów – potwory nie atakowały – ✅
+- **Plik:** `common/world/objects/npc.cpp`
+- **Objaw:** wilki, gobliny i inne potwory nie reagowały na bohatera i nie atakowały.
+- **Przyczyna:** skrypt NB `ZS_MM_AllScheduler` robi `AI_RemoveWeapon` + `AI_StartState`. Potwory nie mają animacji chowania broni (wilk w trybie pięści, goblin z pałką), więc `AI_RemoveWeapon` wisiał w kolejce AI w nieskończoność i blokował wszystko po nim. Potwór nie dostawał stanu ani percepcji (`percEnemy=0`), więc `PERC_ASSESSENEMY` → `B_MM_AssessEnemy` nigdy się nie uruchamiało.
+- **Poprawka:** u potworów `AI_RemoveWeapon` chowa broń od razu, bez animacji (tak jak `drawWeaponFist` wyciąga ją bez animacji). Kolejka się odblokowuje, a atak dalej idzie przez skrypty NB. Dzięki temu działają wyjątki z NB: przywołańcy i drużyna nie atakują bohatera, potwory z questów czekają na swój etap, wilki najpierw warczą, owce uciekają.
+- **Diagnostyka:** w logu są linie `NB ai: ...` (stan, kolejka, percepcje potwora przy bohaterze). Można je wyłączyć przez `NB_AI_TRACE = false`.
 
 ### 1. Czarny ekran w scenie z Xardasem – ✅ (11.11.2026)
 - **Pliki:** `common/world/triggers/cscamera.cpp`, `common/world/triggers/cscamera.h`
