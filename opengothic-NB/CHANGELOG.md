@@ -12,6 +12,7 @@ Status:
 ### 0. Obsługa skryptów New Balance (Copilot, przed tym logiem) – ✅
 - **Pliki:** `common/game/gamescript.cpp`, `common/world/objects/npc.cpp`
 - **Co:** zastępniki funkcji `RX_*` z pluginu Union (zmienne NB postaci, maski, teksty, losowanie, wywołania zwrotne, cykl `RX_Main_CycleTrigger` co sekundę). Dzięki nim działają teksty i ticki.
+- **AI potworów (`npc.cpp`):** zmienne NB postaci (`RX_GETNPCVAR`/`RX_SETNPCVAR`, zapisywane w save'ach) naprawiły AI potworów. Wilki, gobliny i inne potwory znów atakują bohatera.
 
 ### 1. Czarny ekran w scenie z Xardasem – ✅ (11.11.2026)
 - **Pliki:** `common/world/triggers/cscamera.cpp`, `common/world/triggers/cscamera.h`
