@@ -15,6 +15,7 @@ import com.winlator.XServerDisplayActivity;
 import com.winlator.core.AppUtils;
 import com.winlator.core.KeyValueSet;
 import com.winlator.renderer.GLRenderer;
+import com.winlator.renderer.FrameGenEffect;
 import com.winlator.renderer.effects.CRTEffect;
 import com.winlator.renderer.effects.ColorEffect;
 import com.winlator.renderer.effects.FXAAEffect;
@@ -27,6 +28,8 @@ public class ScreenEffectDialog extends ContentDialog {
     public static final String PREF_FPS_LIMIT = "fps_limit";
     // Domyślny limit 60 FPS: mniej pracy dla CPU (tłumaczenie x86 → ARM) i niższa temperatura
     public static final int DEFAULT_FPS_LIMIT = 60;
+    public static final String PREF_FRAME_GEN_ENABLED = "frame_gen_enabled";
+    public static final String PREF_FRAME_GEN_TYPE = "frame_gen_type";
     private final XServerDisplayActivity activity;
     private final SharedPreferences preferences;
     private final Spinner sProfile;
@@ -36,6 +39,8 @@ public class ScreenEffectDialog extends ContentDialog {
     private final CheckBox cbEnableFXAA;
     private final CheckBox cbEnableCRTShader;
     private final SeekBar sbFpsLimit;
+    private final CheckBox cbEnableFrameGen;
+    private final Spinner sFrameGenType;
 
     public ScreenEffectDialog(XServerDisplayActivity activity) {
         super(activity, R.layout.screen_effect_dialog);
@@ -59,6 +64,15 @@ public class ScreenEffectDialog extends ContentDialog {
         cbEnableCRTShader = findViewById(R.id.CBEnableCRTShader);
         sbFpsLimit = findViewById(R.id.SBFpsLimit);
         sbFpsLimit.setValue(renderer.getFpsLimit());
+
+        cbEnableFrameGen = findViewById(R.id.CBEnableFrameGen);
+        sFrameGenType = findViewById(R.id.SFrameGenType);
+        sFrameGenType.setAdapter(new ArrayAdapter<>(activity, android.R.layout.simple_spinner_dropdown_item,
+            new String[]{activity.getString(R.string.frame_gen_blend), activity.getString(R.string.frame_gen_adaptive)}));
+        final FrameGenEffect currentFrameGen = renderer.effectComposer.getFrameGen();
+        cbEnableFrameGen.setChecked(currentFrameGen != null);
+        sFrameGenType.setSelection(currentFrameGen != null ? currentFrameGen.getType()
+            : preferences.getInt(PREF_FRAME_GEN_TYPE, FrameGenEffect.TYPE_BLEND));
 
         sbBrightness.setValue(colorEffect.getBrightness() * 100);
         sbContrast.setValue(colorEffect.getContrast() * 100);
@@ -96,6 +110,11 @@ public class ScreenEffectDialog extends ContentDialog {
             int fpsLimit = Math.round(sbFpsLimit.getValue());
             renderer.setFpsLimit(fpsLimit);
             preferences.edit().putInt(PREF_FPS_LIMIT, fpsLimit).apply();
+
+            boolean frameGenEnabled = cbEnableFrameGen.isChecked();
+            int frameGenType = sFrameGenType.getSelectedItemPosition();
+            preferences.edit().putBoolean(PREF_FRAME_GEN_ENABLED, frameGenEnabled).putInt(PREF_FRAME_GEN_TYPE, frameGenType).apply();
+            applyFrameGen(renderer, frameGenEnabled, frameGenType);
 
             float brightness = sbBrightness.getValue();
             float contrast = sbContrast.getValue();
@@ -136,6 +155,16 @@ public class ScreenEffectDialog extends ContentDialog {
         cbEnableFXAA.setChecked(false);
         cbEnableCRTShader.setChecked(false);
         sbFpsLimit.setValue(0);
+        cbEnableFrameGen.setChecked(false);
+    }
+
+    public static void applyFrameGen(GLRenderer renderer, boolean enabled, int type) {
+        FrameGenEffect current = renderer.effectComposer.getFrameGen();
+        if (!enabled) {
+            if (current != null) renderer.effectComposer.setFrameGen(null);
+        }
+        else if (current == null) renderer.effectComposer.setFrameGen(new FrameGenEffect(renderer, type));
+        else current.setType(type);
     }
 
     private void saveProfile(Spinner sProfile) {

@@ -37,4 +37,8 @@
     <string name="hud_show_ram">Pokaż RAM</string>
     <string name="hud_show_cpu">Pokaż CPU</string>
     <string name="hud_show_battery">Pokaż baterię (poziom, temperatura)</string>
+    <string name="frame_generation">Generowanie klatek</string>
+    <string name="enable_frame_generation">Włącz generowanie klatek (x2)</string>
+    <string name="frame_gen_blend">Mieszanie (płynne)</string>
+    <string name="frame_gen_adaptive">Adaptacyjne (mniej duchów)</string>
 </resources>

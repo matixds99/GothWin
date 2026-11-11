@@ -12,6 +12,7 @@ public class EffectComposer {
     private RenderTarget readBuffer = null;
     private RenderTarget writeBuffer = null;
     private final ArrayList<Effect> effects = new ArrayList<>();
+    private FrameGenEffect frameGen = null;
 
     public EffectComposer(GLRenderer renderer) {
         this.renderer = renderer;
@@ -27,6 +28,15 @@ public class EffectComposer {
         renderer.xServerView.requestRender();
     }
 
+    public synchronized FrameGenEffect getFrameGen() {
+        return frameGen;
+    }
+
+    public synchronized void setFrameGen(FrameGenEffect frameGen) {
+        this.frameGen = frameGen;
+        renderer.xServerView.requestRender();
+    }
+
     public synchronized  <T extends Effect> T getEffect(Class<T> effectClass) {
         for (Effect effect : effects) {
             if (effect.getClass() == effectClass) return (T)effect;
@@ -35,7 +45,7 @@ public class EffectComposer {
     }
 
     public synchronized boolean hasEffects() {
-        return !effects.isEmpty();
+        return !effects.isEmpty() || frameGen != null;
     }
 
     private void swapBuffers() {
@@ -74,11 +84,12 @@ public class EffectComposer {
     public synchronized void render() {
         initBuffers();
 
+        final boolean repeatPass = frameGen != null && frameGen.consumeRepeat();
         GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, hasEffects() ? readBuffer.getFramebuffer() : 0);
         renderer.drawFrame();
 
         for (Effect effect : effects) {
-            boolean renderToScreen = effect == effects.get(effects.size()-1);
+            boolean renderToScreen = frameGen == null && effect == effects.get(effects.size()-1);
 
             GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, !renderToScreen ? writeBuffer.getFramebuffer() : 0);
             GLES20.glViewport(0, 0, renderer.surfaceWidth, renderer.surfaceHeight);
@@ -88,5 +99,7 @@ public class EffectComposer {
             renderEffect(effect);
             swapBuffers();
         }
+
+        if (frameGen != null) frameGen.render(readBuffer.getTextureId(), repeatPass);
     }
 }

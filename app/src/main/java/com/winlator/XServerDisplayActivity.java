@@ -564,6 +564,8 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
         final GLRenderer renderer = xServerView.getRenderer();
         renderer.setCursorVisible(false);
         renderer.setFpsLimit(preferences.getInt(ScreenEffectDialog.PREF_FPS_LIMIT, ScreenEffectDialog.DEFAULT_FPS_LIMIT));
+        ScreenEffectDialog.applyFrameGen(renderer, preferences.getBoolean(ScreenEffectDialog.PREF_FRAME_GEN_ENABLED, false),
+            preferences.getInt(ScreenEffectDialog.PREF_FRAME_GEN_TYPE, 0));
         renderer.setCursorColor(preferences.getInt("cursor_color", 0xffffff));
         renderer.setCursorScale(preferences.getFloat("cursor_scale", 1.0f));
         renderer.setForceWindowsFullscreen(shortcut != null && shortcut.getExtra("forceFullscreen", "0").equals("1"));

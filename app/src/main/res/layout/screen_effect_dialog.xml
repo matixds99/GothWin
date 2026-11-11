@@ -64,6 +64,31 @@
                     android:text="@string/color_adjustment"
                     android:background="?attr/colorSecondarySurface" />
             </FrameLayout>
+
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp">
+
+                <LinearLayout style="@style/FieldSet">
+                    <CheckBox
+                        android:id="@+id/CBEnableFrameGen"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/enable_frame_generation" />
+
+                    <Spinner
+                        style="@style/ComboBox"
+                        android:id="@+id/SFrameGenType"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
+                </LinearLayout>
+
+                <TextView
+                    style="@style/FieldSetLabel"
+                    android:text="@string/frame_generation"
+                    android:background="?attr/colorSecondarySurface" />
+            </FrameLayout>
         </LinearLayout>
 
         <View style="@style/VerticalLine" />
