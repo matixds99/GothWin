@@ -226,7 +226,7 @@ public class GothicLauncherFragment extends Fragment {
             EnvVars envVars = new EnvVars(Container.DEFAULT_ENV_VARS);
             envVars.put("WINEESYNC", "0");
             envVars.put("BOX64_DYNAREC_BIGBLOCK", "2");
-            envVars.put("BOX64_DYNAREC_STRONG_MEM", "0");
+            envVars.put("BOX64_DYNAREC_STRONGMEM", "0");
             data.put("envVars", envVars.toString());
 
             manager.createContainerAsync(data, container -> {

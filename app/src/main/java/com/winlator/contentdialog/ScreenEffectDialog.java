@@ -25,6 +25,8 @@ import java.util.LinkedHashSet;
 
 public class ScreenEffectDialog extends ContentDialog {
     public static final String PREF_FPS_LIMIT = "fps_limit";
+    // Domyślny limit 60 FPS: mniej pracy dla CPU (tłumaczenie x86 → ARM) i niższa temperatura
+    public static final int DEFAULT_FPS_LIMIT = 60;
     private final XServerDisplayActivity activity;
     private final SharedPreferences preferences;
     private final Spinner sProfile;
