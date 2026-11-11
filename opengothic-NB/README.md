@@ -12,3 +12,5 @@ Pliki do podmiany 1:1 w projekcie `borsuczyna/opengothic-android` (ta sama ście
 | `common/world/objects/npc.cpp` | Twoja wersja (zmienne NB postaci, `RX_GETNPCVAR`/`RX_SETNPCVAR`) – bez zmian |
 
 `npc.cpp` wymaga Twojego `npc.h` (pola `newBalanceNpcVars`, `newBalanceGetNpcVar`/`newBalanceSetNpcVar`), którego tu nie ma.
+
+Historia poprawek: [CHANGELOG.md](CHANGELOG.md)
