@@ -34,7 +34,7 @@ Status:
 - **Poprawka:** `RX_OpenCraft` otwiera stare menu dialogowe, które nadal jest w skryptach NB (jak `AI_ProcessInfos(hero)` w Gothicu 2). Przepisy i składniki pochodzą ze skryptów moda.
 - **Do sprawdzenia:** stół runiczny, zwoje, kowadło, piec. Kuchnia, łuki, biżuteria i runy demoniczne mogą nie mieć starego menu.
 
-### 3. Biały ekran wczytywania – 🧪 (12.11.2026, poprawione 2x)
+### 3. Biały ekran wczytywania – ✅ (12.11.2026, poprawione 2x)
 - **Pliki:** `common/gothic.cpp`, `common/mainwindow.cpp`
 - **Objaw:** przy wczytywaniu białe tło, na nim tylko pasek postępu.
 - **Przyczyna:** `LOADING.TGA` w NB to tylko malutka biała zaślepka. Plugin Union losuje prawdziwe obrazki z `/_work/data/textures/_compiled/` według wzoru `LOADING_<ŚWIAT>_<numer>` (sprawdzone w kodzie pluginu). Pierwsza wersja poprawki szukała złego wzoru (`LOADING_<numer>`), dlatego nadal było białe tło.
