@@ -40,6 +40,7 @@ public class ControlElement {
     public static final int FLAG_TOGGLE_SWITCH = 1<<3;
     public static final int FLAG_BOUNDING_BOX_NEEDS_UPDATE = 1<<4;
     public static final int FLAG_MOUSE_MOVE_MODE = 1<<5;
+    public static final int FLAG_FILLED = 1<<6;
     public enum Type {
         BUTTON, D_PAD, RANGE_BUTTON, STICK, TRACKPAD, MIDI_KEY, RADIAL_MENU;
 
@@ -210,6 +211,19 @@ public class ControlElement {
 
     public void setMouseMoveMode(boolean mouseMoveMode) {
         propertyFlags.set(FLAG_MOUSE_MOVE_MODE, mouseMoveMode);
+    }
+
+    public boolean isFilled() {
+        return propertyFlags.isSet(FLAG_FILLED);
+    }
+
+    public void setFilled(boolean filled) {
+        propertyFlags.set(FLAG_FILLED, filled);
+    }
+
+    private int getFillColor() {
+        int dark = getDarkColor();
+        return ColorUtils.setAlphaComponent(dark, (int)(Color.alpha(dark) * 0.6f));
     }
 
     public Binding getBindingAt(int index) {
@@ -442,6 +456,12 @@ public class ControlElement {
 
                 float cx = boundingBox.centerX();
                 float cy = boundingBox.centerY();
+                boolean filledIdle = propertyFlags.isSet(FLAG_FILLED) && !propertyFlags.isSet(FLAG_PRESSED);
+                int shapeColor = paint.getColor();
+                if (filledIdle) {
+                    paint.setStyle(Paint.Style.FILL);
+                    paint.setColor(getFillColor());
+                }
 
                 switch (shape) {
                     case CIRCLE:
@@ -460,6 +480,11 @@ public class ControlElement {
                         canvas.drawRoundRect(boundingBox.left, boundingBox.top, boundingBox.right, boundingBox.bottom, radius, radius, paint);
                         break;
                     }
+                }
+
+                if (filledIdle) {
+                    paint.setStyle(Paint.Style.STROKE);
+                    paint.setColor(shapeColor);
                 }
 
                 if (iconId > 0) {
@@ -635,19 +660,25 @@ public class ControlElement {
                 int cx = boundingBox.centerX();
                 int cy = boundingBox.centerY();
                 int oldColor = paint.getColor();
-                canvas.drawCircle(cx, cy, boundingBox.height() * 0.5f, paint);
+                boolean filledStick = propertyFlags.isSet(FLAG_FILLED);
+                if (filledStick) {
+                    paint.setStyle(Paint.Style.FILL);
+                    paint.setColor(ColorUtils.setAlphaComponent(lightColor, 38));
+                    canvas.drawCircle(cx, cy, boundingBox.height() * 0.5f, paint);
+                }
+                else canvas.drawCircle(cx, cy, boundingBox.height() * 0.5f, paint);
 
                 float thumbstickX = currentPosition != null ? currentPosition.x : cx;
                 float thumbstickY = currentPosition != null ? currentPosition.y : cy;
 
                 short thumbRadius = (short) (snappingSize * 3.5f * scale);
                 paint.setStyle(Paint.Style.FILL);
-                paint.setColor(ColorUtils.setAlphaComponent(lightColor, 50));
+                paint.setColor(ColorUtils.setAlphaComponent(lightColor, filledStick ? 110 : 50));
                 canvas.drawCircle(thumbstickX, thumbstickY, thumbRadius, paint);
 
                 paint.setStyle(Paint.Style.STROKE);
                 paint.setColor(oldColor);
-                canvas.drawCircle(thumbstickX, thumbstickY, thumbRadius + strokeWidth * 0.5f, paint);
+                if (!filledStick) canvas.drawCircle(thumbstickX, thumbstickY, thumbRadius + strokeWidth * 0.5f, paint);
                 break;
             }
             case TRACKPAD: {
@@ -744,6 +775,11 @@ public class ControlElement {
                     drawIcon(canvas, cx, cy, boundingBox.width() * 0.4f, boundingBox.width() * 0.4f, 17, false);
                 }
                 else if (iconId > 0) {
+                    if (propertyFlags.isSet(FLAG_FILLED)) {
+                        paint.setStyle(Paint.Style.FILL);
+                        paint.setColor(getFillColor());
+                        canvas.drawCircle(cx, cy, radius, paint);
+                    }
                     drawIcon(canvas, cx, cy, boundingBox.width(), boundingBox.height(), iconId, true);
                 }
                 else {
@@ -754,7 +790,7 @@ public class ControlElement {
 
                 paint.setStyle(Paint.Style.STROKE);
                 paint.setColor(oldColor);
-                canvas.drawCircle(cx, cy, radius, paint);
+                if (!(propertyFlags.isSet(FLAG_FILLED) && !propertyFlags.isSet(FLAG_VISIBLE) && iconId > 0)) canvas.drawCircle(cx, cy, radius, paint);
                 break;
             }
         }
@@ -803,6 +839,7 @@ public class ControlElement {
                 if (orientation != 0) elementJSONObject.put("orientation", orientation);
             }
             if (propertyFlags.isSet(FLAG_MOUSE_MOVE_MODE)) elementJSONObject.put("mouseMoveMode", true);
+            if (propertyFlags.isSet(FLAG_FILLED)) elementJSONObject.put("filled", true);
 
             return elementJSONObject;
         }
