@@ -50,6 +50,18 @@ public class GothicSettingsFragment extends Fragment {
     public static final String PREF_STRETCH_SCREEN = "gothic_stretch_screen";
     public static final String PREF_CONTROLS_PROFILE = "gothic_controls_profile";
     public static final String EXTRA_CONTROLS_PROFILE = "gothic_controls_profile";
+    private static final String PREF_CONTROLS_DEFAULT_APPLIED = "gothic_controls_default_applied";
+    public static final int DEFAULT_CONTROLS_PROFILE_ID = 1;
+
+    /**
+     * Ustawia domyslnie wbudowany profil sterowania "Gothic" (id 1). Dzieje sie to jednorazowo,
+     * wiec pozniejszy wybor w ustawieniach (takze "bez sterowania") zostaje zachowany.
+     */
+    public static void ensureDefaultControlsProfile(SharedPreferences preferences) {
+        if (preferences.getBoolean(PREF_CONTROLS_DEFAULT_APPLIED, false)) return;
+        preferences.edit().putInt(PREF_CONTROLS_PROFILE, DEFAULT_CONTROLS_PROFILE_ID)
+                .putBoolean(PREF_CONTROLS_DEFAULT_APPLIED, true).apply();
+    }
 
     private static final String[] RESOLUTIONS = {"800x600", "960x540", "1280x720", "1600x900", "1920x1080"};
     private static final String[] AUDIO_IDS = {AudioDrivers.ALSA, AudioDrivers.PULSEAUDIO};
@@ -159,7 +171,8 @@ public class GothicSettingsFragment extends Fragment {
 
         addSection(getString(R.string.gothic_controls_section));
         sControlsProfile = addSpinnerRow(getString(R.string.gothic_controls_profile), new ArrayList<>(), 0);
-        loadControlsProfiles(preferences.getInt(PREF_CONTROLS_PROFILE, 0));
+        ensureDefaultControlsProfile(preferences);
+        loadControlsProfiles(preferences.getInt(PREF_CONTROLS_PROFILE, DEFAULT_CONTROLS_PROFILE_ID));
         addActionRow(getString(R.string.gothic_manage_controls), this::manageControlsProfiles, null, null, null, null);
         addHint(getString(R.string.gothic_editors_save_immediately));
     }
