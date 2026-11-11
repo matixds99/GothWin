@@ -849,6 +849,15 @@ void GameScript::initCommon() {
     bindNb("RX_END",                 [](int32_t) {});
     bindNb("RX_TOGGLEPLAYERCONTROLS",[](int32_t) {});
 
+    // Menu_ReadInt / Menu_WriteInt: the options of NB in Gothic.ini ([AST] bSkipLogo, bCanSaveGame, bOptionHealth...).
+    // They come from Union, without them every option is 0 and nothing is saved.
+    bindNb("MENU_READINT", [](std::string_view sec, std::string_view key) -> int32_t {
+      return Gothic::settingsGetI(sec,key);
+      });
+    bindNb("MENU_WRITEINT", [](std::string_view sec, std::string_view key, int32_t value) {
+      Gothic::settingsSetI(sec,key,value);
+      });
+
     // the tables of crafting (alchemy, runes, scrolls, anvil, ...): NB opens the window of its DLL here.
     // The scripts of NB still have the old menus of dialogs (PC_Health_Start, PC_Circle, PC_..._End),
     // so this does what AI_ProcessInfos(hero) does in Gothic 2: the table opens the menu of the recipes.

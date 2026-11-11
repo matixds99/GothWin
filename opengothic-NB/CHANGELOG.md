@@ -40,7 +40,13 @@ Status:
 - **Przyczyna:** NB nie ma zwykłego `LOADING.TGA`, bo plugin Union losuje obrazki `LOADING_<numer>`. Pusta tekstura rysowała się jako biały prostokąt.
 - **Poprawka:** przy wczytywaniu losowany jest obrazek `LOADING_<numer>` moda. Jeśli go nie ma, brany jest dowolny `LOADING_*`, a gdy nie ma żadnego obrazka, tło jest czarne.
 
+### 4. Opcje moda z Gothic.ini nie działały – 🧪 (12.11.2026)
+- **Plik:** `common/game/gamescript.cpp` (`MENU_READINT`, `MENU_WRITEINT` w bloku NB)
+- **Objaw:** skrypty NB czytają swoje opcje z `Gothic.ini`, sekcja `[AST]` (np. `bSkipLogo`, `bCanSaveGame`, `bOptionHealth`, `bOptionMonsterPower`, `bShowKarma`, ok. 70 opcji). Każda zwracała 0, a zapisy przepadały.
+- **Przyczyna:** `Menu_ReadInt` / `Menu_WriteInt` dostarcza plugin Union, a OpenGothic ich nie miał.
+- **Poprawka:** obie funkcje czytają i zapisują ustawienia OpenGothic (`Gothic.ini`). Opcje, które sprawdzają same skrypty NB, działają po wpisaniu ich do `[AST]`, np. `bSkipLogo=1` pomija intro.
+
 ---
 
 ## Do zrobienia
-- [ ] Menu „Ustawienia gry” jest puste. Ta strona w NB jest budowana przez plugin Union (5 kategorii, ok. 130 opcji). Czeka na decyzję: ukryć ją, zostawić tylko działające opcje albo odbudować całe menu.
+- [ ] Menu „Ustawienia gry” jest puste, bo tę stronę buduje plugin Union (5 kategorii, ok. 130 opcji). Większość opcji steruje funkcjami Uniona, których w OpenGothic nie ma. Plan: ukryć tę stronę albo zostawić na niej tylko opcje czytane przez skrypty (pkt 4).
