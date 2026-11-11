@@ -4,15 +4,11 @@
 
 # GothWin
 
-**GothWin** to zmodyfikowana wersja (fork) środowiska **Winlator**, rozwijana z myślą o personalizacji, lepszej wydajności i dostosowanym interfejsie użytkownika.
+**GothWin** to zmodyfikowana wersja (fork) środowiska **Winlator**
 
 > ⚠️ Projekt jest na wczesnym etapie rozwoju. Powstaje z pomocą AI, aby uzyskać gotowy launcher do gry Gothic.
 
 ---
-
-## 🌟 O projekcie
-
-GothWin umożliwia uruchamianie aplikacji i gier przeznaczonych dla systemu Windows (x86_64) na urządzeniach z Androidem za pomocą Wine oraz Box86/Box64.
 
 ### Kluczowe modyfikacje w GothWin
 * **Zmodyfikowany interfejs:** własny launcher gry, dostosowany wygląd i układ przycisków.
