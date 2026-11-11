@@ -31,7 +31,10 @@ public class AboutDialog extends ContentDialog {
                 "Mesa (Turnip/Zink/VirGL) (<a href=\"https://www.mesa3d.org\">mesa3d.org</a>)",
                 "DXVK (<a href=\"https://github.com/doitsujin/dxvk\">github.com/doitsujin/dxvk</a>)",
                 "VKD3D (<a href=\"https://gitlab.winehq.org/wine/vkd3d\">gitlab.winehq.org/wine/vkd3d</a>)",
-                "CNC DDraw (<a href=\"https://github.com/FunkyFr3sh/cnc-ddraw\">github.com/FunkyFr3sh/cnc-ddraw</a>)"
+                "CNC DDraw (<a href=\"https://github.com/FunkyFr3sh/cnc-ddraw\">github.com/FunkyFr3sh/cnc-ddraw</a>)",
+                "CronyX by REF4IK, MIT License (<a href=\"https://github.com/REF4IK/CronyX-\">github.com/REF4IK/CronyX-</a>)",
+                "LSFG (lsfg-vk), MIT License, Copyright (c) 2025 lsfg-vk (<a href=\"https://github.com/PancakeTAS/lsfg-vk\">github.com/PancakeTAS/lsfg-vk</a>)",
+                "Lossless Scaling is a product of THS / Lossless Scaling developers; Lossless.dll is supplied by the user"
             );
 
             TextView tvCreditsAndThirdPartyApps = findViewById(R.id.TVCreditsAndThirdPartyApps);

@@ -40,6 +40,9 @@ import com.winlator.contentdialog.ContentDialog;
 import com.winlator.inputcontrols.ControlsProfile;
 import com.winlator.inputcontrols.InputControlsManager;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -71,6 +74,8 @@ public class GothicSettingsFragment extends Fragment {
     private Spinner sBox64Preset;
     private Spinner sControlsProfile;
     private Switch swEsync;
+    private TextView tvLosslessStatus;
+    private static final int LOSSLESS_DLL_REQUEST_CODE = 0x4C53;
 
     private ArrayList<Box64Preset> box64Presets;
     private ArrayList<ControlsProfile> controlsProfiles;
@@ -162,6 +167,75 @@ public class GothicSettingsFragment extends Fragment {
         loadControlsProfiles(preferences.getInt(PREF_CONTROLS_PROFILE, 0));
         addActionRow(getString(R.string.gothic_manage_controls), this::manageControlsProfiles, null, null, null, null);
         addHint(getString(R.string.gothic_editors_save_immediately));
+
+        addSection("GENEROWANIE KLATEK");
+        tvLosslessStatus = addHint("");
+        updateLosslessStatus();
+        addActionRow("Importuj Lossless.dll", this::pickLosslessDll, "Usuń", this::removeLosslessDll, null, null);
+        addHint("Plik Lossless.dll pochodzi z Twojej własnej kopii Lossless Scaling (Steam) i nie jest dołączony do aplikacji. Jest zapisywany lokalnie na potrzeby LSFG.");
+    }
+
+    public static File getLosslessDll(Context context) {
+        return new File(context.getFilesDir(), "lsfg/Lossless.dll");
+    }
+
+    private void updateLosslessStatus() {
+        File dll = getLosslessDll(requireContext());
+        tvLosslessStatus.setText(dll.isFile()
+            ? "Lossless.dll: zaimportowano (" + (dll.length() / 1024) + " KB)"
+            : "Lossless.dll: brak");
+    }
+
+    private void pickLosslessDll() {
+        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        intent.setType("*/*");
+        startActivityForResult(intent, LOSSLESS_DLL_REQUEST_CODE);
+    }
+
+    private void removeLosslessDll() {
+        File dll = getLosslessDll(requireContext());
+        if (dll.isFile() && !dll.delete()) {
+            Toast.makeText(requireContext(), "Nie udało się usunąć pliku.", Toast.LENGTH_LONG).show();
+        }
+        updateLosslessStatus();
+    }
+
+    private void importLosslessDll(android.net.Uri uri) {
+        Context context = requireContext();
+        File dll = getLosslessDll(context);
+        File tmp = new File(dll.getParentFile(), "Lossless.dll.tmp");
+        dll.getParentFile().mkdirs();
+        boolean ok = false;
+        try (InputStream in = context.getContentResolver().openInputStream(uri);
+             FileOutputStream out = new FileOutputStream(tmp)) {
+            byte[] buffer = new byte[64 * 1024];
+            int read;
+            long total = 0;
+            while (in != null && (read = in.read(buffer)) > 0) {
+                out.write(buffer, 0, read);
+                total += read;
+            }
+            ok = total > 1024;
+        }
+        catch (Exception e) {}
+        // Sygnatura "MZ" potwierdza, że to plik DLL/EXE
+        if (ok) {
+            try (InputStream check = new java.io.FileInputStream(tmp)) {
+                ok = check.read() == 'M' && check.read() == 'Z';
+            }
+            catch (Exception e) {
+                ok = false;
+            }
+        }
+        if (ok) {
+            dll.delete();
+            ok = tmp.renameTo(dll);
+        }
+        else tmp.delete();
+        Toast.makeText(context, ok ? "Zaimportowano Lossless.dll" : "To nie jest poprawny plik Lossless.dll",
+            Toast.LENGTH_LONG).show();
+        updateLosslessStatus();
     }
 
     private String getSelectedBox64PresetId() {
@@ -260,6 +334,12 @@ public class GothicSettingsFragment extends Fragment {
     @Override
     public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == LOSSLESS_DLL_REQUEST_CODE) {
+            if (resultCode == Activity.RESULT_OK && data != null && data.getData() != null && tvLosslessStatus != null) {
+                importLosslessDll(data.getData());
+            }
+            return;
+        }
         if (requestCode == MainActivity.EDIT_INPUT_CONTROLS_REQUEST_CODE && sControlsProfile != null) {
             int selectedId = resultCode == Activity.RESULT_OK && data != null
                     ? data.getIntExtra("selected_profile_id", 0) : getSelectedControlsProfileId();
@@ -452,7 +532,7 @@ public class GothicSettingsFragment extends Fragment {
         row.addView(button, params);
     }
 
-    private void addHint(String text) {
+    private TextView addHint(String text) {
         TextView hint = new TextView(requireContext());
         hint.setText(text);
         hint.setTextColor(Color.parseColor("#A4AFBC"));
@@ -461,6 +541,7 @@ public class GothicSettingsFragment extends Fragment {
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         params.topMargin = dp(8);
         llSettings.addView(hint, params);
+        return hint;
     }
 
     /** Adapter spinnera w ciemnych kolorach launchera. */
