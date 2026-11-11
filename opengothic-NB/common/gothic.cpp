@@ -529,9 +529,10 @@ void Gothic::startLoad(std::string_view banner,
   implStartLoadSave(banner,true,f);
   }
 
-/// Mods on Union (New Balance) show a random LOADING_<number>.TGA, LOADING.TGA itself may be missing or a blank one.
-/// strict: only LOADING_<digits>; otherwise any LOADING_* (the last resort, if the asked one does not exist)
-static std::string randomLoadingBanner(bool strict) {
+/// Mods on Union (New Balance) show a random LOADING_<WORLD>_<number>.TGA (the files of /_work/data/textures/_compiled/),
+/// their LOADING.TGA is only a tiny white placeholder.
+/// world: the world of the banner (LOADING_NEWWORLD.TGA -> NEWWORLD), empty for LOADING.TGA - then any world
+static std::string randomLoadingBanner(std::string_view world) {
   std::vector<std::string> list;
   std::function<void(const zenkit::VfsNode&)> walk = [&](const zenkit::VfsNode& n) {
     if(n.type()==zenkit::VfsNodeType::DIRECTORY) {
@@ -552,13 +553,16 @@ static std::string randomLoadingBanner(bool strict) {
       base = name.substr(0,name.size()-4);
     else
       return;
-    if(base.size()<=prefix.size())
+    // LOADING_<WORLD>_<number>
+    const size_t us = base.rfind('_');
+    if(us==std::string::npos || us+1>=base.size() || us<prefix.size())
       return;
-    if(strict) {
-      for(size_t i=prefix.size(); i<base.size(); ++i)
-        if(!std::isdigit(static_cast<unsigned char>(base[i])))
-          return;
-      }
+    for(size_t i=us+1; i<base.size(); ++i)
+      if(!std::isdigit(static_cast<unsigned char>(base[i])))
+        return;
+    const std::string_view w = std::string_view(base).substr(prefix.size(), us>prefix.size() ? us-prefix.size() : 0);
+    if(!world.empty() && w!=world)
+      return;
     base += ".TGA";
     if(std::find(list.begin(),list.end(),base)==list.end())
       list.push_back(std::move(base));
@@ -570,25 +574,33 @@ static std::string randomLoadingBanner(bool strict) {
   return list[std::uniform_int_distribution<size_t>(0,list.size()-1)(rng)];
   }
 
+static bool isUsableBanner(const Tempest::Texture2d& t) {
+  // the placeholders of Union mods are a few pixels of white
+  return !t.isEmpty() && t.w()>=64 && t.h()>=64;
+  }
+
 void Gothic::implStartLoadSave(std::string_view banner,
                                bool load,
                                const std::function<std::unique_ptr<GameSession>(std::unique_ptr<GameSession>&&)> f) {
   loadTex = Texture2d();
-  if(load && banner=="LOADING.TGA") {
-    // the random picture of the mod, as Union does it
-    auto alt = randomLoadingBanner(true);
+  if(load && !banner.empty()) {
+    std::string world(banner);
+    for(auto& c:world)
+      c = char(std::toupper(static_cast<unsigned char>(c)));
+    if(world.size()>4 && world.compare(world.size()-4,4,".TGA")==0)
+      world.resize(world.size()-4);
+    world = world.rfind("LOADING_",0)==0 ? world.substr(8) : std::string();
+
+    auto alt = randomLoadingBanner(world);
+    if(alt.empty() && !world.empty())
+      alt = randomLoadingBanner("");
     if(!alt.empty())
       loadTex = Resources::loadTextureUncached(alt);
     }
-  if(loadTex.isEmpty() && !banner.empty())
+  if(!isUsableBanner(loadTex) && !banner.empty())
     loadTex = Resources::loadTextureUncached(banner);
-  if(loadTex.isEmpty() && load) {
-    auto alt = randomLoadingBanner(true);
-    if(alt.empty())
-      alt = randomLoadingBanner(false);
-    if(!alt.empty())
-      loadTex = Resources::loadTextureUncached(alt);
-    }
+  if(!isUsableBanner(loadTex))
+    loadTex = Texture2d();
   loadProgress.store(0);
 
   auto zero=LoadState::Idle;
