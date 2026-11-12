@@ -53,7 +53,8 @@ Status:
 - **Poprawka:** obie funkcje czytają i zapisują ustawienia OpenGothic (`Gothic.ini`). Opcje, które sprawdzają same skrypty NB, działają po wpisaniu ich do `[AST]`, np. `bSkipLogo=1` pomija intro.
 
 ### 5. Puste menu „Ustawienia gry” – 🧪 (12.11.2026)
-- **Pliki:** `common/ui/gamemenu.cpp`, `common/game/nboptions.h` (nowy), `common/game/gamescript.cpp`
+- **Pliki:** `common/ui/gamemenu.cpp`, `common/game/gamescript.cpp`, `common/game/nboptions.h`
+- ⚠️ **`nboptions.h` to NOWY PLIK.** Trzeba go dodać do `common/game/`, obok `gamescript.cpp`. Bez niego build się nie uda.
 - **Objaw:** pierwsza kategoria w ustawieniach („Ustawienia gry”) była pusta.
 - **Przyczyna:** w `MENU.DAT` moda ta strona to pusta rama (`MENU_OPT_CONTROLS_NEWOPTIONS`), wypełnia ją plugin Union. Z kodu pluginu odczytałem pełną listę: ok. 140 opcji, ich klucze w `Gothic.ini`, typy i wartości domyślne.
 - **Poprawka:**
