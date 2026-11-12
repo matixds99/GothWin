@@ -26,6 +26,8 @@
 #include "resources.h"
 #include "graphics/mesh/protomesh.h"
 #include "graphics/mesh/submesh/animmesh.h"
+#include "graphics/effect.h"
+#include "world/objects/pfxemitter.h"
 #include <unordered_set>
 
 using namespace Tempest;
@@ -751,7 +753,39 @@ bool Npc::checkHealth(bool onChange, bool allowUnconscious) {
   return true;
   }
 
+// The blood of the original engine: a hit shows the particles of C_GilValues.blood_emitter of the guild
+// of the victim (in New Balance: BFX_Preset1 = the feathers of a scavenger, BFX_Golem = stones ...),
+// and the death - the same emitter with "_DEAD" (BFX_Preset1_DEAD), if the scripts define one.
+// OpenGothic played only the sound of a hit, so a hit "did not land".
+static void emitBloodFx(World& world, const Npc& victim, const Npc* attacker, bool death) {
+  const auto& gv = world.script().guildVal();
+  const auto  gl = std::min<uint32_t>(victim.guild(),zenkit::IGuildValues::count-1);
+  if(gv.blood_disabled[gl]!=0)
+    return;
+  std::string name = gv.blood_emitter[gl];
+  if(name.empty())
+    return;
+  if(death)
+    name += "_DEAD";
+  if(Gothic::inst().loadParticleFx(name,true)==nullptr)
+    return;
+
+  Tempest::Vec3 p = victim.centerPosition();
+  if(attacker!=nullptr && attacker!=&victim)
+    p += (attacker->centerPosition()-p)*0.3f;
+  Tempest::Matrix4x4 pos;
+  pos.identity();
+  pos.translate(p);
+
+  Effect e(PfxEmitter(world,name),"");
+  e.setObjMatrix(pos);
+  e.setActive(true);
+  world.runEffect(std::move(e));
+  }
+
 void Npc::onNoHealth(bool death, HitSound sndMask) {
+  if(death)
+    emitBloodFx(owner,*this,lastHit,true);
   invent.switchActiveWeapon(*this,Item::NSLOT);
   // CoM: in some scenes the hero keeps the weapon when he falls unconscious
   if(death || !owner.script().dmaDropUnconscious(*this))
@@ -2395,8 +2429,11 @@ void Npc::takeDamage(Npc& other, const Bullet* b, const CollideMask bMask, int32
   hitResult = DamageCalculator::damageValue(other,*this,b,isSpell,dmg,bMask);
   owner.script().dmaDamageEnd(*this,dmaDamage);
   dontKill = dmaDamage.dontKill;
-  if(!isSpell && !isDown() && hitResult.hasHit)
+  if(!isSpell && !isDown() && hitResult.hasHit) {
     owner.addWeaponHitEffect(other,b,*this).play();
+    if(hitResult.value>0)
+      emitBloodFx(owner,*this,&other,false);
+    }
 
   if(isDown()) {
     onNoHealth(dontKill,HS_NoSound);

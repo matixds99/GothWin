@@ -177,6 +177,11 @@ Pliki: przy każdej poprawce jest lista plików. **🆕 NOWY PLIK** oznacza plik
 - **Co wiadomo:** Lord Andre nosi `ITAR_PAL_H_NPC` (model `Armor_Pal_H.asc`), Lothar zbroję paladyna `Armor_Pal_M.asc`. Pancerz straży (`WACHE_ARMOR_V2.asc`) działa. W logu nie ma `unable to load mesh` dla tych zbroi, więc model chyba się wczytuje, tylko się nie rysuje.
 - **Na razie:** do `log.txt` dopisuje się raz na każdy model zbroi linia `armor "…": …` (czy plik jest w archiwach, ile ma części skórowanych, tekstur i doczepianych elementów, rozmiar). Na jej podstawie zrobię właściwą poprawkę.
 
+### 17. Trafienia w zwierzęta „nie wchodziły” – brak efektów krwi (pióra ścierwojada itp.) – 🧪 (12.11.2026)
+- **Pliki:** `common/world/objects/npc.cpp`
+- **Przyczyna:** porównanie z nagraniem z Winlatora: w oryginale przy każdym trafieniu ze ścierwojada lecą białe pióra, a przy śmierci jest ich cały wybuch. To krew silnika: cząsteczki `C_GilValues.BLOOD_EMITTER` gildii ofiary (w NB `BFX_Preset1` to pióra ścierwojada, `BFX_Golem` kamienie, `BFX_Skeleton` kości, `BFX_Demon` …) i przy śmierci ta sama nazwa z `_DEAD`. OpenGothic tego w ogóle nie robił: przy trafieniu był tylko dźwięk, więc cios wyglądał, jakby nie trafił.
+- **Poprawka:** przy trafieniu bronią białą lub strzałą, które zadało obrażenia, pojawiają się cząsteczki `BLOOD_EMITTER` gildii ofiary (w punkcie trafienia, między ofiarą a atakującym), a przy śmierci `BLOOD_EMITTER` + `_DEAD`, jeśli skrypty taki efekt mają. `BLOOD_DISABLED` jest respektowane. Działa dla wszystkich istot, nie tylko zwierząt.
+
 ---
 
 ## Do zrobienia
