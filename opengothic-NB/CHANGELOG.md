@@ -135,7 +135,7 @@ Pliki: przy każdej poprawce jest lista plików. **🆕 NOWY PLIK** oznacza plik
   - włącza się przez **Shift+F5** na klawiaturze, przyciskiem w zakładce **„Ognik”** menu modów (na telefonie: Ustawienia → MODS) albo komendą `ognik` w konsoli,
   - po zmianie świata albo wczytaniu gry ognik wraca, jeśli był przywołany, a gdy zgubi się daleko (np. po teleporcie), pojawia się znowu przy bohaterze.
 
-### 12. Opis przedmiotów w ekwipunku: był tylko „Wartość” – ✅ opisy działają (12.11.2026), 🧪 poprawka okienka
+### 12. Opis przedmiotów w ekwipunku: był tylko „Wartość” – ✅ (12.11.2026)
 - **Pliki:** 🆕 **NOWY PLIK** `common/game/nbiteminfo.h` (do folderu `common/game/`, obok `gamescript.cpp`), `common/game/gamescript.cpp`, `common/ui/inventorymenu.cpp`
 - **Przyczyna:** w NB większość broni i pancerzy ma w skrypcie tylko `TEXT[5]` (wartość). Resztę opisu dopisuje plugin Union w chwili pokazania przedmiotu, z pól przedmiotu i tekstów ze stałych skryptu `RX_INV_DESC*`. Bez pluginu zostawała sama „Wartość”.
 - **Poprawka:** kod pluginu przepisany z UNION_ABI.DLL. Wywołuje się przy wybraniu przedmiotu w ekwipunku (`dmaItemInfo`):
