@@ -127,6 +127,14 @@ Pliki: przy każdej poprawce jest lista plików. **🆕 NOWY PLIK** oznacza plik
 - Listę przewija się palcem, a zakładkę zmienia się dotknięciem.
 - **Uwaga:** opisów pozycji nie ma w plikach moda (rysuje je plugin), więc są napisane od nowa i mogą się trochę różnić od oryginału. Wartości są oryginalne, ze skryptów.
 
+### 11. Wędrujący ognik od Vatrasa (L-Shift+F5) – 🧪 (12.11.2026) – mod JS
+- **Pliki:** 🆕 **NOWY MOD** `mods/nb-wisp/` (`manifest.json`, `index.js`), gotowy do instalacji jako `mods/nb-wisp.zip`. Nie trzeba przebudowywać APK.
+- **Przyczyna:** w NB ognika przywołuje plugin Union pod L-Shift+F5 (`RX_QuickPanel_Wisp` tylko ustawia flagę dla pluginu). W skryptach jest tylko sama postać `WISP_DETECTOR` i jej AI: podąża za bohaterem (`ZS_MM_Rtn_Summoned`) i szuka przedmiotów (`B_MM_WispDetect`).
+- **Mod:**
+  - przywołuje albo odsyła ognika (`WISP_DETECTOR`), jeśli bohater ma amulet wędrującego ognika (`ITAM_ADDON_WISPDETECTORNEW` albo `ITAM_ADDON_WISPDETECTOR`),
+  - włącza się przez **Shift+F5** na klawiaturze, przyciskiem w zakładce **„Ognik”** menu modów (na telefonie: Ustawienia → MODS) albo komendą `ognik` w konsoli,
+  - po zmianie świata albo wczytaniu gry ognik wraca, jeśli był przywołany, a gdy zgubi się daleko (np. po teleporcie), pojawia się znowu przy bohaterze.
+
 ---
 
 ## Do zrobienia

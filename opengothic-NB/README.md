@@ -34,6 +34,16 @@ Te pliki trzeba **dodać**, nie podmieniać. Bez nich build się nie uda.
 
 ---
 
+## Mody JS (nie trzeba budować APK)
+
+Mody w JavaScripcie dla systemu modów projektu borsuczyny (`docs/MODS.md`). Instalacja na telefonie: launcher → **Mods** → **Add a mod (.zip)**, potem włącz przełącznik.
+
+| Mod | Plik do zainstalowania | Co robi | Poprawka |
+|---|---|---|---|
+| `mods/nb-wisp` | `mods/nb-wisp.zip` | wędrujący ognik od Vatrasa: Shift+F5, przycisk w zakładce „Ognik” menu modów albo komenda `ognik` | 11 |
+
+---
+
 ## Pliki potrzebne, których tu nie ma
 
 | Plik | Dlaczego |

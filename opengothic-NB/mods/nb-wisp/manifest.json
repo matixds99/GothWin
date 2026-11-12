@@ -1,0 +1,10 @@
+{
+  "id": "nb-wisp",
+  "name": "New Balance: ognik",
+  "version": "1.0.0",
+  "author": "matixds99",
+  "description": "Wędrujący ognik od Vatrasa (Gothic II: New Balance). W oryginale przywołuje go plugin Union pod L-Shift+F5. Tutaj: Shift+F5, przycisk w menu modów (F10 / Ustawienia → MODS) albo komenda 'ognik'.",
+  "main": "index.js",
+  "apiVersion": 1,
+  "game": ["G2"]
+}
