@@ -7,6 +7,8 @@ Status:
 - ✅ sprawdzone w grze
 - 🧪 czeka na test
 
+Pliki: przy każdej poprawce jest lista plików. **🆕 NOWY PLIK** oznacza plik, którego nie ma w projekcie borsuczyny i który trzeba dodać. Pozostałe pliki się podmienia. Pełna lista jest w [README.md](README.md).
+
 ---
 
 ### 0. Obsługa skryptów New Balance (Copilot, przed tym logiem) – ✅
@@ -53,7 +55,7 @@ Status:
 - **Poprawka:** obie funkcje czytają i zapisują ustawienia OpenGothic (`Gothic.ini`). Opcje, które sprawdzają same skrypty NB, działają po wpisaniu ich do `[AST]`, np. `bSkipLogo=1` pomija intro.
 
 ### 5. Puste menu „Ustawienia gry” – ✅ (12.11.2026)
-- **Pliki:** `common/ui/gamemenu.cpp`, `common/game/gamescript.cpp`, `common/game/nboptions.h`
+- **Pliki:** `common/ui/gamemenu.cpp`, `common/game/gamescript.cpp`, `common/game/nboptions.h` 🆕 **NOWY PLIK**
 - ⚠️ **`nboptions.h` to NOWY PLIK.** Trzeba go dodać do `common/game/`, obok `gamescript.cpp`. Bez niego build się nie uda.
 - **Objaw:** pierwsza kategoria w ustawieniach („Ustawienia gry”) była pusta.
 - **Przyczyna:** w `MENU.DAT` moda ta strona to pusta rama (`MENU_OPT_CONTROLS_NEWOPTIONS`), wypełnia ją plugin Union. Z kodu pluginu odczytałem pełną listę: ok. 140 opcji, ich klucze w `Gothic.ini`, typy i wartości domyślne.
@@ -94,7 +96,7 @@ Status:
 - **Poprawka:** jeśli bohater używa obiektu (łóżka), jego animacja i kolejka dialogu zostają bez zmian. Wstaje dopiero normalną animacją łóżka.
 
 ### 8. Statystyki postaci (B): ciemny ekran bez niczego – 🧪 (12.11.2026)
-- **Pliki:** `common/ui/gamemenu.cpp`, `common/ui/gamemenu.h`
+- **Pliki:** `common/ui/gamemenu.cpp`, `common/ui/gamemenu.h` (oba zmienione, nowych plików brak)
 - **Przyczyna:** w NB statystyki to okno pluginu Union z 5 zakładkami. `MENU_STATUS` w `MENU.DAT` moda ma tylko pusty nagłówek, więc OpenGothic rysował tylko przyciemnienie.
 - **Poprawka:** własny ekran statystyk w stylu menu ustawień, w dwóch kolumnach:
   - **Postać:** gildia, poziom, doświadczenie, następny poziom, punkty nauki,
