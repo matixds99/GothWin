@@ -37,6 +37,13 @@
 
 using namespace Tempest;
 
+// PROGRESS.TGA of Gothic II is 512 px wide; mods (New Balance) have HD textures 2x/4x bigger
+static float progressTexScale(const Tempest::Texture2d* loadBox) {
+  if(loadBox==nullptr || Gothic::inst().version().game==1 || loadBox->w()<=512)
+    return 1.f;
+  return float(loadBox->w())/512.f;
+  }
+
 MainWindow::MainWindow(Device& device)
   : Window(CommandLine::inst().isWindowMode() ? Normal : Maximized),device(device),swapchain(device,hwnd()),
     atlas(device),rootMenu(keycodec),inventory(keycodec),
@@ -247,7 +254,12 @@ void MainWindow::paintEvent(PaintEvent& event) {
           int lh = int(h()*0.05);
           drawLoading(p,(w()-lw)/2, int(h()*0.75), lw, lh);
           } else {
-          drawLoading(p,int(w()*0.92)-loadBox->w(), int(h()*0.12), loadBox->w(),loadBox->h());
+          // the bar is made for PROGRESS.TGA of 512 px; a mod with a bigger (HD) texture, as New Balance
+          // with 1024x128, is drawn at the same size, not 2x bigger (see progressTexScale)
+          const float k  = progressTexScale(loadBox);
+          const int   lw = int(float(loadBox->w())/k);
+          const int   lh = int(float(loadBox->h())/k);
+          drawLoading(p,int(w()*0.92)-lw, int(h()*0.12), lw, lh);
           }
         }
       }
@@ -1049,8 +1061,11 @@ void MainWindow::drawProgress(Painter &p, int x, int y, int w, int h, float v) {
   p.setBrush(*loadBox);
   p.drawRect(x,y,w,h, 0,0,loadBox->w(),loadBox->h());
 
-  int paddL = int((float(w)*75.f)/float(loadBox->w()));
-  int paddT = int((float(h)*10.f)/float(loadBox->h()));
+  // the margins of the bar are in the pixels of the original 512 px texture: for an HD texture
+  // of a mod they are scaled with it, else the bar is drawn over the frame
+  const float k = progressTexScale(loadBox);
+  int paddL = int((float(w)*75.f*k)/float(loadBox->w()));
+  int paddT = int((float(h)*10.f*k)/float(loadBox->h()));
 
   if(Gothic::inst().version().game==1) {
     paddL = int((float(w)*30.f)/float(loadBox->w()));
