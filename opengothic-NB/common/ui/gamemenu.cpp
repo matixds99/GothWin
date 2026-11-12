@@ -404,14 +404,10 @@ int32_t GameMenu::numQuests(const QuestLog* ql, QuestStat st) {
 
 /// Returning New Balance: a text of GOTHIC.DAT (RX_MENU_TITLE_STR_...) in the language of the game.
 /// In the main menu there are no scripts of the game yet, then they are read once and the texts kept.
-bool GameMenu::isNbStatus() const {
-  return hItems[0].name=="NB_STATUS_HDR_CHAR";
-  }
+// Returning New Balance: the status screen
+struct NbStatusRow { const char* name; const char* plText; const char* enText; };
 
-void GameMenu::initNbStatus() {
-  const bool pl = Gothic::settingsGetI("GAME","language")==2 || scanPolish();
-  struct Row { const char* name; const char* plText; const char* enText; };
-  static const Row rows[] = {
+static const NbStatusRow nbStatusRows[] = {
     {"NB_STATUS_HDR_CHAR",    "POSTA\xC6",           "CHARACTER"},
     {"MENU_ITEM_PLAYERGUILD", "Gildia",               "Guild"},
     {"MENU_ITEM_LEVEL",       "Poziom",               "Level"},
@@ -441,10 +437,28 @@ void GameMenu::initNbStatus() {
     {"MENU_ITEM_ARMOR_4",     "Magia",                "Magic"},
     };
 
+/// Polish in the code page of the game (windows-1250): the language setting is not always 2 for a Polish game
+static bool nbHasPolishLetters(std::string_view s) {
+  static const unsigned char pl[] = {0xB9,0xE6,0xEA,0xB3,0xF1,0xF3,0x9C,0x9F,0xBF,0xA5,0xC6,0xCA,0xA3,0xD1,0xD3,0x8C,0x8F,0xAF};
+  for(unsigned char c:s)
+    for(auto p:pl)
+      if(c==p)
+        return true;
+  return false;
+  }
+
+static bool nbStatusPolish = false;
+
+bool GameMenu::isNbStatus() const {
+  return hItems[0].name=="NB_STATUS_HDR_CHAR";
+  }
+
+void GameMenu::initNbStatus() {
+  const bool pl = Gothic::settingsGetI("GAME","language")==2 || scanPolish() || nbStatusPolish;
   for(auto& i:hItems)
     i = Item();
   size_t n = 0;
-  for(auto& r:rows) {
+  for(auto& r:nbStatusRows) {
     if(n>=zenkit::IMenu::item_count)
       break;
     auto h = std::make_shared<zenkit::IMenuItem>();
@@ -470,7 +484,7 @@ void GameMenu::paintNbStatus(Painter& p) {
   const Rect panel(int(float(W)*0.04f),int(float(H)*0.06f),int(float(W)*0.92f),int(float(H)*0.88f));
   frame(p,panel,1,PanelLine,PanelFill);
 
-  const bool pl = Gothic::settingsGetI("GAME","language")==2 || scanPolish();
+  const bool pl = Gothic::settingsGetI("GAME","language")==2 || scanPolish() || nbStatusPolish;
   auto fTitle = fontOf(true, int(float(H)*0.060f),Cream);
   auto fHead  = fontOf(false,int(float(H)*0.030f),Gold);
   auto fLabel = fontOf(true, int(float(H)*0.036f),Cream);
@@ -2499,6 +2513,15 @@ void GameMenu::setPlayer(const Npc &pl) {
       };
     set("NB_STATUS_INT", intVal("ATR_INTELLECT"));
     set("NB_STATUS_STAMINA", intVal("ATR_STAMINA"), intVal("ATR_STAMINA_MAX")*10); // NB keeps it x10: ATR_STAMINA = ATR_STAMINA_MAX*10
+    // the language from the texts of the game itself (the names of the talents, the guilds)
+    if(!nbStatusPolish && (nbHasPolishLetters(tal->get_string(1)) || nbHasPolishLetters(tal->get_string(2)) ||
+                           nbHasPolishLetters(gilds->get_string(uint16_t(pl.guild()))))) {
+      nbStatusPolish = true;
+      for(auto& r:nbStatusRows)
+        for(auto& it:hItems)
+          if(it.name==r.name && it.handle!=nullptr)
+            it.handle->text[1] = r.plText;
+      }
     for(uint16_t i=1; i<=4; ++i) {
       auto& title = tal->get_string(i);
       for(auto& it:hItems)

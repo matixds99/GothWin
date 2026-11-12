@@ -107,9 +107,10 @@ Pliki: przy każdej poprawce jest lista plików. **🆕 NOWY PLIK** oznacza plik
   - **Ochrona:** broń sieczna, obuchowa, pociski, ogień, magia,
   - **Czas:** dzień i godzina.
 - **Poprawione po teście:** wytrzymałość pokazywała „99/10” (NB trzyma ją ×10, teraz jest „99/100”), sekcja „Czas” przeszła do lewej kolumny, bo przycisk wstecz zasłaniał dzień, a tytuł nie nachodzi już na przycisk pauzy.
+- **Poprawione po teście 2:** ekran czasem był po angielsku („Character”), bo ustawienie języka gry nie zawsze wynosi 2. Teraz język jest rozpoznawany też po polskich literach w tekstach gry (nazwy talentów i gildii).
 - **Jeszcze nie ma:** pozostałych zakładek Uniona (rzemiosło, trudność itd.), można je dodać później.
 
-### 9. Brak komunikatu na ekranie przy nowym wpisie do dziennika – 🧪 (12.11.2026)
+### 9. Brak komunikatu na ekranie przy nowym wpisie do dziennika – ✅ (12.11.2026)
 - **Plik:** `common/game/gamescript.cpp` (blok NB)
 - **Objaw:** wpis trafia do dziennika, ale na ekranie nie pojawia się „Zadanie uzupełnione!”.
 - **Przyczyna:** `B_LogEntry` w NB pokazuje komunikat przez `AI_PrintQuest(tytuł, temat)`, czyli funkcję Uniona.
