@@ -203,5 +203,7 @@ Pliki: przy każdej poprawce jest lista plików. **🆕 NOWY PLIK** oznacza plik
 ---
 
 ## Do zrobienia
+- [ ] Animacje broni NB: plugin zakłada zestawy dla rapiera, szabli, włóczni, halabardy, kosturów, toporów, broni 2H obuchowej, broni „zręcznościowej”, dwóch broni i tarcz (`RX_ApplyProperOverlaysForNpc`, `RX_InitAnimations` – brak w OpenGothic). Kod wyboru znaleziony w UNION_ABI.DLL (ok. 0x1024AE00), do przepisania.
+- [ ] Potwory w walce za często odskakują/krążą (ścierwojad cofa się zamiast atakować). To problem silnika OpenGothic, nie tylko NB – to samo widać w modzie Renovation (goblin). Reguła `FA_ENEMY_PREHIT` (odskok, gdy przeciwnik bierze zamach) jest w OpenGothic sprawdzana przy każdej decyzji potwora – do porównania z oryginałem.
 - [ ] Walka kilku postaci z jednym celem: cel „głupieje” (krąży, nie atakuje) – do zbadania (nagranie z obozu bandytów, Brago)
 - [ ] `EXT_PutInSlot` / `ActivateZSSlot`: mieszek i torba na bohaterze (opcje z poprawki 5)
