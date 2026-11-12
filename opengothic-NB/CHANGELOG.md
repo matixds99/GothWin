@@ -63,3 +63,4 @@ Status:
 ---
 
 ## Do zrobienia
+- [ ] (na razie nic – dopisuję nowe zgłoszenia)
