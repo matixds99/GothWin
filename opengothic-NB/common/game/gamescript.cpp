@@ -864,6 +864,22 @@ void GameScript::initCommon() {
     bindNb("RX_PRINTDEBUGINFOFUNC",  [](std::string_view)     {});
     bindNb("RX_PRINTPERF",           [](std::string_view, int32_t) {});
     bindNb("RX_PRINTP",              [](std::string_view msg) { Gothic::inst().onPrint(std::string(msg).c_str()); });
+    // the messages of NB on the screen (the plugin draws them; bound only if they are externals in GOTHIC.DAT)
+    bindNb("AI_PRINT",               [](std::string_view msg) { Gothic::inst().onPrint(std::string(msg).c_str()); });
+    bindNb("AI_PRINTRED",            [](std::string_view msg) { Gothic::inst().onPrint(std::string(msg).c_str()); });
+    bindNb("AI_PRINTBONUS",          [](std::string_view msg) { Gothic::inst().onPrint(std::string(msg).c_str()); });
+    bindNb("AI_FASTPRINTSKILLCRAFT", [](std::string_view msg) { Gothic::inst().onPrint(std::string(msg).c_str()); });
+    bindNb("AI_NOTICEPRINT",         [](int32_t, int32_t, std::string_view msg) { Gothic::inst().onPrint(std::string(msg).c_str()); });
+    // B_LogEntry: "Zadanie uzupełnione!" + the name of the topic
+    const auto printQuest = [](std::string_view title, std::string_view topic) {
+      Gothic::inst().onPrint(std::string(title).c_str());
+      if(!topic.empty())
+        Gothic::inst().onPrint(std::string(topic).c_str());
+      };
+    bindNb("AI_PRINTQUEST",          printQuest);
+    bindNb("AI_PRINTQUESTCOMPLETE",  printQuest);
+    bindNb("AI_PRINTQUESTFAIL",      printQuest);
+    bindNb("AI_FASTPRINTCLEAR",      []() {});
     bindNb("RX_BEGIN",               [](int32_t) {});
     bindNb("RX_END",                 [](int32_t) {});
     bindNb("RX_TOGGLEPLAYERCONTROLS",[](int32_t) {});

@@ -11,6 +11,8 @@ Pliki: przy każdej poprawce jest lista plików. **🆕 NOWY PLIK** oznacza plik
 
 ---
 
+### ✅ Sprawdzone też w grze (12.11.2026): pulpity z księgami dają inteligencję (5 → 6), stół demonologiczny otwiera menu.
+
 ### 0. Obsługa skryptów New Balance (Copilot, przed tym logiem) – ✅
 - **Pliki:** `common/game/gamescript.cpp`, `common/world/objects/npc.cpp`
 - **Co:** zastępniki funkcji `RX_*` z pluginu Union (zmienne NB postaci, maski, teksty, losowanie, wywołania zwrotne, cykl `RX_Main_CycleTrigger` co sekundę). Dzięki nim działają teksty i ticki.
@@ -81,7 +83,7 @@ Pliki: przy każdej poprawce jest lista plików. **🆕 NOWY PLIK** oznacza plik
   | Mieszek / torba bohatera (`bShowPocket`, `bShowBag`) | `EXT_PutInSlot` / `ActivateZSSlot` | ❌ tych funkcji Uniona jeszcze nie ma |
   - Usunięte ze strony: `AutoAIM` (skrypty same ustawiają go z powrotem na 0) i „Wytrzymałość przy otwartym ekwipunku” (to funkcja ekwipunku Uniona).
 
-### 6. Brak wpisów do dziennika i zdarzeń w świecie (np. kamień runiczny przy wieży Xardasa) – 🧪 (12.11.2026)
+### 6. Brak wpisów do dziennika i zdarzeń w świecie (np. kamień runiczny przy wieży Xardasa) – ✅ (wpis w dzienniku jest) (12.11.2026)
 - **Plik:** `common/game/gamescript.cpp` (pętla NB w `GameScript::tick`)
 - **Objaw:** przy kamieniu runicznym koło wieży Xardasa nie pojawia się wpis „Kamienie runiczne”.
 - **Przyczyna:** ten wpis (i wiele innych zdarzeń w świecie) daje skrypt `B_GetTime`. W NB woła go plugin Union po nazwie, a nie skrypty, więc w OpenGothic nie wołał go nikt. Z kodu pluginu: timer co 1000 ms woła na zmianę `RX_Main_CycleTrigger` i w następnej sekundzie `b_gettime`, a `PerFrame` jest wołany co klatkę.
@@ -90,12 +92,12 @@ Pliki: przy każdej poprawce jest lista plików. **🆕 NOWY PLIK** oznacza plik
   - co sekundę na zmianę `RX_Main_CycleTrigger` / `B_GetTime`. Uwaga: wcześniej (wersja Copilota) `RX_Main_CycleTrigger` szedł co sekundę, teraz co 2 sekundy, tak jak w pluginie,
   - co 5 sekund `B_CheckMenuOption` (odczyt opcji moda).
 
-### 7. Łóżko: po przespaniu bohater nagle stoi, a potem robi animację wychodzenia z łóżka – 🧪 (12.11.2026)
+### 7. Łóżko: po przespaniu bohater nagle stoi, a potem robi animację wychodzenia z łóżka – ✅ (12.11.2026)
 - **Plik:** `common/world/objects/npc.cpp` (`Npc::resetPositionToTA`)
 - **Przyczyna:** sen przewija czas przez `Wld_SetTime`. OpenGothic ustawia wtedy wszystkie postacie według ich planu dnia i przy okazji zatrzymywał animację bohatera, czyli stawiał go na nogi, mimo że ten dalej leżał w łóżku (w menu snu). Gdy zamykałeś menu, łóżko odtwarzało jeszcze animację wstawania.
 - **Poprawka:** jeśli bohater używa obiektu (łóżka), jego animacja i kolejka dialogu zostają bez zmian. Wstaje dopiero normalną animacją łóżka.
 
-### 8. Statystyki postaci (B): ciemny ekran bez niczego – 🧪 (12.11.2026)
+### 8. Statystyki postaci (B): ciemny ekran bez niczego – ✅ (12.11.2026)
 - **Pliki:** `common/ui/gamemenu.cpp`, `common/ui/gamemenu.h` (oba zmienione, nowych plików brak)
 - **Przyczyna:** w NB statystyki to okno pluginu Union z 5 zakładkami. `MENU_STATUS` w `MENU.DAT` moda ma tylko pusty nagłówek, więc OpenGothic rysował tylko przyciemnienie.
 - **Poprawka:** własny ekran statystyk w stylu menu ustawień, w dwóch kolumnach:
@@ -104,10 +106,16 @@ Pliki: przy każdej poprawce jest lista plików. **🆕 NOWY PLIK** oznacza plik
   - **Walka:** broń jednoręczna, dwuręczna, łuk, kusza (nazwy ze skryptów gry),
   - **Ochrona:** broń sieczna, obuchowa, pociski, ogień, magia,
   - **Czas:** dzień i godzina.
+- **Poprawione po teście:** wytrzymałość pokazywała „99/10” (NB trzyma ją ×10, teraz jest „99/100”), sekcja „Czas” przeszła do lewej kolumny, bo przycisk wstecz zasłaniał dzień, a tytuł nie nachodzi już na przycisk pauzy.
 - **Jeszcze nie ma:** pozostałych zakładek Uniona (rzemiosło, trudność itd.), można je dodać później.
+
+### 9. Brak komunikatu na ekranie przy nowym wpisie do dziennika – 🧪 (12.11.2026)
+- **Plik:** `common/game/gamescript.cpp` (blok NB)
+- **Objaw:** wpis trafia do dziennika, ale na ekranie nie pojawia się „Zadanie uzupełnione!”.
+- **Przyczyna:** `B_LogEntry` w NB pokazuje komunikat przez `AI_PrintQuest(tytuł, temat)`, czyli funkcję Uniona.
+- **Poprawka:** `AI_PrintQuest`, `AI_PrintQuestComplete` i `AI_PrintQuestFail` wypisują na ekranie tytuł i nazwę tematu. Dodane są też inne komunikaty Uniona (`AI_Print`, `AI_PrintRed`, `AI_PrintBonus`, `AI_NoticePrint`, `AI_FastPrintSkillCraft`), ale tylko wtedy, gdy w skryptach są to funkcje zewnętrzne. Te, które już działają przez skrypty, zostają bez zmian.
 
 ---
 
 ## Do zrobienia
-- [ ] Pulpit z księgą w wieży Xardasa: tekst się pokazuje, ale nie daje inteligencji. Skrypty pulpitów (`RX_ChangeInt`) nie zależą od Uniona. Do sprawdzenia: czy pojawia się komunikat „Inteligencja + 1”. Inteligencja NB to osobny atrybut, którego zwykłe okno postaci nie pokazuje.
 - [ ] `EXT_PutInSlot` / `ActivateZSSlot`: mieszek i torba na bohaterze (opcje z poprawki 5)

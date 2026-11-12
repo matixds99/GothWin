@@ -425,6 +425,9 @@ void GameMenu::initNbStatus() {
     {"MENU_ITEM_ATTRIBUTE_3", "Mana",                 "Mana"},
     {"MENU_ITEM_ATTRIBUTE_4", "Punkty \xBFycia",      "Hit points"},
     {"NB_STATUS_STAMINA",     "Wytrzyma\xB3o\x9C\xE6","Stamina"},
+    {"NB_STATUS_HDR_TIME",    "CZAS",                 "TIME"},
+    {"MENU_ITEM_DAY",         "Dzie\xF1",             "Day"},
+    {"MENU_ITEM_TIME",        "Godzina",              "Time"},
     {"NB_STATUS_HDR_COMBAT",  "WALKA",                "COMBAT"},
     {"MENU_ITEM_TALENT_1",    "Bro\xF1 jednor\xEA""czna","One-handed"},
     {"MENU_ITEM_TALENT_2",    "Bro\xF1 dwur\xEA""czna", "Two-handed"},
@@ -436,9 +439,6 @@ void GameMenu::initNbStatus() {
     {"MENU_ITEM_ARMOR_2",     "Pociski",              "Missiles"},
     {"MENU_ITEM_ARMOR_3",     "Ogie\xF1",             "Fire"},
     {"MENU_ITEM_ARMOR_4",     "Magia",                "Magic"},
-    {"NB_STATUS_HDR_TIME",    "CZAS",                 "TIME"},
-    {"MENU_ITEM_DAY",         "Dzie\xF1",             "Day"},
-    {"MENU_ITEM_TIME",        "Godzina",              "Time"},
     };
 
   for(auto& i:hItems)
@@ -473,15 +473,16 @@ void GameMenu::paintNbStatus(Painter& p) {
   const bool pl = Gothic::settingsGetI("GAME","language")==2 || scanPolish();
   auto fTitle = fontOf(true, int(float(H)*0.060f),Cream);
   auto fHead  = fontOf(false,int(float(H)*0.030f),Gold);
-  auto fLabel = fontOf(true, int(float(H)*0.040f),Cream);
-  auto fValue = fontOf(true, int(float(H)*0.040f),Gold);
+  auto fLabel = fontOf(true, int(float(H)*0.036f),Cream);
+  auto fValue = fontOf(true, int(float(H)*0.036f),Gold);
 
   const int padX = int(float(panel.w)*0.04f);
-  fTitle.drawText(p,panel.x+padX,panel.y+int(float(panel.h)*0.09f),pl ? "Statystyki postaci" : "Character");
+  // the pause button of the phone is in the upper left corner
+  fTitle.drawText(p,std::max(panel.x+padX,int(float(W)*0.10f)),panel.y+int(float(panel.h)*0.09f),pl ? "Statystyki postaci" : "Character");
 
   const int colW  = (panel.w-3*padX)/2;
   const int top   = panel.y+int(float(panel.h)*0.15f);
-  const int rowH  = std::max(1,int(float(panel.h)*0.058f));
+  const int rowH  = std::max(1,int(float(panel.h)*0.048f));
   int       col   = 0;
   int       y     = top;
   for(auto& it:hItems) {
@@ -2497,7 +2498,7 @@ void GameMenu::setPlayer(const Npc &pl) {
       return (v!=nullptr && v->type()==zenkit::DaedalusDataType::INT) ? v->get_int() : 0;
       };
     set("NB_STATUS_INT", intVal("ATR_INTELLECT"));
-    set("NB_STATUS_STAMINA", intVal("ATR_STAMINA"), intVal("ATR_STAMINA_MAX"));
+    set("NB_STATUS_STAMINA", intVal("ATR_STAMINA"), intVal("ATR_STAMINA_MAX")*10); // NB keeps it x10: ATR_STAMINA = ATR_STAMINA_MAX*10
     for(uint16_t i=1; i<=4; ++i) {
       auto& title = tal->get_string(i);
       for(auto& it:hItems)
