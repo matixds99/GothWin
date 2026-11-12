@@ -116,6 +116,14 @@ struct NbState {
   std::vector<NbCallback>  callbacks;
   zenkit::DaedalusSymbol*  cycle           = nullptr;
   uint64_t                 lastCycleSecond = uint64_t(-1);
+  // the loops that the Union plugin calls by the name (UNION_ABI.DLL):
+  // a timer of 1000 ms: RX_Main_CycleTrigger, the next second b_gettime, and again; PerFrame every frame
+  zenkit::DaedalusSymbol*  getTime         = nullptr;
+  zenkit::DaedalusSymbol*  perFrame        = nullptr;
+  zenkit::DaedalusSymbol*  checkMenu       = nullptr;
+  zenkit::DaedalusSymbol*  frameTime       = nullptr;
+  int                      unionCycle      = 0;
+  uint64_t                 nextMenuCheck   = 0;
   };
 
 std::unordered_map<const GameScript*, NbState> nbStates;
@@ -489,6 +497,16 @@ void GameScript::initCommon() {
     nbState.cycle = vm.find_symbol_by_name("RX_MAIN_CYCLETRIGGER");
     if(nbState.cycle!=nullptr && nbState.cycle->type()!=zenkit::DaedalusDataType::FUNCTION)
       nbState.cycle = nullptr;
+    const auto nbFunc = [this](std::string_view name) -> zenkit::DaedalusSymbol* {
+      auto* f = vm.find_symbol_by_name(name);
+      return f!=nullptr && f->type()==zenkit::DaedalusDataType::FUNCTION && !f->is_external() &&
+             vm.find_parameters_for_function(f).empty() ? f : nullptr;
+      };
+    nbState.getTime   = nbFunc("B_GETTIME");
+    nbState.perFrame  = nbFunc("PERFRAME");
+    nbState.checkMenu = nbFunc("B_CHECKMENUOPTION");
+    if(auto* ft = vm.find_symbol_by_name("RX_FRAMETIME"); ft!=nullptr && ft->type()==zenkit::DaedalusDataType::INT && !ft->is_member())
+      nbState.frameTime = ft;
     std::vector<std::string> nbBound;
     // registers only a declared external whose signature in GOTHIC.DAT is the one of the callback
     const auto bindNb = [this,&nbBound](std::string_view name, auto callback) {
@@ -2394,15 +2412,47 @@ void GameScript::tick(uint64_t dt) {
       }
     }
 
-  // RX_MAIN_CYCLETRIGGER of NB: once a second
-  auto* cycle = nb->second.cycle;
-  if(cycle==nullptr)
-    return;
+  auto& st = nb->second;
+  const auto callNb = [this](zenkit::DaedalusSymbol* fn) {
+    if(fn==nullptr)
+      return;
+    try {
+      if(fn->has_return())
+        (void)vm.call_function<int>(fn); else
+        vm.call_function<void>(fn);
+      }
+    catch(const std::exception& e) {
+      Log::e("NB: ",fn->name()," failed: ",e.what());
+      }
+    };
+
+  // PerFrame: every frame, RX_FrameTime is the time of the frame in ms (the plugin writes it)
+  if(st.perFrame!=nullptr) {
+    if(st.frameTime!=nullptr)
+      st.frameTime->set_int(int32_t(dt));
+    callNb(st.perFrame);
+    }
+
+  // B_CheckMenuOption: the plugin calls it after the menu; here once in 5 s (it only reads the options)
+  if(st.checkMenu!=nullptr && tickCount()>=st.nextMenuCheck) {
+    st.nextMenuCheck = tickCount()+5000;
+    callNb(st.checkMenu);
+    }
+
+  // the timer of 1000 ms of the plugin: RX_Main_CycleTrigger, the next second b_gettime
+  // (b_gettime: the world events, e.g. the quest of the rune stone near the tower of Xardas)
   const uint64_t currentSecond = tickCount()/1000;
-  if(currentSecond==nb->second.lastCycleSecond)
+  if(currentSecond==st.lastCycleSecond)
     return;
-  nb->second.lastCycleSecond = currentSecond;
-  vm.call_function(cycle);
+  st.lastCycleSecond = currentSecond;
+  ++st.unionCycle;
+  if(st.unionCycle==1) {
+    callNb(st.cycle);
+    }
+  if(st.unionCycle>=2) {
+    st.unionCycle = 0;
+    callNb(st.getTime);
+    }
   }
 
 uint32_t GameScript::rand(uint32_t max) {

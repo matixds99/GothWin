@@ -79,7 +79,18 @@ Status:
   | Mieszek / torba bohatera (`bShowPocket`, `bShowBag`) | `EXT_PutInSlot` / `ActivateZSSlot` | ❌ tych funkcji Uniona jeszcze nie ma |
   - Usunięte ze strony: `AutoAIM` (skrypty same ustawiają go z powrotem na 0) i „Wytrzymałość przy otwartym ekwipunku” (to funkcja ekwipunku Uniona).
 
+### 6. Brak wpisów do dziennika i zdarzeń w świecie (np. kamień runiczny przy wieży Xardasa) – 🧪 (12.11.2026)
+- **Plik:** `common/game/gamescript.cpp` (pętla NB w `GameScript::tick`)
+- **Objaw:** przy kamieniu runicznym koło wieży Xardasa nie pojawia się wpis „Kamienie runiczne”.
+- **Przyczyna:** ten wpis (i wiele innych zdarzeń w świecie) daje skrypt `B_GetTime`. W NB woła go plugin Union po nazwie, a nie skrypty, więc w OpenGothic nie wołał go nikto. Z kodu pluginu: timer co 1000 ms woła na zmianę `RX_Main_CycleTrigger` i w następnej sekundzie `b_gettime`, a `PerFrame` jest wołany co klatkę.
+- **Poprawka:** pętla działa tak jak w pluginie:
+  - co klatkę `PerFrame` (z `RX_FrameTime` = czas klatki w ms),
+  - co sekundę na zmianę `RX_Main_CycleTrigger` / `B_GetTime`. Uwaga: wcześniej (wersja Copilota) `RX_Main_CycleTrigger` szedł co sekundę, teraz co 2 sekundy, tak jak w pluginie,
+  - co 5 sekund `B_CheckMenuOption` (odczyt opcji moda).
+
 ---
 
 ## Do zrobienia
+- [ ] Pulpity z księgami: nie dają inteligencji / punktów nauki (czekam na szczegóły: który pulpit, czy pokazuje się tekst księgi)
+- [ ] Łóżka: co dokładnie nie działa?
 - [ ] `EXT_PutInSlot` / `ActivateZSSlot`: mieszek i torba na bohaterze (opcje z poprawki 5)
