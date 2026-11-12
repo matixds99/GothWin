@@ -155,6 +155,7 @@ struct Option {
 
 // the options shown in OpenGothic: the switches that the scripts themselves read (Menu_ReadInt),
 // the rest of the menu of the plugin changes things that only the plugin does
+// (not here: AutoAIM - the scripts set it back to 0 themselves; bShowStaminaWhenInvOpen - the inventory of the plugin)
 inline constexpr Option shown[] = {
   {"SHOW_GODS_KARMA", "AST", "bShowKarma", 0},
   {"SHOW_HUNGER", "AST", "bHFTStatus", 0},
@@ -167,10 +168,8 @@ inline constexpr Option shown[] = {
   {"SHOW_HIDE_NPC_POCKETS", "AST", "bHidePocketsNpc", 0},
   {"SHOW_PAL_UNDEAD_PROC", "AST", "bShowEffectPalUndeadProc", 0},
   {"SHOW_POISON_HERO", "AST", "bShowPoisonHero", 0},
-  {"INV_SHOW_STAMINA", "AST", "bShowStaminaWhenInvOpen", 1},
   {"GAMEPLAY_HARDBOSSES", "AST", "bToggleHardBosses", 2},
   {"GAMEPLAY_SAVES", "AST", "bCanSaveLeg", 2},
-  {"GAMEPLAY_AUTO_AIM", "AST", "AutoAIM", 2},
   {"GAMEPLAY_HERO_REACTIONS", "AST", "bToggleHeroVoice", 2},
   {"BR_SPAWN_MONSTERS", "BELIARS_RAGE", "RX_BeliarRage_Opt_SpawnMonsters", 4},
   {"BR_HARD_CURSE", "BELIARS_RAGE", "RX_BeliarRage_Opt_HardCurse", 4},
