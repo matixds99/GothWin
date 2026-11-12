@@ -135,6 +135,16 @@ Pliki: przy każdej poprawce jest lista plików. **🆕 NOWY PLIK** oznacza plik
   - włącza się przez **Shift+F5** na klawiaturze, przyciskiem w zakładce **„Ognik”** menu modów (na telefonie: Ustawienia → MODS) albo komendą `ognik` w konsoli,
   - po zmianie świata albo wczytaniu gry ognik wraca, jeśli był przywołany, a gdy zgubi się daleko (np. po teleporcie), pojawia się znowu przy bohaterze.
 
+### 12. Opis przedmiotów w ekwipunku: był tylko „Wartość” – 🧪 (12.11.2026)
+- **Pliki:** 🆕 **NOWY PLIK** `common/game/nbiteminfo.h` (do folderu `common/game/`, obok `gamescript.cpp`), `common/game/gamescript.cpp`
+- **Przyczyna:** w NB większość broni i pancerzy ma w skrypcie tylko `TEXT[5]` (wartość). Resztę opisu dopisuje plugin Union w chwili pokazania przedmiotu, z pól przedmiotu i tekstów ze stałych skryptu `RX_INV_DESC*`. Bez pluginu zostawała sama „Wartość”.
+- **Poprawka:** kod pluginu przepisany z UNION_ABI.DLL. Wywołuje się przy wybraniu przedmiotu w ekwipunku (`dmaItemInfo`):
+  - **broń biała:** obrażenia (np. „Obrażenia cięte: 15”), „Długość broni: 40 | Jednoręczna”, wymagania („Wymagana siła: 10” albo „Brak wymagań”), wartość,
+  - **łuki i kusze:** obrażenia, typ („Łuk”/„Kusza”), wymagania (też umiejętność łuku/kuszy), wartość,
+  - **pancerze:** ochrona przed cięciem, obuchem, kłuciem, ogniem | magią, wymagania,
+  - **pierścienie i amulety:** „Ulepszenia: siła + N” (tylko gdy przedmiot daje siłę, zręczność albo manę).
+- **Czego jeszcze nie ma:** dopisków NB zależnych od stanu broni: „Naostrzona”, „Magiczna”, „Przeklęta”, broń orków i jaszczuroludzi, premie z pieczęci, waga.
+
 ---
 
 ## Do zrobienia

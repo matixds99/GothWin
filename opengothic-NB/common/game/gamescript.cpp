@@ -1,5 +1,6 @@
 #include "gamescript.h"
 #include "nboptions.h"
+#include "nbiteminfo.h"
 
 #include <Tempest/Log>
 #include <Tempest/SoundEffect>
@@ -282,6 +283,8 @@ void GameScript::dmaInventoryOpen(Npc& npc) {
   }
 
 void GameScript::dmaItemInfo(const Item& item) {
+  // NB: the description of weapons/armors is made by the Union plugin - see nbiteminfo.h
+  NbItemInfo::apply(vm,const_cast<Item&>(item).handle());
   if(dma!=nullptr)
     dma->eventItemInfo(item);
   }
