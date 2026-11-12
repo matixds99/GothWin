@@ -1946,7 +1946,13 @@ bool Npc::implAttack(uint64_t dt) {
   // NOTE: in original-game, this behaviour seem to be hardcoded
   // test case: wolf jump-back quite often when close, but programmed to jump only if attacked
   // so far promoting wait to jump seem to work best
-  const bool jmp = fghAlgo.isInCloseupRange(*this,*currentTarget,owner.script()) && fghAlgo.isInFocusAngle(*this,*currentTarget);
+  // Fix (NB, Renovation, vanilla G2 alike): the promotion was done for any WAIT/TURN within 0.75 of the
+  // base fight distance - that is the normal melee distance of a wolf or a scavenger, so with
+  // FA_MY_W_FOCUS = {ATTACK, WAIT} every second decision became a jump back: monsters kept backing off
+  // and circling instead of fighting. Now only a WAIT, and only when the bodies really overlap
+  // (closer than half of the base distance), is a step back - the "too close" correction of the script.
+  const float closeD = fghAlgo.baseDistance(*this,*currentTarget,owner.script())*0.5f;
+  const bool  jmp    = fghAlgo.qDistTo(*this,*currentTarget)<=closeD*closeD && fghAlgo.isInFocusAngle(*this,*currentTarget);
 
   // vanilla behavior, required for orcs in G1 orcgraveyard
   if(ws==WeaponState::NoWeapon && isAiQueueEmpty() && canSwitchWeapon()) {
@@ -2109,7 +2115,7 @@ bool Npc::implAttack(uint64_t dt) {
     return true;
     }
 
-  if(act==FightAlgo::MV_JUMPBACK || (act==FightAlgo::MV_WAIT && jmp) || (act==FightAlgo::MV_TURN && jmp)) {
+  if(act==FightAlgo::MV_JUMPBACK || (act==FightAlgo::MV_WAIT && jmp)) {
     if(isSwim()) {
       fghAlgo.consumeAction();
       return true;

@@ -200,10 +200,15 @@ Pliki: przy każdej poprawce jest lista plików. **🆕 NOWY PLIK** oznacza plik
 - **Przyczyna:** NB zmniejsza i powiększa wiele istot przez `Mdl_SetModelScale` (271 razy w skryptach: młody wilk 0,7, inne 0,6–1,5). OpenGothic skalował tylko wygląd i kolizję, a ruch z animacji (długość kroku) zostawał pełny. Wilk zmniejszony do 0,7 przebiegał więc 1/0,7 ≈ 1,4× więcej, niż pozwalają jego nogi, a powiększone istoty (1,1–1,5) były za wolne.
 - **Poprawka:** ruch z animacji (root motion) jest mnożony przez skalę modelu, jak w oryginalnym silniku.
 
+### 21. Potwory w walce ciągle odskakują i krążą zamiast walczyć (wszystkie mody) – 🧪 (12.11.2026)
+- **Pliki:** `common/world/objects/npc.cpp`
+- **Przyczyna:** test w czystej Nocy Kruka na OpenGothic pokazał to samo co w NB i Renovation (młody wilk trzyma dystans), więc to silnik. W OpenGothic jest „łatka”: gdy potwór jest bliżej niż 0,75 podstawowego dystansu walki, każde jego „czekaj” (`MOVE_WAIT`) i „obróć się” (`MOVE_TURN`) zamienia się w odskok do tyłu. Dla wilka i ścierwojada to zwykły dystans walki wręcz, a ich taktyka to {atak, czekaj} – co druga decyzja kończyła się odskokiem, więc potwór cofał się i krążył.
+- **Poprawka:** odskok zamiast „czekaj” tylko wtedy, gdy postacie naprawdę na siebie nachodzą (bliżej niż połowa podstawowego dystansu) – to korekta „za blisko” ze skryptów. „Obróć się” już nie zamienia się w odskok. Odskoki wpisane w taktyki skryptów (np. reakcja na zamach przeciwnika `FA_ENEMY_PREHIT`) działają jak dotąd.
+
 ---
 
 ## Do zrobienia
 - [ ] Animacje broni NB: plugin zakłada zestawy dla rapiera, szabli, włóczni, halabardy, kosturów, toporów, broni 2H obuchowej, broni „zręcznościowej”, dwóch broni i tarcz (`RX_ApplyProperOverlaysForNpc`, `RX_InitAnimations` – brak w OpenGothic). Kod wyboru znaleziony w UNION_ABI.DLL (ok. 0x1024AE00), do przepisania.
-- [ ] Potwory w walce za często odskakują/krążą (ścierwojad cofa się zamiast atakować). To problem silnika OpenGothic, nie tylko NB – to samo widać w modzie Renovation (goblin). Reguła `FA_ENEMY_PREHIT` (odskok, gdy przeciwnik bierze zamach) jest w OpenGothic sprawdzana przy każdej decyzji potwora – do porównania z oryginałem.
+- [x] (poprawka 21) Potwory w walce za często odskakują/krążą (ścierwojad cofa się zamiast atakować). To problem silnika OpenGothic, nie tylko NB – to samo widać w modzie Renovation (goblin). Reguła `FA_ENEMY_PREHIT` (odskok, gdy przeciwnik bierze zamach) jest w OpenGothic sprawdzana przy każdej decyzji potwora – do porównania z oryginałem.
 - [ ] Walka kilku postaci z jednym celem: cel „głupieje” (krąży, nie atakuje) – do zbadania (nagranie z obozu bandytów, Brago)
 - [ ] `EXT_PutInSlot` / `ActivateZSSlot`: mieszek i torba na bohaterze (opcje z poprawki 5)
