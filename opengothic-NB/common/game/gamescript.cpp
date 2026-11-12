@@ -1,4 +1,5 @@
 #include "gamescript.h"
+#include "nboptions.h"
 
 #include <Tempest/Log>
 #include <Tempest/SoundEffect>
@@ -851,6 +852,8 @@ void GameScript::initCommon() {
 
     // Menu_ReadInt / Menu_WriteInt: the options of NB in Gothic.ini ([AST] bSkipLogo, bCanSaveGame, bOptionHealth...).
     // They come from Union, without them every option is 0 and nothing is saved.
+    // the default values of the options of the plugin, as Union writes them into Gothic.ini at the start
+    NbOptions::ensureDefaults();
     bindNb("MENU_READINT", [](std::string_view sec, std::string_view key) -> int32_t {
       return Gothic::settingsGetI(sec,key);
       });

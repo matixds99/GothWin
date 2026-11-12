@@ -52,7 +52,14 @@ Status:
 - **Przyczyna:** `Menu_ReadInt` / `Menu_WriteInt` dostarcza plugin Union, a OpenGothic ich nie miał.
 - **Poprawka:** obie funkcje czytają i zapisują ustawienia OpenGothic (`Gothic.ini`). Opcje, które sprawdzają same skrypty NB, działają po wpisaniu ich do `[AST]`, np. `bSkipLogo=1` pomija intro.
 
+### 5. Puste menu „Ustawienia gry” – 🧪 (12.11.2026)
+- **Pliki:** `common/ui/gamemenu.cpp`, `common/game/nboptions.h` (nowy), `common/game/gamescript.cpp`
+- **Objaw:** pierwsza kategoria w ustawieniach („Ustawienia gry”) była pusta.
+- **Przyczyna:** w `MENU.DAT` moda ta strona to pusta rama (`MENU_OPT_CONTROLS_NEWOPTIONS`), wypełnia ją plugin Union. Z kodu pluginu odczytałem pełną listę: ok. 140 opcji, ich klucze w `Gothic.ini`, typy i wartości domyślne.
+- **Poprawka:**
+  - strona pokazuje 21 przełączników, które czytają same skrypty NB. Wśród nich: pomijanie prologu, zapis w dowolnym miejscu, trudniejsi bossowie, okrzyki bohatera, karma bogów, sakiewka i torba na bohaterze, ekran śmierci oraz opcje Gniewu Beliara. Nazwy i „tak/nie” są brane ze skryptów gry, więc są po polsku. Reszty opcji pluginu nie pokazuję, bo sterują funkcjami, które ma tylko Union.
+  - wartości domyślne opcji NB (sekcje `[AST]` i `[BELIARS_RAGE]`) są dopisywane do `Gothic.ini`, jeśli ich tam nie ma, tak jak robi to silnik z Unionem. Przykład: `bCanSaveLeg=1` (zapis w dowolnym miejscu) i `bToggleHardBosses=1` są domyślnie włączone, a wcześniej skrypty widziały 0.
+
 ---
 
 ## Do zrobienia
-- [ ] Menu „Ustawienia gry” jest puste, bo tę stronę buduje plugin Union (5 kategorii, ok. 130 opcji). Większość opcji steruje funkcjami Uniona, których w OpenGothic nie ma. Plan: ukryć tę stronę albo zostawić na niej tylko opcje czytane przez skrypty (pkt 4).
