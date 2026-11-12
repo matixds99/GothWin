@@ -182,11 +182,13 @@ Pliki: przy każdej poprawce jest lista plików. **🆕 NOWY PLIK** oznacza plik
 - **Przyczyna:** porównanie z nagraniem z Winlatora: w oryginale przy każdym trafieniu ze ścierwojada lecą białe pióra, a przy śmierci jest ich cały wybuch. To krew silnika: cząsteczki `C_GilValues.BLOOD_EMITTER` gildii ofiary (w NB `BFX_Preset1` to pióra ścierwojada, `BFX_Golem` kamienie, `BFX_Skeleton` kości, `BFX_Demon` …) i przy śmierci ta sama nazwa z `_DEAD`. OpenGothic tego w ogóle nie robił: przy trafieniu był tylko dźwięk, więc cios wyglądał, jakby nie trafił.
 - **Poprawka:** przy trafieniu bronią białą lub strzałą, które zadało obrażenia, pojawiają się cząsteczki `BLOOD_EMITTER` gildii ofiary (w punkcie trafienia, między ofiarą a atakującym), a przy śmierci `BLOOD_EMITTER` + `_DEAD`, jeśli skrypty taki efekt mają. `BLOOD_DISABLED` jest respektowane. Działa dla wszystkich istot, nie tylko zwierząt.
 
-### 18. Trudno trafić zwierzęta, walka „zacina się” – 🔍 diagnostyka (12.11.2026)
-- **Pliki:** `common/world/objects/npc.cpp`
+### 18. Trudno trafić zwierzęta, walka „zacina się” – 🧪 poprawka focusu (12.11.2026)
+- **Pliki:** `common/game/playercontrol.cpp` (poprawka), `common/world/objects/npc.cpp` (diagnostyka już usunięta)
 - **Co wiadomo:** w OpenGothic cios bohatera zadaje obrażenia tylko celowi z focusu (`currentTarget`), i to tylko gdy w chwili uderzenia jest w zasięgu `FIGHT_RANGE_BASE(bohater) + FIGHT_RANGE_BASE(cel) + długość broni` i w kącie ±30° przed bohaterem. Zwierzęta w NB dużo skaczą i krążą, więc któryś z tych warunków może odpadać.
-- **Na razie:** przy każdym ciosie bohatera na ekranie pojawia się `[walka] trafienie/pudlo: … d=… zasieg=… kat=…` albo `pudlo: brak celu`. Na tej podstawie poprawię właściwy warunek. Komunikaty zostaną usunięte po poprawce.
-- **Przy okazji znalezione (do poprawy w następnym kroku):** NB przesuwa numery gildii o 5 (`GIL_SEPERATOR_HUM` = 21, wilk = 32, ścierwojad = 27), a OpenGothic ma na sztywno numery z Gothica II (16, 27, 22). Przez to gildie ludzi 16–20 NB (templariusze, nekromanci …) są traktowane jak potwory, nie dostają ludzkich wartości gildii, a listy nieumarłych/smoka wskazują inne istoty.
+- **Wynik diagnostyki (komunikaty `[walka]` na ekranie):** trafienia z bliska liczą się dobrze (d 109–215 przy zasięgu 300, kąt 0–5°), pudła tylko gdy wilk odskoczył (d > 300). Obrażenia 10/5 zgadzają się z NB: plugin liczy `siła + broń − ochrona` przy udanym rzucie na talent, inaczej 1/10 (min. 5); młody wilk ma 20 ochrony. Komunikaty usunięte.
+- **Przyczyna:** porównanie z Winlatorem: gdy wilk obiega bohatera w bok, oryginał trzyma go w focusie, bohater i kamera same się do niego obracają. W OpenGothic focus był co klatkę wyszukiwany od nowa w wąskim stożku przed bohaterem – wilk wychodził z niego, focus znikał, bohater przestawał się obracać i ciosy szły w powietrze (bez przycisku blokady celu).
+- **Poprawka:** w walce wręcz (pięści, broń 1H/2H) focus jest „lepki”: przeciwnik zostaje celem, dopóki żyje, jest bliżej niż 10 m i nie zasłania go ściana. Focus przechodzi na innego wroga tylko, gdy ten jest bliżej. Bohater dalej sam się do niego obraca (jak w oryginale). Przycisk blokady celu działa jak dotąd.
+- **Przy okazji znalezione (do poprawy później):** NB przesuwa numery gildii o 5 (`GIL_SEPERATOR_HUM` = 21, wilk = 32, ścierwojad = 27), a OpenGothic ma na sztywno numery z Gothica II (16, 27, 22). Przez to gildie ludzi 16–20 NB (templariusze, nekromanci …) są traktowane jak potwory, nie dostają ludzkich wartości gildii, a listy nieumarłych/smoka wskazują inne istoty.
 
 ---
 

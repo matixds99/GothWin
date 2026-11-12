@@ -2339,39 +2339,13 @@ bool Npc::setGoToLadder() {
   return false;
   }
 
-// NB diagnostics (temporary): why a swing of the hero did not hit, printed on the screen.
-// The hit of OpenGothic: only currentTarget (the focus), in range BASE(hero)+BASE(target)+weapon and +-30 degrees.
-static void reportSwing(const Npc& pl, const Npc* tg, const FightAlgo& fa, GameScript& sc, const char* res) {
-  if(tg==nullptr) {
-    Gothic::inst().onPrint("[walka] pudlo: brak celu (focus)");
-    return;
-    }
-  const float d   = std::sqrt(fa.qDistTo(pl,*tg));
-  const float r   = fa.prefferedAttackDistance(pl,*tg,sc);
-  const auto  dp  = tg->collosionCenter()-pl.collosionCenter();
-  float       ang = std::abs(std::remainder(pl.rotationRad()-std::atan2(dp.z,dp.x), float(2*M_PI)))*float(180.0/M_PI);
-  string_frm  msg("[walka] ",res," d=",int(d)," zasieg=",int(r)," kat=",int(ang)," (max 30)");
-  Gothic::inst().onPrint(msg);
-  }
-
 void Npc::commitDamage() {
-  if(currentTarget==nullptr) {
-    if(isPlayer())
-      reportSwing(*this,nullptr,fghAlgo,owner.script(),"");
+  if(currentTarget==nullptr)
     return;
-    }
-  if(!fghAlgo.isInAttackRange(*this,*currentTarget,owner.script())) {
-    if(isPlayer())
-      reportSwing(*this,currentTarget,fghAlgo,owner.script(),"pudlo: za daleko");
+  if(!fghAlgo.isInAttackRange(*this,*currentTarget,owner.script()))
     return;
-    }
-  if(!fghAlgo.isInFocusAngle(*this,*currentTarget)) {
-    if(isPlayer())
-      reportSwing(*this,currentTarget,fghAlgo,owner.script(),"pudlo: zly kat");
+  if(!fghAlgo.isInFocusAngle(*this,*currentTarget))
     return;
-    }
-  if(isPlayer())
-    reportSwing(*this,currentTarget,fghAlgo,owner.script(),"trafienie");
   currentTarget->takeDamage(*this,nullptr);
   }
 
