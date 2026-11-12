@@ -21,6 +21,7 @@
 #include "world/objects/npc.h"
 #include "world/objects/item.h"
 #include "game/serialize.h"
+#include "game/savegameheader.h"
 #include "game/globaleffects.h"
 #include "game/definitions/musicdefinitions.h"
 #include "utils/gthfont.h"
@@ -1466,7 +1467,28 @@ void MainWindow::loadGame(std::string_view slot) {
     }
 
   Gothic::inst().setBenchmarkMode(Benchmark::None);
-  Gothic::inst().startLoad("LOADING.TGA",[slot=std::string(slot)](std::unique_ptr<GameSession>&& game){
+  // the loading picture of the world of the save (LOADING_NEWWORLD.TGA), as for a change of the world:
+  // the mods on Union (New Balance) choose LOADING_<WORLD>_<number> by it
+  std::string banner = "LOADING.TGA";
+  try {
+    Tempest::RFile fin{std::string(slot)};
+    Serialize      reader(fin);
+    SaveGameHeader hdr;
+    reader.setEntry("header");
+    reader.read(hdr);
+    std::string w = hdr.world;
+    const size_t beg = w.find_last_of("\\/");
+    if(beg!=std::string::npos)
+      w = w.substr(beg+1);
+    const size_t end = w.rfind('.');
+    if(end!=std::string::npos)
+      w.resize(end);
+    if(!w.empty())
+      banner = "LOADING_" + w + ".TGA";
+    }
+  catch(...) {
+    }
+  Gothic::inst().startLoad(banner,[slot=std::string(slot)](std::unique_ptr<GameSession>&& game){
     game = nullptr; // clear world-memory now
     try {
       Tempest::RFile file(slot);

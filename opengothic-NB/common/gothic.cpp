@@ -591,11 +591,18 @@ void Gothic::implStartLoadSave(std::string_view banner,
       world.resize(world.size()-4);
     world = world.rfind("LOADING_",0)==0 ? world.substr(8) : std::string();
 
+    // 1. a random picture of this world; 2. the picture of the world itself; 3. a random one of any world
     auto alt = randomLoadingBanner(world);
-    if(alt.empty() && !world.empty())
-      alt = randomLoadingBanner("");
     if(!alt.empty())
       loadTex = Resources::loadTextureUncached(alt);
+    if(!isUsableBanner(loadTex))
+      loadTex = Resources::loadTextureUncached(banner);
+    if(!isUsableBanner(loadTex) && !world.empty()) {
+      alt = randomLoadingBanner("");
+      if(!alt.empty())
+        loadTex = Resources::loadTextureUncached(alt);
+      }
+    Log::i("loading screen: \"",banner,"\" world=\"",world,"\" -> \"",alt.empty() ? std::string(banner) : alt,"\"");
     }
   if(!isUsableBanner(loadTex) && !banner.empty())
     loadTex = Resources::loadTextureUncached(banner);
