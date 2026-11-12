@@ -177,46 +177,27 @@ Pliki: przy każdej poprawce jest lista plików. **🆕 NOWY PLIK** oznacza plik
 - **Co wiadomo:** Lord Andre nosi `ITAR_PAL_H_NPC` (model `Armor_Pal_H.asc`), Lothar zbroję paladyna `Armor_Pal_M.asc`. Pancerz straży (`WACHE_ARMOR_V2.asc`) działa. W logu nie ma `unable to load mesh` dla tych zbroi, więc model chyba się wczytuje, tylko się nie rysuje.
 - **Na razie:** do `log.txt` dopisuje się raz na każdy model zbroi linia `armor "…": …` (czy plik jest w archiwach, ile ma części skórowanych, tekstur i doczepianych elementów, rozmiar). Na jej podstawie zrobię właściwą poprawkę.
 
-### 17. Brak efektów krwi przy trafieniu (pióra ścierwojada itp.) – 🧪 (12.11.2026)
-- **Pliki:** `common/world/objects/npc.cpp`
-- **Przyczyna:** porównanie z nagraniem z Winlatora: w oryginale przy każdym trafieniu ze ścierwojada lecą białe pióra, a przy śmierci jest ich cały wybuch. To krew silnika: cząsteczki `C_GilValues.BLOOD_EMITTER` gildii ofiary (w NB `BFX_Preset1` to pióra ścierwojada, `BFX_Golem` kamienie, `BFX_Skeleton` kości, `BFX_Demon` …) i przy śmierci ta sama nazwa z `_DEAD`. OpenGothic tego w ogóle nie robił: przy trafieniu był tylko dźwięk, więc cios wyglądał, jakby nie trafił.
-- **Poprawka:** przy trafieniu bronią białą lub strzałą, które zadało obrażenia, pojawiają się cząsteczki `BLOOD_EMITTER` gildii ofiary (w punkcie trafienia, między ofiarą a atakującym), a przy śmierci `BLOOD_EMITTER` + `_DEAD`, jeśli skrypty taki efekt mają. `BLOOD_DISABLED` jest respektowane. Działa dla wszystkich istot, nie tylko zwierząt.
-
-### 18. Trudno trafić zwierzęta, walka „zacina się” – ✅ lepiej, focus trzyma (12.11.2026)
-- **Pliki:** `common/game/playercontrol.cpp` (poprawka), `common/world/objects/npc.cpp` (diagnostyka już usunięta)
-- **Co wiadomo:** w OpenGothic cios bohatera zadaje obrażenia tylko celowi z focusu (`currentTarget`), i to tylko gdy w chwili uderzenia jest w zasięgu `FIGHT_RANGE_BASE(bohater) + FIGHT_RANGE_BASE(cel) + długość broni` i w kącie ±30° przed bohaterem. Zwierzęta w NB dużo skaczą i krążą, więc któryś z tych warunków może odpadać.
-- **Wynik diagnostyki (komunikaty `[walka]` na ekranie):** trafienia z bliska liczą się dobrze (d 109–215 przy zasięgu 300, kąt 0–5°), pudła tylko gdy wilk odskoczył (d > 300). Obrażenia 10/5 zgadzają się z NB: plugin liczy `siła + broń − ochrona` przy udanym rzucie na talent, inaczej 1/10 (min. 5); młody wilk ma 20 ochrony. Komunikaty usunięte.
-- **Przyczyna:** porównanie z Winlatorem: gdy wilk obiega bohatera w bok, oryginał trzyma go w focusie, bohater i kamera same się do niego obracają. W OpenGothic focus był co klatkę wyszukiwany od nowa w wąskim stożku przed bohaterem – wilk wychodził z niego, focus znikał, bohater przestawał się obracać i ciosy szły w powietrze (bez przycisku blokady celu).
-- **Poprawka:** w walce wręcz (pięści, broń 1H/2H) focus jest „lepki”: przeciwnik zostaje celem, dopóki żyje, jest bliżej niż 10 m i nie zasłania go ściana. Focus przechodzi na innego wroga tylko, gdy ten jest bliżej. Bohater dalej sam się do niego obraca (jak w oryginale). Przycisk blokady celu działa jak dotąd.
-- **Przy okazji znalezione (do poprawy później):** NB przesuwa numery gildii o 5 (`GIL_SEPERATOR_HUM` = 21, wilk = 32, ścierwojad = 27), a OpenGothic ma na sztywno numery z Gothica II (16, 27, 22). Przez to gildie ludzi 16–20 NB (templariusze, nekromanci …) są traktowane jak potwory, nie dostają ludzkich wartości gildii, a listy nieumarłych/smoka wskazują inne istoty.
-
 ### 19. Komunikat „Nowy wpis w dzienniku!” wyglądał inaczej niż w oryginale – ✅ (12.11.2026)
 - **Pliki:** `common/game/gamescript.cpp`
 - **Przyczyna:** ten napis rysuje plugin Union (`AI_PrintQuest`, `AI_PrintQuestComplete`, `AI_PrintQuestFail` z UNION_ABI.DLL), nie silnik gry. W poprawce 9 był wypisywany jak zwykły komunikat (biały, w liście u góry). W pluginie: po lewej stronie, na ok. 29% wysokości ekranu, tytuł czcionką ze skryptu `RX_QuestTitleFont` (`FONT_OLD_20_ZHITE.TGA`) w kolorze: nowy wpis – złoty, zadanie nieudane – czerwony, zakończone – zielony, a pod nim nazwa tematu białą `FONT_OLD_20_WHITE`.
 - **Poprawka:** tak samo: tytuł po lewej czcionką `RX_QuestTitleFont`, pod nim temat, przez 5 s. Kolory: nowy wpis żółty, nieudane czerwone, zakończone białe (OpenGothic ma tylko takie kolory czcionek – zielonego brak).
 
-### 20. Młody wilk biegnie do ataku ~1,5× za szybko – 🧪 (12.11.2026)
-- **Pliki:** `common/world/objects/npc.cpp`
-- **Przyczyna:** NB zmniejsza i powiększa wiele istot przez `Mdl_SetModelScale` (271 razy w skryptach: młody wilk 0,7, inne 0,6–1,5). OpenGothic skalował tylko wygląd i kolizję, a ruch z animacji (długość kroku) zostawał pełny. Wilk zmniejszony do 0,7 przebiegał więc 1/0,7 ≈ 1,4× więcej, niż pozwalają jego nogi, a powiększone istoty (1,1–1,5) były za wolne.
-- **Poprawka:** ruch z animacji (root motion) jest mnożony przez skalę modelu, jak w oryginalnym silniku.
-
-### 21. Potwory w walce ciągle odskakują i krążą zamiast walczyć (wszystkie mody) – ❌ bez efektu w grze, kontynuacja w poprawce 22 (12.11.2026)
-- **Pliki:** `common/world/objects/npc.cpp`
-- **Przyczyna:** test w czystej Nocy Kruka na OpenGothic pokazał to samo co w NB i Renovation (młody wilk trzyma dystans), więc to silnik. W OpenGothic jest „łatka”: gdy potwór jest bliżej niż 0,75 podstawowego dystansu walki, każde jego „czekaj” (`MOVE_WAIT`) i „obróć się” (`MOVE_TURN`) zamienia się w odskok do tyłu. Dla wilka i ścierwojada to zwykły dystans walki wręcz, a ich taktyka to {atak, czekaj} – co druga decyzja kończyła się odskokiem, więc potwór cofał się i krążył.
-- **Poprawka:** odskok zamiast „czekaj” tylko wtedy, gdy postacie naprawdę na siebie nachodzą (bliżej niż połowa podstawowego dystansu) – to korekta „za blisko” ze skryptów. „Obróć się” już nie zamienia się w odskok. Odskoki wpisane w taktyki skryptów (np. reakcja na zamach przeciwnika `FA_ENEMY_PREHIT`) działają jak dotąd.
-
-### 22. Potwory dalej odskakują przy każdym zamachu bohatera – 🧪 (13.11.2026)
-- **Pliki:** `common/game/fightalgo.cpp`, `common/game/fightalgo.h` (zmienione pliki z projektu – podmienić), `common/world/objects/npc.cpp`
-- **Przyczyna:** reakcja na zamach przeciwnika (`FA_ENEMY_PREHIT`: wilk {odskok, unik w bok}, ścierwojad {odskok}) była sprawdzana przy **każdej** decyzji potwora, a decyzje zapadają co ~0,2 s. Cały zamach bohatera (aż do momentu trafienia) liczy się jako „przed ciosem”, więc potwór dostawał kilka okazji na odskok w czasie jednego zamachu – praktycznie zawsze odskakiwał, zanim miecz doszedł. Do tego „za blisko → odskok” z poprawki 21 mogło się powtarzać co chwilę.
-- **Poprawka:**
-  - reakcja na zamach najwyżej **raz na jeden zamach** bohatera i z szansą 50% (w pozostałych przypadkach potwór walczy według zwykłej taktyki – atakuje albo czeka);
-  - odskok „za blisko” najwyżej raz na 2,5 s.
-- **Tymczasowa diagnostyka:** przy każdym odskoku od bohatera na ekranie pojawia się `[odskok] <potwór> : <powód>` – „zamach gracza (FA_ENEMY_PREHIT)”, „za blisko” albo „taktyka/po trafieniu”. Jeśli potwory dalej uciekają, powód z ekranu powie, co poprawiać dalej. Do usunięcia, gdy walka będzie dobra.
-
----
+### 23. NPC walczą jak nowicjusze: brak talentów i animacji walki (cały świat NB) – 🧪 (13.11.2026)
+- **Pliki:** `common/game/gamescript.cpp`
+- **Przyczyna:** każda postać NB w swojej definicji wywołuje `B_SetFightSkills(npc, procent)`. Skrypt zapisuje tylko zmienne pomocnicze i całą resztę zostawia pluginowi: `RX_ApplyProperOverlaysForNpc`. OpenGothic nie zna tej funkcji, więc u **wszystkich NPC** (Brago, bandyci, strażnicy, najemnicy …) talent 1H/2H/łuk/kusza zostawał na 0%. Skutki: animacje nieszkolonego nowicjusza (bez `humans_1hST1–3` / `2hST1–3`), żadnych trafień krytycznych (obrażenia zawsze ÷10, minimum 5), słabsze strzelanie.
+- **Poprawka:** przepisany kod z UNION_ABI.DLL (0x10198B20):
+  - procent dodawany do szansy trafienia 1H, 2H, łuku i kuszy (zakres 0–100);
+  - zdejmowane stare nakładki, potem zakładana właściwa: od 90% ST3, od 60% ST2, od 30% ST1, poniżej – bez nakładki (łuk i kusza: od 60% T2, od 30% T1);
+  - ustawiany poziom umiejętności walki (0–3).
+  - `RX_InitAnimations` – w OpenGothic nic nie musi robić (animacje i tak są szukane po nazwie).
+- **Bohater:** jego animacje (rapier, szabla, włócznia, halabarda, kostury, topory, dwie bronie, tarcze) zakładają skrypty NB przy założeniu broni (`RX_ApplyAnim_Weapons`, `EQUIP_*`). To działa także w OpenGothic, dlatego bohater ma np. rapier.
 
 ## Do zrobienia
-- [ ] Animacje broni NB: plugin zakłada zestawy dla rapiera, szabli, włóczni, halabardy, kosturów, toporów, broni 2H obuchowej, broni „zręcznościowej”, dwóch broni i tarcz (`RX_ApplyProperOverlaysForNpc`, `RX_InitAnimations` – brak w OpenGothic). Kod wyboru znaleziony w UNION_ABI.DLL (ok. 0x1024AE00), do przepisania.
-- [ ] (poprawki 21, 22 – w testach) Potwory w walce za często odskakują/krążą (ścierwojad cofa się zamiast atakować). To problem silnika OpenGothic, nie tylko NB – to samo widać w modzie Renovation (goblin). Reguła `FA_ENEMY_PREHIT` (odskok, gdy przeciwnik bierze zamach) jest w OpenGothic sprawdzana przy każdej decyzji potwora – do porównania z oryginałem.
+- [ ] **Animacje broni NB – sprawdzić, co się za nimi kryje (w toku).** Ustalone do tej pory:
+  - bohater: animacje zakładają skrypty (`RX_ApplyAnim_Weapons` → `RX_ApplyAni_1H_Rapier` / `_DexSword` / `_1H_Sword` / `_2H_Speer` / `_2H_Staff` / `_2H_Hallberd` / `_2H_Common`, tarcze `RX_ApplyShieldAni`, dwie bronie `Humans_1x2ST3` / `2x2ST3`, topory orków `HUMANS_AXEST2`) – w OpenGothic działa;
+  - NPC: talenty i nakładki ST1–3 z pluginu – poprawka 23;
+  - do sprawdzenia w grze: czy zestawy rapiera/szabli/włóczni mają w plikach .MDS ciosy, które OpenGothic odtwarza inaczej niż oryginał (kilka pchnięć w jednej animacji, kombinacje, zasięg) – potrzebne nagranie walki rapierem i zwykłym mieczem;
+  - kod wyboru dla NPC z innymi broniami (ok. 0x1024AE00 w DLL) – do przejrzenia.
+- [ ] Potwory w walce za często odskakują/krążą (ścierwojad cofa się zamiast atakować). To problem silnika OpenGothic, nie tylko NB – to samo widać w modzie Renovation (goblin). Reguła `FA_ENEMY_PREHIT` (odskok, gdy przeciwnik bierze zamach) jest w OpenGothic sprawdzana przy każdej decyzji potwora – do porównania z oryginałem.
 - [ ] Walka kilku postaci z jednym celem: cel „głupieje” (krąży, nie atakuje) – do zbadania (nagranie z obozu bandytów, Brago)
 - [ ] `EXT_PutInSlot` / `ActivateZSSlot`: mieszek i torba na bohaterze (opcje z poprawki 5)

@@ -916,6 +916,55 @@ void GameScript::initCommon() {
     bindNb("RX_GETWEIGHTVALUE", [](std::shared_ptr<zenkit::IItem> itm, int32_t index) -> int32_t {
       return itm!=nullptr ? NbItemInfo::weight(itm->symbol_index(),index) : 0;
       });
+    // B_SetFightSkills(npc, percent) for NPCs: the plugin adds percent to the hit chances (1H, 2H, bow,
+    // crossbow; 0..100) and gives the matching fighting skill and overlay - ST3 from 90%, ST2 from 60%,
+    // ST1 from 30% (bow/crossbow: T2 from 60%, T1 from 30%). Without it every NPC of NB stayed at 0%:
+    // the untrained animations of a beginner and no critical hits (UNION_ABI.DLL 0x10198B20)
+    bindNb("RX_APPLYPROPEROVERLAYSFORNPC", [this](std::shared_ptr<zenkit::INpc> npcRef, int32_t percent) {
+      auto npc = findNpc(npcRef);
+      if(npc==nullptr)
+        return;
+      auto& h = npc->handle();
+      for(int t=TALENT_1H; t<=TALENT_CROSSBOW; ++t)
+        h.hitchance[t] = std::clamp(h.hitchance[t]+percent, 0, 100);
+
+      static const char* all[] = {
+        "HUMANS_1HST1.MDS","HUMANS_1HST2.MDS","HUMANS_1HST3.MDS",
+        "HUMANS_2HST1.MDS","HUMANS_2HST2.MDS","HUMANS_2HST3.MDS",
+        "HUMANS_BOWT1.MDS","HUMANS_BOWT2.MDS","HUMANS_CBOWT1.MDS","HUMANS_CBOWT2.MDS",
+        "HUMANS_2X2ST3.MDS",
+        };
+      for(auto name:all)
+        if(auto sk = Resources::loadSkeleton(name))
+          npc->delOverlay(sk);
+
+      const auto apply = [npc](Talent t, int lvl, const char* mds) {
+        npc->setTalentSkill(t,lvl);
+        if(mds!=nullptr)
+          if(auto sk = Resources::loadSkeleton(mds))
+            npc->addOverlay(sk,0);
+        };
+      const auto melee = [&](Talent t, const char* st1, const char* st2, const char* st3) {
+        const int hc = h.hitchance[t];
+        if(hc>=90)      apply(t,3,st3);
+        else if(hc>=60) apply(t,2,st2);
+        else if(hc>=30) apply(t,1,st1);
+        else            apply(t,0,nullptr);
+        };
+      const auto range = [&](Talent t, const char* t1, const char* t2) {
+        const int hc = h.hitchance[t];
+        if(hc>=60)      apply(t,2,t2);
+        else if(hc>=30) apply(t,1,t1);
+        else            apply(t,0,nullptr);
+        };
+      melee(TALENT_1H,"HUMANS_1HST1.MDS","HUMANS_1HST2.MDS","HUMANS_1HST3.MDS");
+      melee(TALENT_2H,"HUMANS_2HST1.MDS","HUMANS_2HST2.MDS","HUMANS_2HST3.MDS");
+      range(TALENT_BOW,     "HUMANS_BOWT1.MDS", "HUMANS_BOWT2.MDS");
+      range(TALENT_CROSSBOW,"HUMANS_CBOWT1.MDS","HUMANS_CBOWT2.MDS");
+      });
+    // re-reads the animation ids of the model after the overlays changed; OpenGothic looks the
+    // animations up by name each time, so there is nothing to do
+    bindNb("RX_INITANIMATIONS", [](std::shared_ptr<zenkit::INpc>) {});
     bindNb("RX_OPENCRAFT", [this](int32_t /*craftType*/) {
       if(auto pl = owner.player()) {
         aiOutOrderId = 0;
