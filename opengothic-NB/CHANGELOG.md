@@ -93,6 +93,17 @@ Status:
 - **Przyczyna:** sen przewija czas przez `Wld_SetTime`. OpenGothic ustawia wtedy wszystkie postacie według ich planu dnia i przy okazji zatrzymywał animację bohatera, czyli stawiał go na nogi, mimo że ten dalej leżał w łóżku (w menu snu). Gdy zamykałeś menu, łóżko odtwarzało jeszcze animację wstawania.
 - **Poprawka:** jeśli bohater używa obiektu (łóżka), jego animacja i kolejka dialogu zostają bez zmian. Wstaje dopiero normalną animacją łóżka.
 
+### 8. Statystyki postaci (B): ciemny ekran bez niczego – 🧪 (12.11.2026)
+- **Pliki:** `common/ui/gamemenu.cpp`, `common/ui/gamemenu.h`
+- **Przyczyna:** w NB statystyki to okno pluginu Union z 5 zakładkami. `MENU_STATUS` w `MENU.DAT` moda ma tylko pusty nagłówek, więc OpenGothic rysował tylko przyciemnienie.
+- **Poprawka:** własny ekran statystyk w stylu menu ustawień, w dwóch kolumnach:
+  - **Postać:** gildia, poziom, doświadczenie, następny poziom, punkty nauki,
+  - **Atrybuty:** siła, zręczność, **inteligencja** (atrybut NB), mana, punkty życia, **wytrzymałość** (NB),
+  - **Walka:** broń jednoręczna, dwuręczna, łuk, kusza (nazwy ze skryptów gry),
+  - **Ochrona:** broń sieczna, obuchowa, pociski, ogień, magia,
+  - **Czas:** dzień i godzina.
+- **Jeszcze nie ma:** pozostałych zakładek Uniona (rzemiosło, trudność itd.), można je dodać później.
+
 ---
 
 ## Do zrobienia

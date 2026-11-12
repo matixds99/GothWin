@@ -14,6 +14,9 @@
 #include "world/objects/npc.h"
 #include "world/world.h"
 #include "ui/menuroot.h"
+#ifdef OPENGOTHIC_TOUCH_UI
+#include "ui/touchdraw.h"
+#endif
 #include "utils/gthfont.h"
 #include "utils/fileutil.h"
 #include "utils/keycodec.h"
@@ -317,6 +320,8 @@ GameMenu::GameMenu(MenuRoot &owner, KeyCodec& keyCodec, zenkit::DaedalusVm& vm, 
 #endif
 
   initItems();
+  if(statusMenu && menu->items[0]=="MENU_ITEM_STATUS_HEADING" && menu->items[1].empty())
+    initNbStatus();
 #ifdef OPENGOTHIC_TOUCH_UI
   if(savesKind>=0)
     saves.reset(new SaveScreen(savesKind==0 ? SaveScreen::Load : SaveScreen::Save,scanPolish()));
@@ -399,6 +404,112 @@ int32_t GameMenu::numQuests(const QuestLog* ql, QuestStat st) {
 
 /// Returning New Balance: a text of GOTHIC.DAT (RX_MENU_TITLE_STR_...) in the language of the game.
 /// In the main menu there are no scripts of the game yet, then they are read once and the texts kept.
+bool GameMenu::isNbStatus() const {
+  return hItems[0].name=="NB_STATUS_HDR_CHAR";
+  }
+
+void GameMenu::initNbStatus() {
+  const bool pl = Gothic::settingsGetI("GAME","language")==2 || scanPolish();
+  struct Row { const char* name; const char* plText; const char* enText; };
+  static const Row rows[] = {
+    {"NB_STATUS_HDR_CHAR",    "POSTA\xC6",           "CHARACTER"},
+    {"MENU_ITEM_PLAYERGUILD", "Gildia",               "Guild"},
+    {"MENU_ITEM_LEVEL",       "Poziom",               "Level"},
+    {"MENU_ITEM_EXP",         "Do\x9Cwiadczenie",     "Experience"},
+    {"MENU_ITEM_LEVEL_NEXT",  "Nast\xEApny poziom",   "Next level"},
+    {"MENU_ITEM_LEARN",       "Punkty nauki",         "Learning points"},
+    {"NB_STATUS_HDR_ATR",     "ATRYBUTY",             "ATTRIBUTES"},
+    {"MENU_ITEM_ATTRIBUTE_1", "Si\xB3""a",            "Strength"},
+    {"MENU_ITEM_ATTRIBUTE_2", "Zr\xEA""czno\x9C\xE6", "Dexterity"},
+    {"NB_STATUS_INT",         "Inteligencja",         "Intelligence"},
+    {"MENU_ITEM_ATTRIBUTE_3", "Mana",                 "Mana"},
+    {"MENU_ITEM_ATTRIBUTE_4", "Punkty \xBFycia",      "Hit points"},
+    {"NB_STATUS_STAMINA",     "Wytrzyma\xB3o\x9C\xE6","Stamina"},
+    {"NB_STATUS_HDR_COMBAT",  "WALKA",                "COMBAT"},
+    {"MENU_ITEM_TALENT_1",    "Bro\xF1 jednor\xEA""czna","One-handed"},
+    {"MENU_ITEM_TALENT_2",    "Bro\xF1 dwur\xEA""czna", "Two-handed"},
+    {"MENU_ITEM_TALENT_3",    "\xA3uk",               "Bow"},
+    {"MENU_ITEM_TALENT_4",    "Kusza",                "Crossbow"},
+    {"NB_STATUS_HDR_PROT",    "OCHRONA",              "PROTECTION"},
+    {"MENU_ITEM_ARMOR_11",    "Bro\xF1 sieczna",      "Weapons"},
+    {"MENU_ITEM_ARMOR_1",     "Bro\xF1 obuchowa",     "Blunt"},
+    {"MENU_ITEM_ARMOR_2",     "Pociski",              "Missiles"},
+    {"MENU_ITEM_ARMOR_3",     "Ogie\xF1",             "Fire"},
+    {"MENU_ITEM_ARMOR_4",     "Magia",                "Magic"},
+    {"NB_STATUS_HDR_TIME",    "CZAS",                 "TIME"},
+    {"MENU_ITEM_DAY",         "Dzie\xF1",             "Day"},
+    {"MENU_ITEM_TIME",        "Godzina",              "Time"},
+    };
+
+  for(auto& i:hItems)
+    i = Item();
+  size_t n = 0;
+  for(auto& r:rows) {
+    if(n>=zenkit::IMenu::item_count)
+      break;
+    auto h = std::make_shared<zenkit::IMenuItem>();
+    h->type     = zenkit::MenuItemType::TEXT;
+    h->text[0]  = "";
+    // the texts of the menu are in the code page of the game (Polish: windows-1250), as the scripts
+    h->text[1]  = pl ? r.plText : r.enText;
+    h->fontname = "FONT_OLD_10_WHITE.TGA";
+    hItems[n].name    = r.name;
+    hItems[n].handle  = std::move(h);
+    hItems[n].visible = true;
+    ++n;
+    }
+  }
+
+#ifdef OPENGOTHIC_TOUCH_UI
+void GameMenu::paintNbStatus(Painter& p) {
+  using namespace touchdraw;
+  const int W = w();
+  const int H = h();
+  bar(p,0,0,W,H,Dim);
+
+  const Rect panel(int(float(W)*0.04f),int(float(H)*0.06f),int(float(W)*0.92f),int(float(H)*0.88f));
+  frame(p,panel,1,PanelLine,PanelFill);
+
+  const bool pl = Gothic::settingsGetI("GAME","language")==2 || scanPolish();
+  auto fTitle = fontOf(true, int(float(H)*0.060f),Cream);
+  auto fHead  = fontOf(false,int(float(H)*0.030f),Gold);
+  auto fLabel = fontOf(true, int(float(H)*0.040f),Cream);
+  auto fValue = fontOf(true, int(float(H)*0.040f),Gold);
+
+  const int padX = int(float(panel.w)*0.04f);
+  fTitle.drawText(p,panel.x+padX,panel.y+int(float(panel.h)*0.09f),pl ? "Statystyki postaci" : "Character");
+
+  const int colW  = (panel.w-3*padX)/2;
+  const int top   = panel.y+int(float(panel.h)*0.15f);
+  const int rowH  = std::max(1,int(float(panel.h)*0.058f));
+  int       col   = 0;
+  int       y     = top;
+  for(auto& it:hItems) {
+    if(it.handle==nullptr || it.name.empty())
+      continue;
+    if(it.name=="NB_STATUS_HDR_COMBAT") {
+      col = 1;
+      y   = top;
+      }
+    const int x = panel.x+padX+col*(colW+padX);
+    if(it.name.rfind("NB_STATUS_HDR_",0)==0) {
+      if(y!=top)
+        y += rowH/3;
+      drawSpaced(p,fHead,x,y+rowH/2+fHead.pixelSize()/2,it.handle->text[1],std::max(1,int(float(H)*0.003f)));
+      bar(p,x,y+rowH-2,colW,1,Hairline);
+      y += rowH;
+      continue;
+      }
+    const std::string& value = it.handle->text[0];
+    const int vw = fValue.textSize(value).w;
+    fLabel.drawText(p,x,y+rowH/2+fLabel.pixelSize()/2,fit(fLabel,it.handle->text[1],colW-vw-int(float(W)*0.02f)));
+    fValue.drawText(p,x+colW-vw,y+rowH/2+fValue.pixelSize()/2,value);
+    y += rowH;
+    }
+  }
+#endif
+
+
 static std::string nbScriptText(std::string_view name, std::string_view fallback) {
   static std::unordered_map<std::string,std::string> cache;
   static int32_t cacheLang = -1;
@@ -1311,6 +1422,10 @@ void GameMenu::paintEvent(PaintEvent &e) {
     paintPanel(p);
     return;
     }
+  if(isNbStatus()) {
+    paintNbStatus(p);
+    return;
+    }
   if(touch.log) {
     paintTouchLog(p);
     return;
@@ -1674,7 +1789,7 @@ void GameMenu::onTick() {
     optionsUpdate();
     return;
     }
-  if(touch.list || touch.log || saves!=nullptr) {
+  if(touch.list || touch.log || saves!=nullptr || isNbStatus()) {
     resize(owner.size());
     setPosition(0,0);
     return;
@@ -2374,6 +2489,21 @@ void GameMenu::setPlayer(const Npc &pl) {
     set(string_frm("MENU_ITEM_TALENT_",i,"_TITLE"), str);
     set(string_frm("MENU_ITEM_TALENT_",i,"_SKILL"), strEnum(talV->get_string(i),sk,textBuf));
     set(string_frm("MENU_ITEM_TALENT_",i),          string_frm(val,"%"));
+    }
+
+  if(isNbStatus()) {
+    auto intVal = [&](std::string_view name) -> int32_t {
+      auto* v = sc.findSymbol(name);
+      return (v!=nullptr && v->type()==zenkit::DaedalusDataType::INT) ? v->get_int() : 0;
+      };
+    set("NB_STATUS_INT", intVal("ATR_INTELLECT"));
+    set("NB_STATUS_STAMINA", intVal("ATR_STAMINA"), intVal("ATR_STAMINA_MAX"));
+    for(uint16_t i=1; i<=4; ++i) {
+      auto& title = tal->get_string(i);
+      for(auto& it:hItems)
+        if(it.name==string_frm("MENU_ITEM_TALENT_",i) && it.handle!=nullptr && !title.empty())
+          it.handle->text[1] = title;
+      }
     }
 
   if(statusMenu) {
