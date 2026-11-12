@@ -405,37 +405,233 @@ int32_t GameMenu::numQuests(const QuestLog* ql, QuestStat st) {
 /// Returning New Balance: a text of GOTHIC.DAT (RX_MENU_TITLE_STR_...) in the language of the game.
 /// In the main menu there are no scripts of the game yet, then they are read once and the texts kept.
 // Returning New Balance: the status screen
-struct NbStatusRow { const char* name; const char* plText; const char* enText; };
-
-static const NbStatusRow nbStatusRows[] = {
-    {"NB_STATUS_HDR_CHAR",    "POSTA\xC6",           "CHARACTER"},
-    {"MENU_ITEM_PLAYERGUILD", "Gildia",               "Guild"},
-    {"MENU_ITEM_LEVEL",       "Poziom",               "Level"},
-    {"MENU_ITEM_EXP",         "Do\x9Cwiadczenie",     "Experience"},
-    {"MENU_ITEM_LEVEL_NEXT",  "Nast\xEApny poziom",   "Next level"},
-    {"MENU_ITEM_LEARN",       "Punkty nauki",         "Learning points"},
-    {"NB_STATUS_HDR_ATR",     "ATRYBUTY",             "ATTRIBUTES"},
-    {"MENU_ITEM_ATTRIBUTE_1", "Si\xB3""a",            "Strength"},
-    {"MENU_ITEM_ATTRIBUTE_2", "Zr\xEA""czno\x9C\xE6", "Dexterity"},
-    {"NB_STATUS_INT",         "Inteligencja",         "Intelligence"},
-    {"MENU_ITEM_ATTRIBUTE_3", "Mana",                 "Mana"},
-    {"MENU_ITEM_ATTRIBUTE_4", "Punkty \xBFycia",      "Hit points"},
-    {"NB_STATUS_STAMINA",     "Wytrzyma\xB3o\x9C\xE6","Stamina"},
-    {"NB_STATUS_HDR_TIME",    "CZAS",                 "TIME"},
-    {"MENU_ITEM_DAY",         "Dzie\xF1",             "Day"},
-    {"MENU_ITEM_TIME",        "Godzina",              "Time"},
-    {"NB_STATUS_HDR_COMBAT",  "WALKA",                "COMBAT"},
-    {"MENU_ITEM_TALENT_1",    "Bro\xF1 jednor\xEA""czna","One-handed"},
-    {"MENU_ITEM_TALENT_2",    "Bro\xF1 dwur\xEA""czna", "Two-handed"},
-    {"MENU_ITEM_TALENT_3",    "\xA3uk",               "Bow"},
-    {"MENU_ITEM_TALENT_4",    "Kusza",                "Crossbow"},
-    {"NB_STATUS_HDR_PROT",    "OCHRONA",              "PROTECTION"},
-    {"MENU_ITEM_ARMOR_11",    "Bro\xF1 sieczna",      "Weapons"},
-    {"MENU_ITEM_ARMOR_1",     "Bro\xF1 obuchowa",     "Blunt"},
-    {"MENU_ITEM_ARMOR_2",     "Pociski",              "Missiles"},
-    {"MENU_ITEM_ARMOR_3",     "Ogie\xF1",             "Fire"},
-    {"MENU_ITEM_ARMOR_4",     "Magia",                "Magic"},
+struct NbStatRow { char kind; const char* label; const char* a; const char* b; };
+struct NbStatTab { const char* pl; const char* en; std::vector<NbStatRow> rows; };
+static const std::vector<NbStatTab>& nbStatTabs() {
+  static const std::vector<NbStatTab> tabs = {
+    {"Posta\xE6", "Character", {
+      {'H', "Posta\xE6", nullptr, nullptr},
+      {'E', "Gildia", "guild", nullptr},
+      {'S', "Rozdzia\xB3", "SKAPITEL", nullptr},
+      {'E', "Poziom", "level", nullptr},
+      {'E', "Do\x9Cwiadczenie", "exp", nullptr},
+      {'E', "Nast\xEApny poziom", "next", nullptr},
+      {'E', "Punkty nauki", "lp", nullptr},
+      {'S', "Dzie\xF1", "SALLDAY", nullptr},
+      {'S', "Ranga", "SGRADE", nullptr},
+      {'S', "Punkty rangi", "SRANKPOINTS", nullptr},
+      {'H', "Bogowie i gildie", nullptr, nullptr},
+      {'S', "Karma Innosa", "SINNOSKARMA", nullptr},
+      {'S', "Karma Beliara", "SBELIARKARMA", nullptr},
+      {'S', "Gildia z\xB3odziei", "STHIEFGUILD", nullptr},
+      {'S', "Gildia zab\xF3jc\xF3w", "SKILLERSGUILD", nullptr},
+      {'S', "Gildia kupc\xF3w", "STRADEGUILD", nullptr},
+      {'S', "Zabite potwory", "SMONSTERKILLED", nullptr},
+      {'S', "Zabici ludzie", "SPEOPLEKILLED", nullptr},
+      {'H', "Poziom trudno\x9C""ci", nullptr, nullptr},
+      {'S', "Poziom trudno\x9C""ci", "SHARDLVL", nullptr},
+      {'S', "Tryb SNC", "SHARDSNC", nullptr},
+      {'S', "Trudne AI", "SHARDKSAIMODE", nullptr},
+      {'S', "Punkty nauki na poziom", "SSTATUSLP", nullptr},
+      {'S', "\xAFycie na poziom", "SSTATUSHP", nullptr},
+      {'S', "Do\x9Cwiadczenie z walki", "SSTATUSEXP", nullptr},
+      {'S', "\xAFycie wrog\xF3w", "SSTATUSMONSTER", nullptr},
+      {'S', "Si\xB3""a wrog\xF3w", "SSTATUSMONSTERPOWER", nullptr},
+      {'S', "Ochrona wrog\xF3w", "SSTATUSMONSTERPROT", nullptr},
+      {'S', "Z\xB3oto", "SSTATUSMONEY", nullptr},
+      {'S', "Mikstury lecznicze", "SSTATUSPOTIONS", nullptr},
+      {'S', "Pu\xB3""apki", "SSTATUSTRAPS", nullptr},
+      {'S', "Sen", "SSTATUSSLEEP", nullptr},
+      {'S', "G\xB3\xF3""d / pragnienie / zm\xEA""czenie", "SSTATUSHUNGER", nullptr},
+      }},
+    {"Umiej\xEAtno\x9C""ci", "Skills", {
+      {'H', "Rzemios\xB3o", nullptr, nullptr},
+      {'S', "Kowalstwo", "SSTATUSSMTH", "SMASTERYSMTH"},
+      {'S', "Alchemia", "SSTATUSALKH", "SMASTERYALKH"},
+      {'S', "Tworzenie run", "SSTATUSRUNE", "SMASTERYRUNE"},
+      {'S', "Jubilerstwo", "SSTATUSJEW", nullptr},
+      {'S', "Ostrzenie broni", "SSTATUSSHARP", nullptr},
+      {'S', "Magiczna bro\xF1", "SSTATUSMAGICSMTH", nullptr},
+      {'S', "Kucie rapier\xF3w", "SSTATUSSPAGESMTH", nullptr},
+      {'S', "Bro\xF1 ork\xF3w", "SSTATUSORCWPSMTH", nullptr},
+      {'S', "Wykonywanie pancerzy", "SSTATUSMAKEARMOR", nullptr},
+      {'S', "Ulepszanie pancerzy", "SSTATUSARMORSMTH", nullptr},
+      {'S', "Wykonywanie \xB3uk\xF3w", "SSTATUSMAKEBOW", nullptr},
+      {'H', "G\xF3rnictwo i wytapianie", nullptr, nullptr},
+      {'S', "Wydobywanie rudy", "SMASTERYORE", nullptr},
+      {'S', "Wydobywanie z\xB3ota", "SMASTERYGOLD", nullptr},
+      {'S', "Wytapianie rudy", "SSTATUSPLAVKA", nullptr},
+      {'S', "Wytapianie magicznej rudy", "SSTATUSMAGPLAVKA", nullptr},
+      {'S', "Stal ork\xF3w", "SSTATUSORCPLAVKA", nullptr},
+      {'S', "Wytapianie z\xB3ota", "SSTATUSGOLDSMTH", nullptr},
+      {'H', "Strza\xB3y i be\xB3ty", nullptr, nullptr},
+      {'S', "Strza\xB3y", "SSTATUSARROW", nullptr},
+      {'S', "Ogniste", "SSTATUSFIREARROW", nullptr},
+      {'S', "Magiczne", "SSTATUSMAGICARROW", nullptr},
+      {'S', "Po\x9Cwi\xEA""cone", "SSTATUSBLESSARROW", nullptr},
+      {'S', "Zatrute", "SSTATUSPOISONARROW", nullptr},
+      {'S', "Z rudy", "SSTATUSOREARROW", nullptr},
+      {'S', "Wybuchowe", "ZSTATUSEXPLOSIVEARROW", nullptr},
+      {'H', "My\x9Clistwo", nullptr, nullptr},
+      {'S', "Trofea zwierz\xB9t", "SSTATUSHUNT", nullptr},
+      {'S', "Rze\x9Fnictwo", "SSTATUSMEAT", nullptr},
+      {'S', "Sk\xF3rowanie", "SSTATUSHUNTSKIN", nullptr},
+      {'S', "Sk\xF3rowanie gad\xF3w", "SSTATUSHUNTREPSKIN", nullptr},
+      {'S', "K\xB3y", "SSTATUSHUNTTEETH", nullptr},
+      {'S', "Pazury", "SSTATUSHUNTCLAW", nullptr},
+      {'S', "Pancerze pe\xB3zaczy", "SSTATUSHUNTCRWL", nullptr},
+      {'S', "\xAFuwaczki", "SSTATUSHUNTMNDB", nullptr},
+      {'S', "Skrzyd\xB3""a", "SSTATUSHUNTWING", nullptr},
+      {'S', "\xAF\xB9""d\xB3""a", "SSTATUSHUNTSTING", nullptr},
+      {'S', "Serca", "SSTATUSHUNTHEART", nullptr},
+      {'S', "R\xF3g cieniostwora", "SSTATUSHUNTSHWHORN", nullptr},
+      {'S', "R\xF3g z\xEA""bacza", "SSTATUSHUNTSNAPHORN", nullptr},
+      {'S', "J\xEAzyki ogniste", "SSTATUSHUNTFIRELANG", nullptr},
+      {'S', "\xA3uski smok\xF3w", "SSTATUSHUNTDRAGSCALE", nullptr},
+      {'S', "Krew smok\xF3w", "SSTATUSHUNTDRAGBLOOD", nullptr},
+      {'H', "Gotowanie", nullptr, nullptr},
+      {'S', "Zupy", "SSTATUSHERDSOUP", nullptr},
+      {'S', "Kompoty", "SSTATUSHERDCOMPOT", nullptr},
+      {'S', "Ciasta", "SSTATUSHERDCAKE", nullptr},
+      {'H', "Z\xB3odziejstwo", nullptr, nullptr},
+      {'S', "Kieszonkostwo", "SSTATUSTHFT", "SMASTERYTHFT"},
+      {'S', "Otwieranie zamk\xF3w", "SSTATUSBRK", "SMASTERYBRK"},
+      {'S', "Skradanie", "SSTATUSSTL", nullptr},
+      {'S', "Akrobatyka", "SSTATUSACRO", nullptr},
+      {'H', "Magia", nullptr, nullptr},
+      {'S', "Kr\xB9g magii", "SSTATUSCIRC", nullptr},
+      {'S', "Demonologia", "SSTATUSDMN", nullptr},
+      {'S', "Magiczne zwoje", "SSTATUSMAGSCROLLS", nullptr},
+      {'S', "Sacta Anomen", "SSTATUSSACTANOMEN", nullptr},
+      {'S', "Magiczna tarcza", "SSTATUSMAGICSHIELD", nullptr},
+      {'S', "Moc magii", "SSTATUSMAGICPOWER", nullptr},
+      {'S', "Chwytanie dusz", "SSTATUSCAPSOUL", nullptr},
+      {'H', "Wiedza", nullptr, nullptr},
+      {'S', "Retoryka", "SSTATUSRHETVALUE", "SSTATUSRHET"},
+      {'S', "J\xEAzyk ork\xF3w", "SSTATUSORCL", nullptr},
+      {'S', "J\xEAzyk prastary", "SSTATUSANCL", nullptr},
+      {'S', "J\xEAzyk druid\xF3w", "SSTATUSDRUIDL", nullptr},
+      {'S', "J\xEAzyk demon\xF3w", "SSTATUSDEML", nullptr},
+      {'H', "Regeneracja", nullptr, nullptr},
+      {'S', "Regeneracja \xBFycia", "SSTATUSREGENHP", nullptr},
+      {'S', "Regeneracja many", "SSTATUSREGENMANA", nullptr},
+      {'S', "Regeneracja wytrzyma\xB3o\x9C""ci", "SSTATUSREGENSTAM", nullptr},
+      {'H', "Dary bog\xF3w", nullptr, nullptr},
+      {'S', "Bro\xF1 jednor\xEA""czna", "SSTATUSWARPERC1H", nullptr},
+      {'S', "Bro\xF1 dwur\xEA""czna", "SSTATUSWARPERC2H", nullptr},
+      {'S', "Zwyk\xB3""e dwur\xEA""czne", "SSTATUSWARPERC2HCOMMON", nullptr},
+      {'S', "Tarcza", "SSTATUSWARSHIELDCOMMON", nullptr},
+      {'S', "@RX_STR_STAT_GODGIFTDUAL", "RX_STR_STAT_GODGIFTDUAL_VAL", nullptr},
+      {'S', "@RX_STR_STAT_GODGIFTBOW", "RX_STR_STAT_GODGIFTBOW_VAL", nullptr},
+      {'S', "@RX_STR_STAT_GODGIFTMANA", "RX_STR_STAT_GODGIFTMANA_VAL", nullptr},
+      {'S', "@RX_STR_STAT_GODGIFTSUMMON", "RX_STR_STAT_GODGIFTSUMMON_VAL", nullptr},
+      {'S', "Celny strza\xB3", "SSTATUSTRUESHOT", nullptr},
+      }},
+    {"Atrybuty", "Attributes", {
+      {'H', "Atrybuty", nullptr, nullptr},
+      {'E', "Si\xB3""a", "str", "SREALSTR"},
+      {'E', "Zr\xEA""czno\x9C\xE6", "dex", "SREALDEX"},
+      {'E', "Mana", "mana", "SREALMANA"},
+      {'S', "Inteligencja", "SINTELLECT", nullptr},
+      {'E', "Punkty \xBFycia", "hp", nullptr},
+      {'E', "Wytrzyma\xB3o\x9C\xE6", "stamina", nullptr},
+      {'H', "W\xB3""adanie broni\xB9", nullptr, nullptr},
+      {'E', "Bro\xF1 jednor\xEA""czna", "t1", "SMASTERY1H"},
+      {'E', "Bro\xF1 dwur\xEA""czna", "t2", "SMASTERY2H"},
+      {'E', "\xA3uk", "t3", "SMASTERYBOW"},
+      {'E', "Kusza", "t4", "SMASTERYCBOW"},
+      {'S', "Tarcza", "SSHIELD", "SMASTERYSHLD"},
+      {'S', "Dwie bronie", "SDUALWEAPON", nullptr},
+      {'S', "Styl ork\xF3w", "SORCWEAPON", nullptr},
+      }},
+    {"Ochrona", "Protection", {
+      {'H', "Ochrona pancerza", nullptr, nullptr},
+      {'E', "Bro\xF1 sieczna", "pedge", nullptr},
+      {'E', "Bro\xF1 obuchowa", "pblunt", nullptr},
+      {'E', "Pociski", "ppoint", nullptr},
+      {'E', "Ogie\xF1", "pfire", nullptr},
+      {'E', "Magia", "pmagic", nullptr},
+      {'S', "Przewr\xF3""cenie", "SSTATUSFLY", nullptr},
+      {'H', "Odporno\x9C""ci", nullptr, nullptr},
+      {'S', "Trucizny", "SSTATUSPOISON", nullptr},
+      {'S', "Zimno", "SSTATUSCOLD", nullptr},
+      {'S', "\xAF""ar", "SSTATUSHEAT", nullptr},
+      }},
+    {"Osi\xB9gni\xEA""cia", "Achievements", {
+      {'H', "Pokonani przeciwnicy", nullptr, nullptr},
+      {'A', "", "SSTATUSHEROIC_01", nullptr},
+      {'A', "", "SSTATUSHEROIC_02", nullptr},
+      {'A', "", "SSTATUSHEROIC_03", nullptr},
+      {'A', "", "SSTATUSHEROIC_04", nullptr},
+      {'A', "", "SSTATUSHEROIC_05", nullptr},
+      {'A', "", "SSTATUSHEROIC_06", nullptr},
+      {'A', "", "SSTATUSHEROIC_07", nullptr},
+      {'A', "", "SSTATUSHEROIC_08", nullptr},
+      {'A', "", "SSTATUSHEROIC_09", nullptr},
+      {'A', "", "SSTATUSHEROIC_10", nullptr},
+      {'A', "", "SSTATUSHEROIC_11", nullptr},
+      {'A', "", "SSTATUSHEROIC_12", nullptr},
+      {'A', "", "SSTATUSHEROIC_13", nullptr},
+      {'A', "", "SSTATUSHEROIC_14", nullptr},
+      {'A', "", "SSTATUSHEROIC_15", nullptr},
+      {'A', "", "SSTATUSHEROIC_16", nullptr},
+      {'A', "", "SSTATUSHEROIC_17", nullptr},
+      {'A', "", "SSTATUSHEROIC_18", nullptr},
+      {'A', "", "SSTATUSHEROIC_19", nullptr},
+      {'A', "", "SSTATUSHEROIC_20", nullptr},
+      {'A', "", "SSTATUSHEROIC_21", nullptr},
+      {'A', "", "SSTATUSHEROIC_22", nullptr},
+      {'A', "", "SSTATUSHEROIC_23", nullptr},
+      {'A', "", "SSTATUSHEROIC_24", nullptr},
+      {'A', "", "SSTATUSHEROIC_25", nullptr},
+      {'A', "", "SSTATUSHEROIC_26", nullptr},
+      {'A', "", "SSTATUSHEROIC_27", nullptr},
+      {'A', "", "SSTATUSHEROIC_28", nullptr},
+      {'A', "", "SSTATUSHEROIC_29", nullptr},
+      {'A', "", "SSTATUSHEROIC_30", nullptr},
+      {'A', "", "SSTATUSHEROIC_31", nullptr},
+      {'A', "", "SSTATUSHEROIC_32", nullptr},
+      {'A', "", "SSTATUSHEROIC_33", nullptr},
+      {'A', "", "SSTATUSHEROIC_34", nullptr},
+      {'A', "", "SSTATUSHEROIC_35", nullptr},
+      {'A', "", "SSTATUSHEROIC_36", nullptr},
+      {'A', "", "SSTATUSHEROIC_37", nullptr},
+      {'A', "", "SSTATUSHEROIC_38", nullptr},
+      {'A', "", "SSTATUSHEROIC_39", nullptr},
+      }},
     };
+  return tabs;
+  }
+
+// what the screen shows: the lines of every tab, filled by setPlayer
+struct NbStatLine { std::string label, value; bool header = false; };
+static std::vector<std::vector<NbStatLine>> nbStatData;
+static int   nbStatTab    = 0;
+static float nbStatScroll = 0;
+static bool  nbStatDrag   = false;
+static float nbStatDragY  = 0, nbStatDragStart = 0;
+
+struct NbStatGeom { Tempest::Rect panel, tabs, content; int rowH = 1; };
+static NbStatGeom nbStatGeom(int W, int H) {
+  NbStatGeom g;
+  g.panel   = Tempest::Rect(int(float(W)*0.04f),int(float(H)*0.05f),int(float(W)*0.92f),int(float(H)*0.90f));
+  const int pad = int(float(g.panel.w)*0.03f);
+  // the pause button of the phone is in the upper left corner: the tabs start after it
+  const int tx  = std::max(g.panel.x+pad,int(float(W)*0.10f));
+  g.tabs    = Tempest::Rect(tx,g.panel.y+int(float(g.panel.h)*0.03f),g.panel.x+g.panel.w-pad-tx,int(float(g.panel.h)*0.11f));
+  const int cy  = g.tabs.y+g.tabs.h+int(float(g.panel.h)*0.03f);
+  // the back button of the phone is in the lower right corner: the values end before it
+  g.content = Tempest::Rect(g.panel.x+pad,cy,int(float(g.panel.w)*0.80f),g.panel.y+g.panel.h-pad-cy);
+  g.rowH    = std::max(1,int(float(H)*0.058f));
+  return g;
+  }
+
+static float nbStatMaxScroll(const NbStatGeom& g) {
+  if(nbStatTab<0 || size_t(nbStatTab)>=nbStatData.size())
+    return 0;
+  const float total = float(nbStatData[size_t(nbStatTab)].size())*float(g.rowH);
+  return std::max(0.f,total-float(g.content.h));
+  }
 
 /// Polish in the code page of the game (windows-1250): the language setting is not always 2 for a Polish game
 static bool nbHasPolishLetters(std::string_view s) {
@@ -454,24 +650,16 @@ bool GameMenu::isNbStatus() const {
   }
 
 void GameMenu::initNbStatus() {
-  const bool pl = Gothic::settingsGetI("GAME","language")==2 || scanPolish() || nbStatusPolish;
   for(auto& i:hItems)
     i = Item();
-  size_t n = 0;
-  for(auto& r:nbStatusRows) {
-    if(n>=zenkit::IMenu::item_count)
-      break;
-    auto h = std::make_shared<zenkit::IMenuItem>();
-    h->type     = zenkit::MenuItemType::TEXT;
-    h->text[0]  = "";
-    // the texts of the menu are in the code page of the game (Polish: windows-1250), as the scripts
-    h->text[1]  = pl ? r.plText : r.enText;
-    h->fontname = "FONT_OLD_10_WHITE.TGA";
-    hItems[n].name    = r.name;
-    hItems[n].handle  = std::move(h);
-    hItems[n].visible = true;
-    ++n;
-    }
+  // the mark of the screen; the lines are in nbStatData
+  hItems[0].name    = "NB_STATUS_HDR_CHAR";
+  hItems[0].handle  = std::make_shared<zenkit::IMenuItem>();
+  hItems[0].visible = false;
+  nbStatTab    = 0;
+  nbStatScroll = 0;
+  nbStatDrag   = false;
+  nbStatData.clear();
   }
 
 #ifdef OPENGOTHIC_TOUCH_UI
@@ -479,47 +667,63 @@ void GameMenu::paintNbStatus(Painter& p) {
   using namespace touchdraw;
   const int W = w();
   const int H = h();
-  bar(p,0,0,W,H,Dim);
-
-  const Rect panel(int(float(W)*0.04f),int(float(H)*0.06f),int(float(W)*0.92f),int(float(H)*0.88f));
-  frame(p,panel,1,PanelLine,PanelFill);
-
+  const auto g = nbStatGeom(W,H);
   const bool pl = Gothic::settingsGetI("GAME","language")==2 || scanPolish() || nbStatusPolish;
-  auto fTitle = fontOf(true, int(float(H)*0.060f),Cream);
+
+  bar(p,0,0,W,H,Dim);
+  frame(p,g.panel,1,PanelLine,PanelFill);
+
+  // the tabs
+  const auto& tabs = nbStatTabs();
+  const int   n    = int(tabs.size());
+  auto fTab   = fontOf(true,int(float(H)*0.040f),Cream);
+  auto fTabHi = fontOf(true,int(float(H)*0.040f),Gold);
+  for(int i=0; i<n; ++i) {
+    const int x0 = g.tabs.x+g.tabs.w*i/n;
+    const int x1 = g.tabs.x+g.tabs.w*(i+1)/n;
+    const bool active = i==nbStatTab;
+    if(active) {
+      bar(p,x0+2,g.tabs.y,x1-x0-4,g.tabs.h,RowSel);
+      bar(p,x0+2,g.tabs.y+g.tabs.h-std::max(2,int(float(H)*0.004f)),x1-x0-4,std::max(2,int(float(H)*0.004f)),Gold);
+      }
+    auto& f = active ? fTabHi : fTab;
+    const std::string label = fit(f,pl ? tabs[size_t(i)].pl : tabs[size_t(i)].en,x1-x0-8);
+    f.drawText(p,(x0+x1-f.textSize(label).w)/2,g.tabs.y+g.tabs.h/2+f.pixelSize()/2,label);
+    }
+  bar(p,g.panel.x+1,g.tabs.y+g.tabs.h+1,g.panel.w-2,1,Hairline);
+
+  if(nbStatTab<0 || size_t(nbStatTab)>=nbStatData.size())
+    return;
+  const auto& lines = nbStatData[size_t(nbStatTab)];
+  nbStatScroll = std::clamp(nbStatScroll,0.f,nbStatMaxScroll(g));
+
   auto fHead  = fontOf(false,int(float(H)*0.030f),Gold);
   auto fLabel = fontOf(true, int(float(H)*0.036f),Cream);
   auto fValue = fontOf(true, int(float(H)*0.036f),Gold);
-
-  const int padX = int(float(panel.w)*0.04f);
-  // the pause button of the phone is in the upper left corner
-  fTitle.drawText(p,std::max(panel.x+padX,int(float(W)*0.10f)),panel.y+int(float(panel.h)*0.09f),pl ? "Statystyki postaci" : "Character");
-
-  const int colW  = (panel.w-3*padX)/2;
-  const int top   = panel.y+int(float(panel.h)*0.15f);
-  const int rowH  = std::max(1,int(float(panel.h)*0.048f));
-  int       col   = 0;
-  int       y     = top;
-  for(auto& it:hItems) {
-    if(it.handle==nullptr || it.name.empty())
-      continue;
-    if(it.name=="NB_STATUS_HDR_COMBAT") {
-      col = 1;
-      y   = top;
+  p.setScissor(g.content.x,g.content.y,g.content.w,g.content.h);
+  int yy = g.content.y-int(nbStatScroll);
+  for(auto& l:lines) {
+    if(yy+g.rowH>=g.content.y && yy<=g.content.y+g.content.h) {
+      if(l.header) {
+        drawSpaced(p,fHead,g.content.x,yy+g.rowH/2+fHead.pixelSize()/2,l.label,std::max(1,int(float(H)*0.003f)));
+        bar(p,g.content.x,yy+g.rowH-2,g.content.w,1,Hairline);
+        } else {
+        const int vw = fValue.textSize(l.value).w;
+        fLabel.drawText(p,g.content.x,yy+g.rowH/2+fLabel.pixelSize()/2,fit(fLabel,l.label,g.content.w-vw-int(float(W)*0.02f)));
+        fValue.drawText(p,g.content.x+g.content.w-vw,yy+g.rowH/2+fValue.pixelSize()/2,l.value);
+        }
       }
-    const int x = panel.x+padX+col*(colW+padX);
-    if(it.name.rfind("NB_STATUS_HDR_",0)==0) {
-      if(y!=top)
-        y += rowH/3;
-      drawSpaced(p,fHead,x,y+rowH/2+fHead.pixelSize()/2,it.handle->text[1],std::max(1,int(float(H)*0.003f)));
-      bar(p,x,y+rowH-2,colW,1,Hairline);
-      y += rowH;
-      continue;
-      }
-    const std::string& value = it.handle->text[0];
-    const int vw = fValue.textSize(value).w;
-    fLabel.drawText(p,x,y+rowH/2+fLabel.pixelSize()/2,fit(fLabel,it.handle->text[1],colW-vw-int(float(W)*0.02f)));
-    fValue.drawText(p,x+colW-vw,y+rowH/2+fValue.pixelSize()/2,value);
-    y += rowH;
+    yy += g.rowH;
+    }
+  p.setScissor(-x(),-y(),owner.w(),owner.h());
+
+  // the scroll bar
+  const float maxS = nbStatMaxScroll(g);
+  if(maxS>0) {
+    const int bw = std::max(3,int(float(W)*0.004f));
+    const int bh = std::max(bw*4,int(float(g.content.h)*float(g.content.h)/(float(g.content.h)+maxS)));
+    const int by = g.content.y+int(float(g.content.h-bh)*nbStatScroll/maxS);
+    bar(p,g.content.x+g.content.w+int(float(W)*0.015f),by,bw,bh,Gold);
     }
   }
 #endif
@@ -781,6 +985,22 @@ void GameMenu::finishSaves() {
 
 /// phase: 0 - down, 1 - move, 2 - up, 3 - cancel
 void GameMenu::mobileTouch(float px, float py, int phase) {
+  if(isNbStatus()) {
+    const auto g = nbStatGeom(w(),h());
+    if(phase==0) {
+      nbStatDrag      = g.content.contains(int(px),int(py));
+      nbStatDragY     = py;
+      nbStatDragStart = nbStatScroll;
+      } else
+    if(nbStatDrag && phase==1) {
+      nbStatScroll = std::clamp(nbStatDragStart+(nbStatDragY-py),0.f,nbStatMaxScroll(g));
+      update();
+      } else
+    if(phase>=2) {
+      nbStatDrag = false;
+      }
+    return;
+    }
   if(optView.host) {
     optionsTouch(px,py,phase);
     return;
@@ -874,6 +1094,20 @@ void GameMenu::mobileScroll(float dy) {
   }
 
 void GameMenu::mobileTap(float px, float py) {
+  if(isNbStatus()) {
+    const auto g = nbStatGeom(w(),h());
+    const int  n = int(nbStatTabs().size());
+    if(g.tabs.contains(int(px),int(py)) && n>0) {
+      const int t = std::clamp(int((px-float(g.tabs.x))*float(n)/float(std::max(1,g.tabs.w))),0,n-1);
+      if(t!=nbStatTab) {
+        nbStatTab    = t;
+        nbStatScroll = 0;
+        Gothic::inst().emitGlobalSound(Gothic::inst().loadSoundFx("MENU_BROWSE"));
+        update();
+        }
+      }
+    return;
+    }
   if(optView.host) {
     optionsTap(px,py);
     return;
@@ -2507,26 +2741,111 @@ void GameMenu::setPlayer(const Npc &pl) {
     }
 
   if(isNbStatus()) {
+    // the values: the scripts of NB fill them for the window of the plugin (RefreshStatusMenuData)
+    auto* halt = sc.findSymbol("BHALTHERO");
+    const int32_t haltPrev = (halt!=nullptr && halt->type()==zenkit::DaedalusDataType::INT) ? halt->get_int() : 0;
+    const size_t refresh = sc.findSymbolIndex("REFRESHSTATUSMENUDATA");
+    if(refresh!=size_t(-1)) {
+      try {
+        sc.invokeState(const_cast<Npc*>(&pl),nullptr,nullptr,ScriptFn(refresh));
+        }
+      catch(const std::exception& e) {
+        Tempest::Log::e("NB status: ",e.what());
+        }
+      }
+    if(halt!=nullptr && halt->type()==zenkit::DaedalusDataType::INT)
+      halt->set_int(haltPrev);  // the plugin lets the hero go when the window is closed
+
+    auto str = [&](const char* name) -> std::string {
+      if(name==nullptr)
+        return std::string();
+      auto* v = sc.findSymbol(name);
+      if(v==nullptr || v->type()!=zenkit::DaedalusDataType::STRING)
+        return std::string();
+      return v->get_string();
+      };
     auto intVal = [&](std::string_view name) -> int32_t {
       auto* v = sc.findSymbol(name);
       return (v!=nullptr && v->type()==zenkit::DaedalusDataType::INT) ? v->get_int() : 0;
       };
-    set("NB_STATUS_INT", intVal("ATR_INTELLECT"));
-    set("NB_STATUS_STAMINA", intVal("ATR_STAMINA"), intVal("ATR_STAMINA_MAX")*10); // NB keeps it x10: ATR_STAMINA = ATR_STAMINA_MAX*10
+    auto engine = [&](std::string_view k) -> std::string {
+      if(k=="guild")   return gilds->get_string(uint16_t(pl.guild()));
+      if(k=="level")   return std::to_string(pl.level());
+      if(k=="exp")     return std::to_string(pl.experience());
+      if(k=="next")    return std::to_string(pl.experienceNext());
+      if(k=="lp")      return std::to_string(pl.learningPoints());
+      if(k=="str")     return std::to_string(pl.attribute(ATR_STRENGTH));
+      if(k=="dex")     return std::to_string(pl.attribute(ATR_DEXTERITY));
+      if(k=="mana")    return std::to_string(pl.attribute(ATR_MANA))+"/"+std::to_string(pl.attribute(ATR_MANAMAX));
+      if(k=="hp")      return std::to_string(pl.attribute(ATR_HITPOINTS))+"/"+std::to_string(pl.attribute(ATR_HITPOINTSMAX));
+      if(k=="stamina") return std::to_string(intVal("ATR_STAMINA"))+"/"+std::to_string(intVal("ATR_STAMINA_MAX")*10); // NB keeps it x10
+      if(k.size()==2 && k[0]=='t')
+        return std::to_string(pl.hitChance(Talent(k[1]-'0')))+"%";
+      if(k=="pedge")   return std::to_string(pl.protection(PROT_EDGE));
+      if(k=="pblunt")  return std::to_string(pl.protection(PROT_BLUNT));
+      if(k=="ppoint")  return std::to_string(pl.protection(PROT_POINT));
+      if(k=="pfire")   return std::to_string(pl.protection(PROT_FIRE));
+      if(k=="pmagic")  return std::to_string(pl.protection(PROT_MAGIC));
+      return std::string();
+      };
+    auto meaningful = [](const std::string& v) {
+      return !v.empty() && v!=" " && v!="-";
+      };
+
     // the language from the texts of the game itself (the names of the talents, the guilds)
     if(!nbStatusPolish && (nbHasPolishLetters(tal->get_string(1)) || nbHasPolishLetters(tal->get_string(2)) ||
-                           nbHasPolishLetters(gilds->get_string(uint16_t(pl.guild()))))) {
+                           nbHasPolishLetters(str("SSTATUSPOTIONS")) || nbHasPolishLetters(str("SSTATUSTRAPS"))))
       nbStatusPolish = true;
-      for(auto& r:nbStatusRows)
-        for(auto& it:hItems)
-          if(it.name==r.name && it.handle!=nullptr)
-            it.handle->text[1] = r.plText;
-      }
-    for(uint16_t i=1; i<=4; ++i) {
-      auto& title = tal->get_string(i);
-      for(auto& it:hItems)
-        if(it.name==string_frm("MENU_ITEM_TALENT_",i) && it.handle!=nullptr && !title.empty())
-          it.handle->text[1] = title;
+
+    nbStatData.clear();
+    for(auto& tab:nbStatTabs()) {
+      std::vector<NbStatLine> lines;
+      bool any = false;
+      for(auto& r:tab.rows) {
+        NbStatLine l;
+        if(r.kind=='H') {
+          l.header = true;
+          l.label  = r.label;
+          lines.push_back(std::move(l));
+          continue;
+          }
+        if(r.kind=='A') {
+          // an achievement: the scripts write "- Name" when it is done
+          std::string v = str(r.a);
+          if(v.rfind("- ",0)==0)
+            v = v.substr(2);
+          if(v.empty())
+            continue;
+          l.label = v;
+          lines.push_back(std::move(l));
+          any = true;
+          continue;
+          }
+        l.label = r.label;
+        if(l.label.size()>1 && l.label[0]=='@')
+          l.label = str(l.label.c_str()+1);   // the label is a text of the scripts
+        std::string v = r.kind=='E' ? engine(r.a) : str(r.a);
+        std::string b = str(r.b);
+        if(r.kind=='E' && r.b!=nullptr && std::string_view(r.b).rfind("SREAL",0)==0) {
+          if(meaningful(b))
+            v += std::string(" (") + (nbStatusPolish ? "baza " : "base ") + b + ")";
+          } else
+        if(meaningful(b)) {
+          if(!meaningful(v))
+            v = b; else
+            v += " ("+b+")";
+          }
+        if(v.empty())
+          v = "-";
+        l.value = std::move(v);
+        lines.push_back(std::move(l));
+        }
+      if(!tab.rows.empty() && tab.rows.back().kind=='A' && !any) {
+        NbStatLine l;
+        l.label = nbStatusPolish ? "Brak" : "None";
+        lines.push_back(std::move(l));
+        }
+      nbStatData.push_back(std::move(lines));
       }
     }
 

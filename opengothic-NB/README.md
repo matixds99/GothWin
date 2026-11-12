@@ -29,8 +29,8 @@ Te pliki trzeba **dodać**, nie podmieniać. Bez nich build się nie uda.
 | `common/world/objects/npc.cpp` | zmienne NB postaci, AI potworów (Copilot) + bohater nie wstaje z łóżka przy śnie | 0, 0a, 7 |
 | `common/gothic.cpp` | ekran wczytywania: obrazki moda `LOADING_<ŚWIAT>_<numer>` | 3, 3a |
 | `common/mainwindow.cpp` | ekran wczytywania: świat z nagłówka save'a, czarne tło zamiast białego | 3, 3a |
-| `common/ui/gamemenu.cpp` | strona „Ustawienia gry” z przełącznikami NB, ekran statystyk postaci (B) | 5, 8 |
-| `common/ui/gamemenu.h` | nowe funkcje ekranu statystyk | 8 |
+| `common/ui/gamemenu.cpp` | strona „Ustawienia gry” z przełącznikami NB, okno statystyk postaci (B) z 5 zakładkami | 5, 8, 10 |
+| `common/ui/gamemenu.h` | nowe funkcje ekranu statystyk | 8, 10 |
 
 ---
 

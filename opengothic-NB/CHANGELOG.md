@@ -116,6 +116,17 @@ Pliki: przy każdej poprawce jest lista plików. **🆕 NOWY PLIK** oznacza plik
 - **Przyczyna:** `B_LogEntry` w NB pokazuje komunikat przez `AI_PrintQuest(tytuł, temat)`, czyli funkcję Uniona.
 - **Poprawka:** `AI_PrintQuest`, `AI_PrintQuestComplete` i `AI_PrintQuestFail` wypisują na ekranie tytuł i nazwę tematu. Dodane są też inne komunikaty Uniona (`AI_Print`, `AI_PrintRed`, `AI_PrintBonus`, `AI_NoticePrint`, `AI_FastPrintSkillCraft`), ale tylko wtedy, gdy w skryptach są to funkcje zewnętrzne. Te, które już działają przez skrypty, zostają bez zmian.
 
+### 10. Pełne okno statystyk NB – 5 zakładek – 🧪 (12.11.2026)
+- **Pliki:** `common/ui/gamemenu.cpp`, `common/ui/gamemenu.h` (oba zmienione, nowych plików brak)
+- **Co:** ekran statystyk (B) ma zakładki jak okno pluginu Union. Przy każdym otwarciu woła skrypt NB `RefreshStatusMenuData`, który wylicza wszystkie wartości (po polsku, ze skryptów: „mistrz”, „ekspert”, „uczony”, nazwy bossów…):
+  1. **Postać:** gildia, rozdział, poziom, doświadczenie, punkty nauki, dzień, ranga, karma Innosa i Beliara, gildie złodziei, zabójców i kupców, zabici przeciwnicy, cały poziom trudności (PN i życie na poziom, życie, siła i ochrona wrogów, mikstury, pułapki, sen, głód),
+  2. **Umiejętności:** rzemiosło, górnictwo i wytapianie, strzały, myślistwo (skóry, kły, pazury, rogi, łuski smoków…), gotowanie, złodziejstwo, magia, języki, retoryka, regeneracja, dary bogów,
+  3. **Atrybuty:** siła, zręczność i mana (z wartością bazową), inteligencja, życie, wytrzymałość, władanie bronią w % ze stopniem (zielony/adept/ekspert/mistrz), tarcza, dwie bronie, styl orków,
+  4. **Ochrona:** sieczna, obuchowa, pociski, ogień, magia, przewrócenie, odporność na trucizny, zimno i żar,
+  5. **Osiągnięcia:** pokonani bossowie (39 możliwych).
+- Listę przewija się palcem, a zakładkę zmienia się dotknięciem.
+- **Uwaga:** opisów pozycji nie ma w plikach moda (rysuje je plugin), więc są napisane od nowa i mogą się trochę różnić od oryginału. Wartości są oryginalne, ze skryptów.
+
 ---
 
 ## Do zrobienia
