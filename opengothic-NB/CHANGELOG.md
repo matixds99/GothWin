@@ -147,7 +147,7 @@ Pliki: przy każdej poprawce jest lista plików. **🆕 NOWY PLIK** oznacza plik
 - **Okienko opisu (`inventorymenu.cpp`):** przy 5–6 wierszach pierwszy wiersz nachodził na nazwę przedmiotu, a długie wiersze (np. opis Świętej Strzały) wychodziły poza okienko na ekwipunek. Teraz wiersze zmniejszają się, gdy nie mieszczą się pod nazwą, a za długi wiersz dostaje mniejszą czcionkę, żeby zmieścił się na szerokość.
 - **Czego jeszcze nie ma:** dopisków NB zależnych od stanu broni: „Naostrzona”, „Magiczna”, „Przeklęta”, broń orków i jaszczuroludzi, premie z pieczęci, waga.
 
-### 13. Pełne opisy NB: dopiski broni i waga – 🧪 (12.11.2026)
+### 13. Pełne opisy NB: dopiski broni i waga – ✅ waga sprawdzona (12.11.2026)
 - **Pliki:** `common/game/nbiteminfo.h` (🆕 nowy plik z poprawki 12, podmień na nową wersję), `common/game/gamescript.cpp`
 - **Przyczyna:** reszta opisu, którą rysuje plugin: dopiski typu broni zapisane w bitach `C_ITEM.HP` (`SetItemVarTrue(…, BIT_ITEM_…)`) i waga z `RX_SetWeightValue`. Funkcja `RX_SetWeightValueExt` (i `RX_GetWeightValue`) to zewnętrzne funkcje pluginu, których nikt nie obsługiwał, więc wagi się w ogóle nie zapisywały.
 - **Poprawka:**
