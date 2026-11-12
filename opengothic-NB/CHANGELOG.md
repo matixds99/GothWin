@@ -177,10 +177,16 @@ Pliki: przy każdej poprawce jest lista plików. **🆕 NOWY PLIK** oznacza plik
 - **Co wiadomo:** Lord Andre nosi `ITAR_PAL_H_NPC` (model `Armor_Pal_H.asc`), Lothar zbroję paladyna `Armor_Pal_M.asc`. Pancerz straży (`WACHE_ARMOR_V2.asc`) działa. W logu nie ma `unable to load mesh` dla tych zbroi, więc model chyba się wczytuje, tylko się nie rysuje.
 - **Na razie:** do `log.txt` dopisuje się raz na każdy model zbroi linia `armor "…": …` (czy plik jest w archiwach, ile ma części skórowanych, tekstur i doczepianych elementów, rozmiar). Na jej podstawie zrobię właściwą poprawkę.
 
-### 17. Trafienia w zwierzęta „nie wchodziły” – brak efektów krwi (pióra ścierwojada itp.) – 🧪 (12.11.2026)
+### 17. Brak efektów krwi przy trafieniu (pióra ścierwojada itp.) – 🧪 (12.11.2026)
 - **Pliki:** `common/world/objects/npc.cpp`
 - **Przyczyna:** porównanie z nagraniem z Winlatora: w oryginale przy każdym trafieniu ze ścierwojada lecą białe pióra, a przy śmierci jest ich cały wybuch. To krew silnika: cząsteczki `C_GilValues.BLOOD_EMITTER` gildii ofiary (w NB `BFX_Preset1` to pióra ścierwojada, `BFX_Golem` kamienie, `BFX_Skeleton` kości, `BFX_Demon` …) i przy śmierci ta sama nazwa z `_DEAD`. OpenGothic tego w ogóle nie robił: przy trafieniu był tylko dźwięk, więc cios wyglądał, jakby nie trafił.
 - **Poprawka:** przy trafieniu bronią białą lub strzałą, które zadało obrażenia, pojawiają się cząsteczki `BLOOD_EMITTER` gildii ofiary (w punkcie trafienia, między ofiarą a atakującym), a przy śmierci `BLOOD_EMITTER` + `_DEAD`, jeśli skrypty taki efekt mają. `BLOOD_DISABLED` jest respektowane. Działa dla wszystkich istot, nie tylko zwierząt.
+
+### 18. Trudno trafić zwierzęta, walka „zacina się” – 🔍 diagnostyka (12.11.2026)
+- **Pliki:** `common/world/objects/npc.cpp`
+- **Co wiadomo:** w OpenGothic cios bohatera zadaje obrażenia tylko celowi z focusu (`currentTarget`), i to tylko gdy w chwili uderzenia jest w zasięgu `FIGHT_RANGE_BASE(bohater) + FIGHT_RANGE_BASE(cel) + długość broni` i w kącie ±30° przed bohaterem. Zwierzęta w NB dużo skaczą i krążą, więc któryś z tych warunków może odpadać.
+- **Na razie:** przy każdym ciosie bohatera na ekranie pojawia się `[walka] trafienie/pudlo: … d=… zasieg=… kat=…` albo `pudlo: brak celu`. Na tej podstawie poprawię właściwy warunek. Komunikaty zostaną usunięte po poprawce.
+- **Przy okazji znalezione (do poprawy w następnym kroku):** NB przesuwa numery gildii o 5 (`GIL_SEPERATOR_HUM` = 21, wilk = 32, ścierwojad = 27), a OpenGothic ma na sztywno numery z Gothica II (16, 27, 22). Przez to gildie ludzi 16–20 NB (templariusze, nekromanci …) są traktowane jak potwory, nie dostają ludzkich wartości gildii, a listy nieumarłych/smoka wskazują inne istoty.
 
 ---
 
