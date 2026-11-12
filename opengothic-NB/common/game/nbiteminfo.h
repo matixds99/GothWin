@@ -8,13 +8,41 @@
 //   ranged (ITEM_KAT_FF): 0 damage, 1 type,          2 requirements, 5 value
 //   armor  (ITEM_KAT_ARMOR): 0 edge, 1 blunt, 2 point, 3 fire | magic, 5 requirements
 //   ring/amulet (ITEM_KAT_MAGIC): 0 bonuses (when the item has them)
+//   + row 4: the weight (weapons, shields, armors, helmets), from RX_SetWeightValueExt / WEIGHT
+// The type of a weapon gets the marks of NB from the bits in C_ITEM.HP (SetItemVarTrue):
+// orc weapon (lizard for the Dracon swords), cursed, magic, sharpened.
+// A shield (ITEM_KAT_NF + ITEM_SHIELD) keeps its texts from the script, as in the plugin.
 // Without the constants (not NB) nothing is done.
 
 #include <zenkit/DaedalusVm.hh>
 #include <zenkit/addon/daedalus.hh>
 #include <string>
+#include <array>
+#include <unordered_map>
 
 namespace NbItemInfo {
+
+// RX_SetWeightValueExt(item, index, value): the "weights" of an item instance, RX_W_* (0..9).
+// They are set in the instance of the item (ItMw_..), so they are kept per the instance symbol.
+constexpr size_t WeightCount = 10;
+inline std::unordered_map<uint32_t, std::array<int32_t,WeightCount>>& weights() {
+  static std::unordered_map<uint32_t, std::array<int32_t,WeightCount>> w;
+  return w;
+  }
+
+inline void setWeight(const zenkit::DaedalusInstance& it, int32_t index, int32_t value) {
+  if(index<0 || size_t(index)>=WeightCount)
+    return;
+  auto& w = weights()[it.symbol_index()];
+  w[size_t(index)] = value;
+  }
+
+inline int32_t weight(uint32_t instance, int32_t index) {
+  if(index<0 || size_t(index)>=WeightCount)
+    return 0;
+  auto i = weights().find(instance);
+  return i==weights().end() ? 0 : i->second[size_t(index)];
+  }
 
 inline const std::string& str(zenkit::DaedalusVm& vm, const char* name) {
   static const std::string empty;
@@ -117,6 +145,10 @@ inline std::string requirements(zenkit::DaedalusVm& vm, const zenkit::IItem& it)
 inline std::string weaponType(zenkit::DaedalusVm& vm, const zenkit::IItem& it) {
   using F = zenkit::ItemFlag;
   std::string ret;
+  const auto mark = [&](const char* name) {
+    ret += " | ";
+    ret += str(vm,name);
+    };
   if(has(it,uint32_t(F::TWO_HANDED_SWORD)) || has(it,uint32_t(F::TWO_HANDED_AXE)))
     ret += str(vm,"RX_INV_DESCWEAPON_TYPE_TWO");
   if(has(it,0x10003))
@@ -129,6 +161,22 @@ inline std::string weaponType(zenkit::DaedalusVm& vm, const zenkit::IItem& it) {
     ret += str(vm,"RX_INV_DESCWEAPON_TYPE_CROSS");
   if(has(it,uint32_t(F::BOW)))
     ret += str(vm,"RX_INV_DESCWEAPON_TYPE_BOW");
+
+  // the bits of NB in C_ITEM.HP: BIT_ITEM_SHARPED 1, ORC_WEAPON 0x8000, UNDEAD_WEAPON 0x10000, MAG_SWORD 0x40000
+  const uint32_t bits = uint32_t(it.hp);
+  if(bits & 0x8000) {
+    auto* sym  = vm.find_symbol_by_index(it.symbol_index());
+    bool  drac = sym!=nullptr && (sym->name()=="ITMW_2H_DRACONSWORD_01" || sym->name()=="ITMW_2H_DRACONSWORD_02");
+    mark(drac ? "RX_INV_DESCWEAPON_TYPE_LIZARD" : "RX_INV_DESCWEAPON_TYPE_ORC");
+    }
+  if(bits & 0x10000)
+    mark("RX_INV_DESCWEAPON_TYPE_CURSED");
+  if(bits & 0x40000)
+    mark("RX_INV_DESCWEAPON_TYPE_MAGIC");
+  if(bits & 0x1)
+    mark("RX_INV_DESCWEAPON_TYPE_SHARPED");
+  if(ret.rfind(" | ",0)==0)
+    ret.erase(0,3);
   return ret;
   }
 
@@ -161,6 +209,15 @@ inline void apply(zenkit::DaedalusVm& vm, zenkit::IItem& it) {
   constexpr int32_t CAT_MAGIC = int32_t(1u<<31);
 
   auto clear = [&]() { for(auto& c:it.count) c = 0; };
+  // the weight: in the plugin it is a line of its own under the description
+  auto putWeight = [&](int32_t w, bool keep) {
+    if(keep && !it.text[4].empty())
+      return;
+    it.text[4]  = str(vm,"RX_INV_DESCWEAPON_WEIGHT") + std::to_string(w);
+    it.count[4] = 0;
+    };
+  using F = zenkit::ItemFlag;
+  const bool shield = it.main_flag==CAT_NF && has(it,0x40000) && !has(it,0x40003);
 
   if(it.main_flag==CAT_ARMOR) {
     clear();
@@ -171,6 +228,13 @@ inline void apply(zenkit::DaedalusVm& vm, zenkit::IItem& it) {
     it.text[3] = str(vm,"RX_INV_DESCARMOR_PROT_FIRE")  + std::to_string(it.protection[D::FIRE]) + " | " +
                  str(vm,"RX_INV_DESCARMOR_PROT_MAGIC") + std::to_string(it.protection[D::MAGIC]);
     it.text[5] = requirements(vm,it);
+    if(it.wear==1 || it.wear==2) // torso, head
+      putWeight(it.weight,false);
+    return;
+    }
+
+  if(shield) {
+    putWeight(it.weight,true);
     return;
     }
 
@@ -188,12 +252,16 @@ inline void apply(zenkit::DaedalusVm& vm, zenkit::IItem& it) {
     it.text[2] = requirements(vm,it);
     it.text[5] = str(vm,"RX_INV_DESCWEAPON_PRICE");
     it.count[5] = it.value;
+    const uint32_t inst = it.symbol_index();
+    if(it.main_flag==CAT_NF)
+      putWeight(weight(inst,0)+weight(inst,1),false); // RX_W_CRUSHINDEX + RX_W_MELEEWEAPONINDEX
+    else
+      putWeight(weight(inst,9),false);                // RX_W_RANGEWEAPONINDEX
     return;
     }
 
   if(it.main_flag==CAT_MAGIC) {
-    using F = zenkit::ItemFlag;
-    if(!has(it,uint32_t(F::RING)) && !has(it,uint32_t(F::AMULET)) && !has(it,uint32_t(F::BELT)))
+    if(!has(it,uint32_t(F::RING)) && !has(it,uint32_t(F::AMULET)))
       return;
     auto j = jewel(vm,it);
     if(!j.empty()) {

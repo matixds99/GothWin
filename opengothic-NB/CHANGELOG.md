@@ -147,6 +147,17 @@ Pliki: przy każdej poprawce jest lista plików. **🆕 NOWY PLIK** oznacza plik
 - **Okienko opisu (`inventorymenu.cpp`):** przy 5–6 wierszach pierwszy wiersz nachodził na nazwę przedmiotu, a długie wiersze (np. opis Świętej Strzały) wychodziły poza okienko na ekwipunek. Teraz wiersze zmniejszają się, gdy nie mieszczą się pod nazwą, a za długi wiersz dostaje mniejszą czcionkę, żeby zmieścił się na szerokość.
 - **Czego jeszcze nie ma:** dopisków NB zależnych od stanu broni: „Naostrzona”, „Magiczna”, „Przeklęta”, broń orków i jaszczuroludzi, premie z pieczęci, waga.
 
+### 13. Pełne opisy NB: dopiski broni i waga – 🧪 (12.11.2026)
+- **Pliki:** `common/game/nbiteminfo.h` (🆕 nowy plik z poprawki 12, podmień na nową wersję), `common/game/gamescript.cpp`
+- **Przyczyna:** reszta opisu, którą rysuje plugin: dopiski typu broni zapisane w bitach `C_ITEM.HP` (`SetItemVarTrue(…, BIT_ITEM_…)`) i waga z `RX_SetWeightValue`. Funkcja `RX_SetWeightValueExt` (i `RX_GetWeightValue`) to zewnętrzne funkcje pluginu, których nikt nie obsługiwał, więc wagi się w ogóle nie zapisywały.
+- **Poprawka:**
+  - typ broni dostaje dopiski jak w pluginie: „| Broń orków” (`BIT_ITEM_ORC_WEAPON`; dla Mieczy Draconów „Broń jaszczuroczłeków”), „| Przeklęta” (`BIT_ITEM_UNDEAD_WEAPON`), „| Magiczna” (`BIT_ITEM_MAG_SWORD`), „| Naostrzona” (`BIT_ITEM_SHARPED`),
+  - nowy wiersz **„Waga: N”**: broń biała = `RX_W_CRUSHINDEX` + `RX_W_MELEEWEAPONINDEX`, łuki i kusze = `RX_W_RANGEWEAPONINDEX`, pancerze, hełmy i tarcze = `WEIGHT` przedmiotu,
+  - obsługa `RX_SetWeightValueExt` / `RX_GetWeightValue` (wagę czytają też skrypty, np. `Hero_Poisoned`),
+  - tarcze zostawiają opis ze skryptu (tak robi plugin), dostają tylko wagę,
+  - opis biżuterii tylko dla pierścieni i amuletów (jak w pluginie).
+- **Czego nie ma i nie będzie:** premii z pieczęci (zaklinanie kamieniami `ITMI_ENCHANTSTONE_*`) – to osobne okno i dane pluginu, których OpenGothic nie ma. Naostrzenie plugin też trzyma u siebie, więc „Naostrzona” pojawi się tylko przy broni, którą skrypt oznaczy bitem.
+
 ---
 
 ## Do zrobienia

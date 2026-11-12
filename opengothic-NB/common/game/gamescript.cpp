@@ -901,6 +901,15 @@ void GameScript::initCommon() {
     // the tables of crafting (alchemy, runes, scrolls, anvil, ...): NB opens the window of its DLL here.
     // The scripts of NB still have the old menus of dialogs (PC_Health_Start, PC_Circle, PC_..._End),
     // so this does what AI_ProcessInfos(hero) does in Gothic 2: the table opens the menu of the recipes.
+    // RX_SetWeightValue(item, RX_W_*, value) in the instances of the items: the plugin keeps it per the
+    // instance; used for the weight in the description (nbiteminfo.h) and by the scripts (Hero_Poisoned)
+    bindNb("RX_SETWEIGHTVALUEEXT", [](std::shared_ptr<zenkit::IItem> itm, int32_t index, int32_t value) {
+      if(itm!=nullptr)
+        NbItemInfo::setWeight(*itm,index,value);
+      });
+    bindNb("RX_GETWEIGHTVALUE", [](std::shared_ptr<zenkit::IItem> itm, int32_t index) -> int32_t {
+      return itm!=nullptr ? NbItemInfo::weight(itm->symbol_index(),index) : 0;
+      });
     bindNb("RX_OPENCRAFT", [this](int32_t /*craftType*/) {
       if(auto pl = owner.player()) {
         aiOutOrderId = 0;
