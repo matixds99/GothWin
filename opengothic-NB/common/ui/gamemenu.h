@@ -61,6 +61,7 @@ class GameMenu : public Tempest::Widget {
       Old       = uint8_t(QuestLog::Status::Success),
       Failed    = uint8_t(QuestLog::Status::Failed),
       Log       = uint8_t(5),
+      NbDone    = uint8_t(6), // New Balance: LOG_SUCCESS is 4 there (= Obsolete), see toStatus
       };
 
     struct ListContentDialog;
@@ -190,6 +191,7 @@ class GameMenu : public Tempest::Widget {
     LogView                               touchLogView() const;
     std::vector<const QuestLog::Quest*>   touchLogQuests() const;
     std::array<std::string,4>             touchLogTabNames() const;
+    std::array<QuestStat,4>               touchLogTabStatus() const;
     void                                  mobileLogTouch(float x, float y, int phase);
     void                                  mobileLogTap(float x, float y);
     void                                  paintTouchLog(Tempest::Painter& p);

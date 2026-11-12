@@ -374,7 +374,18 @@ void GameMenu::resetVm(zenkit::DaedalusVm* inVm) {
   updateValues();
   }
 
+// New Balance redefines the constants of the log: LOG_SUCCESS = 4 (Obsolete for the engine) and uses
+// LOG_FAILED (3) for the bestiary. Its MENU.DAT shows the finished quests in the list "FAILEDMISSIONS"
+// (button "Zakończone zadania") and the bestiary in the list "OLDMISSIONS" (button "Bestiariusz").
+static bool nbLogMenu = false;
+
 GameMenu::QuestStat GameMenu::toStatus(std::string_view str) {
+  if(nbLogMenu) {
+    if(str=="FAILEDMISSIONS")
+      return QuestStat::NbDone;
+    if(str=="OLDMISSIONS")
+      return QuestStat::Failed;
+    }
   if(str=="CURRENTMISSIONS")
     return QuestStat::Current;
   if(str=="OLDMISSIONS")
@@ -389,6 +400,9 @@ GameMenu::QuestStat GameMenu::toStatus(std::string_view str) {
 bool GameMenu::isCompatible(const QuestLog::Quest& q, QuestStat st) {
   if(q.section==QuestLog::Section::Note && st==QuestStat::Log)
     return true;
+  if(st==QuestStat::NbDone)
+    return q.section!=QuestLog::Section::Note &&
+           (q.status==QuestLog::Status::Success || q.status==QuestLog::Status::Obsolete);
   return (uint8_t(q.status)==uint8_t(st) && q.section!=QuestLog::Section::Note);
   }
 
@@ -794,6 +808,8 @@ void GameMenu::initItems() {
       }
     updateItem(hItems[i]);
     }
+
+  nbLogMenu = vm->find_symbol_by_name("MENU_OPT_CONTROLS_NEWOPTIONS")!=nullptr;
 
   // Returning New Balance: "Ustawienia gry" (MENU_OPT_CONTROLS_NEWOPTIONS) is an empty page in MENU.DAT,
   // its Union plugin fills it. Here: the switches of the plugin that the scripts read (Menu_ReadInt).
@@ -1405,13 +1421,55 @@ GameMenu::LogView GameMenu::touchLogView() const {
   }
 
 std::vector<const QuestLog::Quest*> GameMenu::touchLogQuests() const {
-  static const QuestStat tabs[4] = {QuestStat::Current, QuestStat::Old, QuestStat::Failed, QuestStat::Log};
+  const auto tabs = touchLogTabStatus();
   std::vector<const QuestLog::Quest*> ret;
   if(auto ql = Gothic::inst().questLog()) {
     for(size_t i=0; i<ql->questCount(); ++i) {
       auto& quest = ql->quest(ql->questCount()-i-1); // the newest is the first
-      if(isCompatible(quest,tabs[std::clamp(touchLog.tab,0,3)]))
+      if(isCompatible(quest,tabs[size_t(std::clamp(touchLog.tab,0,3))]))
         ret.push_back(&quest);
+      }
+    }
+  return ret;
+  }
+
+/// What each section shows is taken from its button too: "EFFECTS MENU_ITEM_LIST_..." opens a list,
+/// whose USERSTRING says the status (CURRENTMISSIONS...). Mods put the buttons in another order
+/// (New Balance: Current, Finished, Trade and craft = LOG, Bestiary), so a fixed order is wrong.
+std::array<GameMenu::QuestStat,4> GameMenu::touchLogTabStatus() const {
+  std::array<QuestStat,4> ret = {QuestStat::Current, QuestStat::Old, QuestStat::Failed, QuestStat::Log};
+
+  std::vector<const Item*> found;
+  for(const auto& it:hItems) {
+    if(!it.handle || !it.visible || isHidden(it.handle) || it.handle->text[0].empty())
+      continue;
+    if(it.handle->type==zenkit::MenuItemType::LISTBOX || it.handle->type==zenkit::MenuItemType::SLIDER)
+      continue;
+    if(it.handle->pos_x>3600 || it.handle->pos_y<600 || it.handle->pos_y>5600)
+      continue;
+    if(!isSelectable(it.handle))
+      continue;
+    found.push_back(&it);
+    }
+  std::sort(found.begin(),found.end(),[](const Item* a, const Item* b){
+    return a->handle->pos_y<b->handle->pos_y;
+    });
+  if(found.size()<4)
+    return ret;
+
+  for(size_t i=0; i<4; ++i) {
+    for(auto& act:found[i]->handle->on_sel_action_s) {
+      std::string_view a = act;
+      if(a.rfind("EFFECTS ",0)!=0)
+        continue;
+      a.remove_prefix(8);
+      for(const auto& it:hItems) {
+        if(it.handle && it.handle->type==zenkit::MenuItemType::LISTBOX && it.name==a) {
+          ret[i] = toStatus(it.handle->user_string[0]);
+          break;
+          }
+        }
+      break;
       }
     }
   return ret;

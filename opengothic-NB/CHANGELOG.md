@@ -163,6 +163,15 @@ Pliki: przy każdej poprawce jest lista plików. **🆕 NOWY PLIK** oznacza plik
 - **Przyczyna:** OpenGothic rysuje pasek (`PROGRESS.TGA`) w rozmiarze tekstury, a marginesy wypełnienia (`PROGRESS_BAR.TGA`) ma na sztywno w pikselach oryginalnej tekstury Gothica II (512 px szerokości: 75 px z boku, 10 px z góry). NB ma tekstury HD 2× większe (ze zrzutu wychodzi ok. 1024×128), więc pasek był dwa razy większy, a wypełnienie zaczynało się przed ramką i nachodziło na lewy ornament.
 - **Poprawka:** gdy tekstura jest szersza niż 512 px, pasek jest rysowany w rozmiarze oryginału (tekstura / skala), a marginesy wypełnienia skalują się razem z teksturą. Dla zwykłego Gothica II nic się nie zmienia. Ta sama poprawka marginesów działa przy pasku na ekranie zapisu.
 
+### 15. Dziennik: puste „Zakończone zadania”, bestiariusz pod „Handel i rzemiosło” – 🧪 (12.11.2026)
+- **Pliki:** `common/ui/gamemenu.cpp`, `common/ui/gamemenu.h`
+- **Przyczyna:**
+  - NB zmienia stałe dziennika: `LOG_SUCCESS` = 4 (dla silnika to „nieaktualne”), a wpisy bestiariusza zapisuje jako `LOG_FAILED` (3). OpenGothic pokazywał w zakończonych tylko status 2, więc ta zakładka była pusta (np. runy teleportacyjne, bandyci Cavalorna).
+  - Na telefonie zakładki miały na sztywno kolejność z Gothica II: obecne, zakończone, nieudane, notatki. W NB trzecim przyciskiem jest „Handel i rzemiosło” (notatki), a czwartym „Bestiariusz” (status 3), więc bestiariusz trafiał pod handel, a notatki pod bestiariusz.
+- **Poprawka:**
+  - każda zakładka bierze teraz to, co pokazuje, ze swojego przycisku w MENU.DAT (`EFFECTS MENU_ITEM_LIST_…` → `USERSTRING` listy), a nie z pozycji na ekranie,
+  - w NB lista „FAILEDMISSIONS” (Zakończone zadania) pokazuje zadania o statusie 2 i 4, a lista „OLDMISSIONS” (Bestiariusz) status 3, tak jak w menu moda. Dla zwykłego Gothica II nic się nie zmienia.
+
 ---
 
 ## Do zrobienia
