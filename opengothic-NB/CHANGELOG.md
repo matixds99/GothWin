@@ -158,7 +158,7 @@ Pliki: przy każdej poprawce jest lista plików. **🆕 NOWY PLIK** oznacza plik
   - opis biżuterii tylko dla pierścieni i amuletów (jak w pluginie).
 - **Czego nie ma i nie będzie:** premii z pieczęci (zaklinanie kamieniami `ITMI_ENCHANTSTONE_*`) – to osobne okno i dane pluginu, których OpenGothic nie ma. Naostrzenie plugin też trzyma u siebie, więc „Naostrzona” pojawi się tylko przy broni, którą skrypt oznaczy bitem.
 
-### 14. Gruby pasek wczytywania, wypełnienie wychodzi poza ramkę – 🧪 (12.11.2026)
+### 14. Gruby pasek wczytywania, wypełnienie wychodzi poza ramkę – ✅ (12.11.2026)
 - **Pliki:** `common/mainwindow.cpp`
 - **Przyczyna:** OpenGothic rysuje pasek (`PROGRESS.TGA`) w rozmiarze tekstury, a marginesy wypełnienia (`PROGRESS_BAR.TGA`) ma na sztywno w pikselach oryginalnej tekstury Gothica II (512 px szerokości: 75 px z boku, 10 px z góry). NB ma tekstury HD 2× większe (ze zrzutu wychodzi ok. 1024×128), więc pasek był dwa razy większy, a wypełnienie zaczynało się przed ramką i nachodziło na lewy ornament.
 - **Poprawka:** gdy tekstura jest szersza niż 512 px, pasek jest rysowany w rozmiarze oryginału (tekstura / skala), a marginesy wypełnienia skalują się razem z teksturą. Dla zwykłego Gothica II nic się nie zmienia. Ta sama poprawka marginesów działa przy pasku na ekranie zapisu.
