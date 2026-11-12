@@ -638,6 +638,11 @@ bool Npc::resetPositionToTA() {
   if(!isPlayer())
     setInteraction(nullptr,true);
 
+  // the player on a bed (Wld_SetTime of the sleep, in the dialog of the mob): the animation of the bed and the
+  // queue of the dialog stay, otherwise he stands up at once and then plays the animation of leaving the bed
+  if(isPlayer() && currentInteract!=nullptr)
+    return true;
+
   // return monsters to their way-points
   // if(routines.empty() && !isPlayer())
   //   return currentTaPoint()!=nullptr;

@@ -88,9 +88,13 @@ Status:
   - co sekundę na zmianę `RX_Main_CycleTrigger` / `B_GetTime`. Uwaga: wcześniej (wersja Copilota) `RX_Main_CycleTrigger` szedł co sekundę, teraz co 2 sekundy, tak jak w pluginie,
   - co 5 sekund `B_CheckMenuOption` (odczyt opcji moda).
 
+### 7. Łóżko: po przespaniu bohater nagle stoi, a potem robi animację wychodzenia z łóżka – 🧪 (12.11.2026)
+- **Plik:** `common/world/objects/npc.cpp` (`Npc::resetPositionToTA`)
+- **Przyczyna:** sen przewija czas przez `Wld_SetTime`. OpenGothic ustawia wtedy wszystkie postacie według ich planu dnia i przy okazji zatrzymywał animację bohatera, czyli stawiał go na nogi, mimo że ten dalej leżał w łóżku (w menu snu). Gdy zamykałeś menu, łóżko odtwarzało jeszcze animację wstawania.
+- **Poprawka:** jeśli bohater używa obiektu (łóżka), jego animacja i kolejka dialogu zostają bez zmian. Wstaje dopiero normalną animacją łóżka.
+
 ---
 
 ## Do zrobienia
-- [ ] Pulpity z księgami: nie dają inteligencji / punktów nauki (czekam na szczegóły: który pulpit, czy pokazuje się tekst księgi)
-- [ ] Łóżka: co dokładnie nie działa?
+- [ ] Pulpit z księgą w wieży Xardasa: tekst się pokazuje, ale nie daje inteligencji. Skrypty pulpitów (`RX_ChangeInt`) nie zależą od Uniona. Do sprawdzenia: czy pojawia się komunikat „Inteligencja + 1”. Inteligencja NB to osobny atrybut, którego zwykłe okno postaci nie pokazuje.
 - [ ] `EXT_PutInSlot` / `ActivateZSSlot`: mieszek i torba na bohaterze (opcje z poprawki 5)
