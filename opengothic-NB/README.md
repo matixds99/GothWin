@@ -25,7 +25,7 @@ Te pliki trzeba **dodać**, nie podmieniać. Bez nich build się nie uda.
 |---|---|---|
 | `common/world/triggers/cscamera.cpp` | kamera filmowa: czarny ekran w scenie z Xardasem | 1 |
 | `common/world/triggers/cscamera.h` | j.w. | 1 |
-| `common/game/gamescript.cpp` | obsługa skryptów NB (Copilot) + stoły rzemieślnicze, `Menu_ReadInt/WriteInt`, domyślne opcje, pętle pluginu (`PerFrame`, `B_GetTime`) | 0, 2, 4, 5, 6 |
+| `common/game/gamescript.cpp` | obsługa skryptów NB (Copilot) + stoły rzemieślnicze, `Menu_ReadInt/WriteInt`, domyślne opcje, pętle pluginu (`PerFrame`, `B_GetTime`), komunikaty na ekranie (`AI_PrintQuest`…) | 0, 2, 4, 5, 6, 9 |
 | `common/world/objects/npc.cpp` | zmienne NB postaci, AI potworów (Copilot) + bohater nie wstaje z łóżka przy śnie | 0, 0a, 7 |
 | `common/gothic.cpp` | ekran wczytywania: obrazki moda `LOADING_<ŚWIAT>_<numer>` | 3, 3a |
 | `common/mainwindow.cpp` | ekran wczytywania: świat z nagłówka save'a, czarne tło zamiast białego | 3, 3a |
