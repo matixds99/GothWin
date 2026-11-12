@@ -2115,7 +2115,12 @@ bool Npc::implAttack(uint64_t dt) {
     return true;
     }
 
-  if(act==FightAlgo::MV_JUMPBACK || (act==FightAlgo::MV_WAIT && jmp)) {
+  // NB fix 22: WAIT->JUMPBACK promotion (too close) limited by a cooldown, so W_FOCUS={ATTACK,WAIT}
+  // does not turn into a jump-back every second decision
+  const bool closeJump = (act==FightAlgo::MV_WAIT && jmp && fghAlgo.closeJumpReady(owner.tickCount()));
+  if(act==FightAlgo::MV_JUMPBACK || closeJump) {
+    if(closeJump)
+      fghAlgo.onCloseJump(owner.tickCount());
     if(isSwim()) {
       fghAlgo.consumeAction();
       return true;
@@ -2131,6 +2136,13 @@ bool Npc::implAttack(uint64_t dt) {
       return true;
       }
     if(setAnim(Npc::Anim::MoveBack)) {
+      // NB diagnostics (temporary): why a monster backs off from the hero
+      if(currentTarget->isPlayer()) {
+        const char* why = closeJump ? "za blisko" :
+                          currentTarget->isPrehit() ? "zamach gracza (FA_ENEMY_PREHIT)" : "taktyka/po trafieniu";
+        string_frm msg("[odskok] ",handle().name[0]," : ",why);
+        Gothic::inst().onPrint(msg);
+        }
       implFaiWait(visual.pose().animationTotalTime());
       fghAlgo.consumeAction();
       }
