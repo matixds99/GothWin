@@ -195,7 +195,13 @@ Pliki: przy każdej poprawce jest lista plików. **🆕 NOWY PLIK** oznacza plik
 - **Przyczyna:** ten napis rysuje plugin Union (`AI_PrintQuest`, `AI_PrintQuestComplete`, `AI_PrintQuestFail` z UNION_ABI.DLL), nie silnik gry. W poprawce 9 był wypisywany jak zwykły komunikat (biały, w liście u góry). W pluginie: po lewej stronie, na ok. 29% wysokości ekranu, tytuł czcionką ze skryptu `RX_QuestTitleFont` (`FONT_OLD_20_ZHITE.TGA`) w kolorze: nowy wpis – złoty, zadanie nieudane – czerwony, zakończone – zielony, a pod nim nazwa tematu białą `FONT_OLD_20_WHITE`.
 - **Poprawka:** tak samo: tytuł po lewej czcionką `RX_QuestTitleFont`, pod nim temat, przez 5 s. Kolory: nowy wpis żółty, nieudane czerwone, zakończone białe (OpenGothic ma tylko takie kolory czcionek – zielonego brak).
 
+### 20. Młody wilk biegnie do ataku ~1,5× za szybko – 🧪 (12.11.2026)
+- **Pliki:** `common/world/objects/npc.cpp`
+- **Przyczyna:** NB zmniejsza i powiększa wiele istot przez `Mdl_SetModelScale` (271 razy w skryptach: młody wilk 0,7, inne 0,6–1,5). OpenGothic skalował tylko wygląd i kolizję, a ruch z animacji (długość kroku) zostawał pełny. Wilk zmniejszony do 0,7 przebiegał więc 1/0,7 ≈ 1,4× więcej, niż pozwalają jego nogi, a powiększone istoty (1,1–1,5) były za wolne.
+- **Poprawka:** ruch z animacji (root motion) jest mnożony przez skalę modelu, jak w oryginalnym silniku.
+
 ---
 
 ## Do zrobienia
+- [ ] Walka kilku postaci z jednym celem: cel „głupieje” (krąży, nie atakuje) – do zbadania (nagranie z obozu bandytów, Brago)
 - [ ] `EXT_PutInSlot` / `ActivateZSSlot`: mieszek i torba na bohaterze (opcje z poprawki 5)

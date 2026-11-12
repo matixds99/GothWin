@@ -1082,7 +1082,14 @@ void Npc::dropTorch(bool burnout) {
   }
 
 Tempest::Vec3 Npc::animMoveSpeed(uint64_t dt) const {
-  return visual.pose().animMoveSpeed(owner.tickCount(),dt);
+  // the movement of the animation (root motion) is scaled with the model, as in the original engine:
+  // a scaled down creature (Mdl_SetModelScale, e.g. the young wolf of New Balance with 0.7) also makes shorter
+  // steps. Without it the small wolf ran 1/0.7 = ~1.4x too fast for its legs.
+  auto v = visual.pose().animMoveSpeed(owner.tickCount(),dt);
+  v.x *= sz[0];
+  v.y *= sz[1];
+  v.z *= sz[2];
+  return v;
   }
 
 void Npc::setVisual(const Skeleton* v) {
