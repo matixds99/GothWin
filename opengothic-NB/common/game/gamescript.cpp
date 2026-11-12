@@ -873,15 +873,21 @@ void GameScript::initCommon() {
     bindNb("AI_PRINTBONUS",          [](std::string_view msg) { Gothic::inst().onPrint(std::string(msg).c_str()); });
     bindNb("AI_FASTPRINTSKILLCRAFT", [](std::string_view msg) { Gothic::inst().onPrint(std::string(msg).c_str()); });
     bindNb("AI_NOTICEPRINT",         [](int32_t, int32_t, std::string_view msg) { Gothic::inst().onPrint(std::string(msg).c_str()); });
-    // B_LogEntry: "Zadanie uzupełnione!" + the name of the topic
-    const auto printQuest = [](std::string_view title, std::string_view topic) {
-      Gothic::inst().onPrint(std::string(title).c_str());
-      if(!topic.empty())
-        Gothic::inst().onPrint(std::string(topic).c_str());
+    // B_LogEntry: "Nowy wpis w dzienniku!" + the name of the topic. As the Union plugin draws it: on the left,
+    // at 29% of the height, the title in RX_QuestTitleFont (new: gold, failed: red, finished: green in the
+    // plugin - here: yellow / red / white, the colors of OpenGothic fonts) and the topic in white below.
+    const auto printQuest = [this](std::string_view title, std::string_view topic, Resources::FontType color) {
+      std::string titleFont = "FONT_OLD_20_WHITE.TGA";
+      if(auto* f = vm.find_symbol_by_name("RX_QUESTTITLEFONT"); f!=nullptr && f->type()==zenkit::DaedalusDataType::STRING) {
+        if(!f->get_string().empty() && Resources::hasFile(f->get_string()))
+          titleFont = f->get_string();
+        }
+      Gothic::inst().onPrintScreen(title,2,27,5,Resources::font(titleFont,color,1));
+      Gothic::inst().onPrintScreen(topic,2,31,5,Resources::font("FONT_OLD_20_WHITE.TGA",Resources::FontType::Normal,1));
       };
-    bindNb("AI_PRINTQUEST",          printQuest);
-    bindNb("AI_PRINTQUESTCOMPLETE",  printQuest);
-    bindNb("AI_PRINTQUESTFAIL",      printQuest);
+    bindNb("AI_PRINTQUEST",          [printQuest](std::string_view t, std::string_view q) { printQuest(t,q,Resources::FontType::Yellow); });
+    bindNb("AI_PRINTQUESTCOMPLETE",  [printQuest](std::string_view t, std::string_view q) { printQuest(t,q,Resources::FontType::Normal); });
+    bindNb("AI_PRINTQUESTFAIL",      [printQuest](std::string_view t, std::string_view q) { printQuest(t,q,Resources::FontType::Red);    });
     bindNb("AI_FASTPRINTCLEAR",      []() {});
     bindNb("RX_BEGIN",               [](int32_t) {});
     bindNb("RX_END",                 [](int32_t) {});

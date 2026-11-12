@@ -190,6 +190,11 @@ Pliki: przy każdej poprawce jest lista plików. **🆕 NOWY PLIK** oznacza plik
 - **Poprawka:** w walce wręcz (pięści, broń 1H/2H) focus jest „lepki”: przeciwnik zostaje celem, dopóki żyje, jest bliżej niż 10 m i nie zasłania go ściana. Focus przechodzi na innego wroga tylko, gdy ten jest bliżej. Bohater dalej sam się do niego obraca (jak w oryginale). Przycisk blokady celu działa jak dotąd.
 - **Przy okazji znalezione (do poprawy później):** NB przesuwa numery gildii o 5 (`GIL_SEPERATOR_HUM` = 21, wilk = 32, ścierwojad = 27), a OpenGothic ma na sztywno numery z Gothica II (16, 27, 22). Przez to gildie ludzi 16–20 NB (templariusze, nekromanci …) są traktowane jak potwory, nie dostają ludzkich wartości gildii, a listy nieumarłych/smoka wskazują inne istoty.
 
+### 19. Komunikat „Nowy wpis w dzienniku!” wyglądał inaczej niż w oryginale – 🧪 (12.11.2026)
+- **Pliki:** `common/game/gamescript.cpp`
+- **Przyczyna:** ten napis rysuje plugin Union (`AI_PrintQuest`, `AI_PrintQuestComplete`, `AI_PrintQuestFail` z UNION_ABI.DLL), nie silnik gry. W poprawce 9 był wypisywany jak zwykły komunikat (biały, w liście u góry). W pluginie: po lewej stronie, na ok. 29% wysokości ekranu, tytuł czcionką ze skryptu `RX_QuestTitleFont` (`FONT_OLD_20_ZHITE.TGA`) w kolorze: nowy wpis – złoty, zadanie nieudane – czerwony, zakończone – zielony, a pod nim nazwa tematu białą `FONT_OLD_20_WHITE`.
+- **Poprawka:** tak samo: tytuł po lewej czcionką `RX_QuestTitleFont`, pod nim temat, przez 5 s. Kolory: nowy wpis żółty, nieudane czerwone, zakończone białe (OpenGothic ma tylko takie kolory czcionek – zielonego brak).
+
 ---
 
 ## Do zrobienia
