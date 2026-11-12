@@ -24,6 +24,9 @@
 #include "camera.h"
 #include "gothic.h"
 #include "resources.h"
+#include "graphics/mesh/protomesh.h"
+#include "graphics/mesh/submesh/animmesh.h"
+#include <unordered_set>
 
 using namespace Tempest;
 
@@ -1084,6 +1087,42 @@ void Npc::setVisualBody(int32_t headTexNr, int32_t teethTexNr, int32_t bodyTexNr
   durtyTranform|=TR_Pos; // update obj matrix
   }
 
+// NB diagnostics: some armors of New Balance (paladins: Armor_Pal_H/M.asc) are invisible, only the head
+// is drawn. Once per model: what was loaded and from where, to find the reason in log.txt.
+static void logArmorMesh(const std::string& asc) {
+  static std::unordered_set<std::string> done;
+  if(asc.empty() || !done.insert(asc).second)
+    return;
+  std::string mdm = asc;
+  FileExt::exchangeExt(mdm,"ASC","MDM");
+  const bool inVdf = Resources::vdfsIndex().find(mdm)!=nullptr;
+  auto* m = Resources::loadMesh(asc);
+  if(m==nullptr) {
+    Log::e("armor \"",asc,"\": NOT LOADED, ",mdm," in archives=",inVdf ? "yes" : "no");
+    return;
+    }
+  size_t subs = 0, noTex = 0;
+  std::string tex;
+  for(auto& sk:m->skined)
+    for(auto& sub:sk.sub) {
+      ++subs;
+      if(sub.material.tex==nullptr)
+        ++noTex;
+      if(tex.size()<160)
+        tex += sub.texName + " ";
+      }
+  std::string att;
+  for(auto& a:m->attach)
+    if(att.size()<160)
+      att += a.name + (a.hasNode ? "(node) " : " ");
+  Log::i("armor \"",asc,"\": ",mdm," in archives=",inVdf ? "yes" : "no",
+         " skinned=",m->skined.size()," submeshes=",subs," noTexture=",noTex,
+         " attach=",m->attach.size()," nodes=",m->nodes.size(),
+         " bbox=(",m->bboxMesh[0].x,",",m->bboxMesh[0].y,",",m->bboxMesh[0].z,")-(",
+         m->bboxMesh[1].x,",",m->bboxMesh[1].y,",",m->bboxMesh[1].z,")",
+         " textures: ",tex," attachments: ",att);
+  }
+
 void Npc::updateArmor() {
   auto  ar = invent.currentArmor();
   auto& w  = owner;
@@ -1098,6 +1137,7 @@ void Npc::updateArmor() {
       auto& asc   = itData.visual_change;
       auto  vbody = asc.empty() ? MeshObjects::Mesh() : w.addView(asc,vColor,0,bdColor);
       visual.setArmor(*this,std::move(vbody));
+      logArmorMesh(asc);
       }
     }
   }

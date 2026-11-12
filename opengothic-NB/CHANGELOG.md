@@ -172,6 +172,11 @@ Pliki: przy każdej poprawce jest lista plików. **🆕 NOWY PLIK** oznacza plik
   - każda zakładka bierze teraz to, co pokazuje, ze swojego przycisku w MENU.DAT (`EFFECTS MENU_ITEM_LIST_…` → `USERSTRING` listy), a nie z pozycji na ekranie,
   - w NB lista „FAILEDMISSIONS” (Zakończone zadania) pokazuje zadania o statusie 2 i 4, a lista „OLDMISSIONS” (Bestiariusz) status 3, tak jak w menu moda. Dla zwykłego Gothica II nic się nie zmienia.
 
+### 16. Niewidoczne zbroje paladynów (Lothar, Lord Andre – sama głowa) – 🔍 diagnostyka (12.11.2026)
+- **Pliki:** `common/world/objects/npc.cpp`
+- **Co wiadomo:** Lord Andre nosi `ITAR_PAL_H_NPC` (model `Armor_Pal_H.asc`), Lothar zbroję paladyna `Armor_Pal_M.asc`. Pancerz straży (`WACHE_ARMOR_V2.asc`) działa. W logu nie ma `unable to load mesh` dla tych zbroi, więc model chyba się wczytuje, tylko się nie rysuje.
+- **Na razie:** do `log.txt` dopisuje się raz na każdy model zbroi linia `armor "…": …` (czy plik jest w archiwach, ile ma części skórowanych, tekstur i doczepianych elementów, rozmiar). Na jej podstawie zrobię właściwą poprawkę.
+
 ---
 
 ## Do zrobienia
