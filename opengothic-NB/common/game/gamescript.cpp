@@ -1120,10 +1120,16 @@ void GameScript::initCommon() {
     // re-reads the animation ids of the model after the overlays changed; OpenGothic looks the
     // animations up by name each time, so there is nothing to do
     bindNb("RX_INITANIMATIONS", [](std::shared_ptr<zenkit::INpc>) {});
-    // B_SelectWeapon(slf, oth) of NB ends with RX_SelectWeaponNpc(slf, oth): the plugin draws the right
-    // weapon for the fight (B_SelectWeapon of Gothic 2). Without it no NPC drew a weapon in a fight
-    // (Lares, the guards...) and stood still while monsters bit it.
+    // B_SelectWeapon(slf, oth) of NB ends with RX_SelectWeaponNpc(slf, oth): the plugin draws the weapon for the fight.
+    // Without it no NPC drew a weapon in a fight (fix 25). NB fix 31: the rules of the plugin (UNION_ABI.DLL 0x1017F840):
+    //  - with a bow/crossbow and arrows the NPC shoots, unless the enemy is closer than 600 (and AIVRX_NPC_RANGE_ONLY is 0);
+    //    bloodflies and harpies are always shot; an enemy immune to arrows (PROT_POINT -1, golems, trolls, guardians)
+    //    only by a monster archer (AIVRX_IS_MONSTER_ARCHER);
+    //  - an NPC that already shoots does not change to the sword for the animals (wolves, scavengers, rats, gobbos...);
+    //  - after a change of the weapon the next one waits 6 s (AIVRX_NPC_CHANGEWEAPON_TIMER), with arrows
+    // That is why Lares shoots the wolves with his bow.
     bindNb("RX_SELECTWEAPONNPC", [this](std::shared_ptr<zenkit::INpc> slfRef, std::shared_ptr<zenkit::INpc> othRef) {
+      static std::unordered_map<const Npc*,uint64_t> changeTime;
       auto* slf = findNpcRaw(slfRef);
       auto* oth = findNpcRaw(othRef);
       if(slf==nullptr || slf->isDown())
@@ -1131,46 +1137,56 @@ void GameScript::initCommon() {
       // ZS_Attack_Loop asks every frame: the weapon is drawn once, not once per frame
       if(!slf->isAiQueueEmpty())
         return;
-      const auto distSym = [this](std::string_view name, int def) {
-        auto* s = vm.find_symbol_by_name(name);
-        return s!=nullptr && s->type()==zenkit::DaedalusDataType::INT ? s->get_int() : def;
-        };
-      const float meleeDist = float(distSym("FIGHT_DIST_MELEE",600));
-      const float dist      = oth!=nullptr ? slf->qDistTo(*oth) : 0.f;
-      const bool  far       = dist > meleeDist*meleeDist;
-      const bool  ranged    = slf->currentRangedWeapon()!=nullptr && slf->hasAmmunition();
-      const auto  st        = slf->weaponState();
+      const auto  ws      = slf->weaponState();
+      const bool  inRange = (ws==WeaponState::Bow || ws==WeaponState::CBow);
+      const bool  melee   = slf->currentMeleeWeapon()!=nullptr;
+      const bool  ranged  = slf->currentRangedWeapon()!=nullptr;
+      const bool  ammo    = ranged && slf->hasAmmunition();
+      const float dist    = oth!=nullptr ? std::sqrt(slf->qDistTo(*oth)) : 0.f;
+      const int   og      = oth!=nullptr ? int(oth->guild()) : 0;
 
-      if(st==WeaponState::Mage) {
-        // B_SelectSpell has not chosen a spell: back to the weapon
+      bool wantRanged = false, wantMelee = false, decided = false;
+      if(ammo) {
+        const bool close = slf->newBalanceGetNpcVar(55)==0 && dist<600.f && og!=30 && og!=43;
+        if(!close) {
+          const bool immune = oth!=nullptr && (oth->handle().protection[zenkit::DamageType::POINT]==-1 || og==44 || og==50 || og==56);
+          if(!immune || slf->newBalanceGetNpcVar(136)!=0) {
+            wantRanged = !inRange;
+            decided    = true;
+            }
+          }
+        }
+      if(!decided) {
+        if(ws!=WeaponState::Fist && !melee)
+          wantMelee = true;                       // fists
+        else if(melee && ws!=WeaponState::W1H && ws!=WeaponState::W2H)
+          wantMelee = true;
+        }
+      static const int animals[] = {32,24,27,29,30,31,34,35,40,41,57,43,50,51,53,54,28,22,23};
+      if(inRange && ammo && wantMelee && std::find(std::begin(animals),std::end(animals),og)!=std::end(animals))
+        wantMelee = false;
+
+      const uint64_t now   = tickCount();
+      auto           it    = changeTime.find(slf);
+      const bool     timer = (it!=changeTime.end() && now<it->second+6000);
+      if(changeTime.size()>4096)
+        changeTime.clear();
+      if(wantRanged) {
+        if(timer)
+          return;
         slf->aiPush(AiQueue::aiRemoveWeapon());
-        if(far && ranged)
-          slf->aiPush(AiQueue::aiReadyRangedWeapon()); else
-          slf->aiPush(AiQueue::aiReadyMeleeWeapon());
+        slf->aiPush(AiQueue::aiReadyRangedWeapon());
+        changeTime[slf] = now;
         return;
         }
-      if(st==WeaponState::Fist || st==WeaponState::W1H || st==WeaponState::W2H) {
-        if(far && ranged) {
+      if(wantMelee) {
+        if(timer && ammo)
+          return;
+        if(ws!=WeaponState::NoWeapon)
           slf->aiPush(AiQueue::aiRemoveWeapon());
-          slf->aiPush(AiQueue::aiReadyRangedWeapon());
-          }
-        else if(st==WeaponState::Fist && slf->currentMeleeWeapon()!=nullptr) {
-          slf->aiPush(AiQueue::aiRemoveWeapon());
-          slf->aiPush(AiQueue::aiReadyMeleeWeapon());
-          }
-        return;
-        }
-      if(st==WeaponState::Bow || st==WeaponState::CBow) {
-        if(!far || !ranged) {
-          slf->aiPush(AiQueue::aiRemoveWeapon());
-          slf->aiPush(AiQueue::aiReadyMeleeWeapon());
-          }
-        return;
-        }
-      // no weapon in the hands
-      if(far && ranged)
-        slf->aiPush(AiQueue::aiReadyRangedWeapon()); else
         slf->aiPush(AiQueue::aiReadyMeleeWeapon());
+        changeTime[slf] = now;
+        }
       });
 
     // B_CheckHealth of NB runs at the start of every state of a human (AIV_TAPOSITION = NOTINPOS) and calls

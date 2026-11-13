@@ -243,6 +243,15 @@ Pliki: przy każdej poprawce jest lista plików. **🆕 NOWY PLIK** oznacza plik
 - **Przyczyna:** obrażenia w NB: trafienie krytyczne (szansa = umiejętność walki w %) daje siła + broń − ochrona, zwykłe tylko 1/10 tego. Szanse NPC ustawia `B_SetFightSkills` → `RX_ApplyProperOverlaysForNpc` (poprawka 23) – ale tylko w chwili tworzenia postaci, czyli przy nowej grze. W zapisie zrobionym przed poprawką 23 wszyscy NPC (Lares – mistrz, 100%) mają szansę 0% i nigdy nie trafiają krytycznie.
 - **Poprawka:** skrypty NB zapisały te procenty także w `AIVAR[84..87]` (1H, 2H, łuk, kusza). NPC w pobliżu bohatera, który ma wszystkie szanse 0, a te zmienne większe od 0, dostaje szanse z nich (i poziom umiejętności/nakładkę jak w poprawce 23). Nowa gra tego nie potrzebuje.
 
+### 31. Lares (i inni z łukiem) nie strzela – w NB łuk ma pierwszeństwo przed mieczem – 🧪 (13.11.2026)
+- **Pliki:** `common/game/gamescript.cpp`
+- **Przyczyna:** poprawka 25 wybierała broń jak zwykły Gothic 2 (łuk tylko dalej niż 600, z bliska od razu miecz). Plugin NB (`RX_SelectWeaponNpc`, UNION_ABI.DLL 0x1017F840) ma własne zasady – w oryginale Lares prawie całą drogę strzela z łuku.
+- **Poprawka – zasady z pluginu:**
+  - z łukiem/kuszą i strzałami NPC strzela, chyba że wróg jest bliżej niż 600 (a `AIVRX_NPC_RANGE_ONLY` = 0); do krwiopijców i harpii zawsze strzela; do wrogów odpornych na strzały (ochrona przed strzałami −1, golemy, trolle, strażnicy) tylko „łucznik-potwór” (`AIVRX_IS_MONSTER_ARCHER`);
+  - NPC, który już strzela, **nie zmienia łuku na miecz przy zwierzętach** (wilki, ścierwojady, szczury, gobliny, krwiopijce, warany, pełzacze, kretoszczury…), nawet z bliska;
+  - po zmianie broni następna dopiero po 6 s (`AIVRX_NPC_CHANGEWEAPON_TIMER`), gdy ma strzały;
+  - bez broni białej – pięści.
+
 ## Do zrobienia
 - [ ] **Animacje broni NB – sprawdzić, co się za nimi kryje (w toku).** Ustalone do tej pory:
   - bohater: animacje zakładają skrypty (`RX_ApplyAnim_Weapons` → `RX_ApplyAni_1H_Rapier` / `_DexSword` / `_1H_Sword` / `_2H_Speer` / `_2H_Staff` / `_2H_Hallberd` / `_2H_Common`, tarcze `RX_ApplyShieldAni`, dwie bronie `Humans_1x2ST3` / `2x2ST3`, topory orków `HUMANS_AXEST2`) – w OpenGothic działa;
