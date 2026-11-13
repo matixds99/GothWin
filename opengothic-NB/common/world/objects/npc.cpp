@@ -2249,27 +2249,6 @@ bool Npc::implAttack(uint64_t dt) {
   }
 
 bool Npc::implAiTick(uint64_t dt) {
-  // NB diagnostics (temporary): a companion (AIV_PARTYMEMBER) that stands still - what it waits for.
-  // "NB comp" in the log, twice a second while it is near the hero.
-  if(NB_AI_TRACE && !isPlayer() && owner.version().game==2 && hnpc->aivar[15]!=0 && !isDown()) {
-    static std::unordered_map<const Npc*,uint64_t> next;
-    auto* pl = owner.player();
-    const uint64_t now = owner.tickCount();
-    auto& t = next[this];
-    if(pl!=nullptr && now>=t && qDistTo(*pl)<3000.f*3000.f) {
-      t = now+500;
-      auto* st = owner.script().findSymbol(aiState.funcIni.ptr);
-      Log::i("NB comp: ",displayName().data(),
-             " state=",(aiState.funcIni.isValid() && st!=nullptr ? st->name().c_str() : "<none>"),
-             " started=",int(aiState.started),
-             " loopIn=",int(aiState.loopNextTime>now ? int64_t(aiState.loopNextTime-now) : 0),
-             " bs=",int(bodyStateMasked())," ws=",int(weaponState()),
-             " go2=",int(go2.flag)," busy=",int(isAiBusy())," talk=",int(isTalk()),
-             " out=",int(outputPipe->isFinished() ? 0 : 1),
-             " target=",(currentTarget!=nullptr ? currentTarget->displayName().data() : "-"),
-             " queue=[",aiQueue.describe(6).c_str(),"]");
-      }
-    }
   // Note AI-action queue takes priority, test case: Vatras pray at night
   if(aiQueue.size()==0) {
     tickRoutine();
@@ -3014,6 +2993,40 @@ void Npc::tick(uint64_t dt) {
   assert(go2.flag!=GoToHint::GT_Enemy && go2.flag!=GoToHint::GT_EnemyG);
 
   tickAnimationTags();
+
+  // NB diagnostics (temporary): a companion (AIV_PARTYMEMBER) that stands still - what it waits for.
+  // "NB comp" in the log, twice a second while it is near the hero (also while it waits or walks).
+  if(!isPlayer() && owner.version().game==2 && hnpc->aivar[15]!=0 && !isDown()) {
+    struct CompTrace { uint64_t next=0; Tempest::Vec3 pos; };
+    static std::unordered_map<const Npc*,CompTrace> trace;
+    auto* pl = owner.player();
+    const uint64_t now = owner.tickCount();
+    auto& t = trace[this];
+    if(pl!=nullptr && now>=t.next && qDistTo(*pl)<3000.f*3000.f) {
+      const float moved = (position()-t.pos).length();
+      t.next = now+500;
+      t.pos  = position();
+      auto* st = owner.script().findSymbol(aiState.funcIni.ptr);
+      std::vector<Pose::LayerInfo> lay;
+      visual.pose().layerInfo(lay,now);
+      std::string anims;
+      for(auto& l:lay)
+        if(l.seq!=nullptr) {
+          anims += l.seq->name;
+          anims += " ";
+          }
+      const auto left = [now](uint64_t t) { return int(t>now ? int64_t(t-now) : 0); };
+      Log::i("NB comp: ",displayName().data(),
+             " state=",(aiState.funcIni.isValid() && st!=nullptr ? st->name().c_str() : "<none>"),
+             " loopIn=",left(aiState.loopNextTime),
+             " wait=",left(waitTime)," aniWait=",left(aniWaitTime)," outWait=",left(outWaitTime)," faiWait=",left(faiWaitTime),
+             " moved=",int(moved)," bs=",int(bodyStateMasked())," ws=",int(weaponState()),
+             " go2=",int(go2.flag)," walk=",int(walkMode()),
+             " talk=",int(isTalk())," out=",int(outputPipe->isFinished() ? 0 : 1),
+             " target=",(currentTarget!=nullptr ? currentTarget->displayName().data() : "-"),
+             " anim=[",anims.c_str(),"] queue=[",aiQueue.describe(6).c_str(),"]");
+      }
+    }
 
   if(!visual.pose().hasAnim())
     setAnim(AnimationSolver::Idle);
