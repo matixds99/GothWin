@@ -965,32 +965,13 @@ void GameScript::initCommon() {
     // re-reads the animation ids of the model after the overlays changed; OpenGothic looks the
     // animations up by name each time, so there is nothing to do
     bindNb("RX_INITANIMATIONS", [](std::shared_ptr<zenkit::INpc>) {});
-    // NB diagnostics (temporary): C_PlayerIsFakeBandit(slf, oth) - "do the bandits take the hero for one of
-    // them" - is called with an empty slf about once a second. The wrapper writes who called it (the call
-    // stack of the scripts) and what slf/oth are, then runs the function of the scripts as before.
-    if(auto* fb = vm.find_symbol_by_name("C_PLAYERISFAKEBANDIT"); fb!=nullptr && !fb->is_external()) {
-      auto seen = std::make_shared<int>(0);
-      vm.override_function("C_PLAYERISFAKEBANDIT", [this,fb,seen](zenkit::DaedalusVm& v) -> zenkit::DaedalusNakedCall {
-        auto oth = v.pop_instance();
-        auto slf = v.pop_instance();
-        if((slf==nullptr || oth==nullptr) && *seen<5) {
-          ++(*seen);
-          const auto nameOf = [this](const std::shared_ptr<zenkit::DaedalusInstance>& i) -> std::string {
-            if(i==nullptr)
-              return "<null>";
-            auto* s = vm.find_symbol_by_index(i->symbol_index());
-            return s!=nullptr ? s->name() : "?";
-            };
-          auto gs = v.global_self()->get_instance();
-          Log::e("NB fakebandit: slf=",nameOf(slf)," oth=",nameOf(oth)," self=",nameOf(gs),
-                 " other=",nameOf(v.global_other()->get_instance()));
-          v.print_stack_trace();
-          }
-        const int32_t r = v.call_function<int32_t>(fb,slf,oth);
-        v.push_int(r);
-        return {};
-        });
-      }
+    // Npc_GetGuildAttitude(npc, other): the attitude of the guilds (the table of Wld_SetGuildAttitude);
+    // the scripts of NB ask it in B_CheckHealth and the reactions to the hero. Without it: 0 = ATT_HOSTILE
+    bindNb("NPC_GETGUILDATTITUDE", [this](std::shared_ptr<zenkit::INpc> aRef, std::shared_ptr<zenkit::INpc> bRef) -> int32_t {
+      auto* a = findNpcRaw(aRef);
+      auto* b = findNpcRaw(bRef);
+      return a!=nullptr && b!=nullptr ? int32_t(guildAttitude(*a,*b)) : int32_t(ATT_NEUTRAL);
+      });
     bindNb("RX_OPENCRAFT", [this](int32_t /*craftType*/) {
       if(auto pl = owner.player()) {
         aiOutOrderId = 0;
@@ -2381,12 +2362,19 @@ Attitude GameScript::personAttitude(const Npc &p0, const Npc &p1) const {
   // CoM uses temporary hostility/friendliness for quest fights and restores
   // it afterwards. The saved temporary value must take precedence over the
   // permanent relationship, just as oCNpc::GetAttitude does.
+  // New Balance: B_SetAttributesToChapter gives EVERY human the personal attitude ATT_NEUTRAL to the hero
+  // (bandits too). In NB the bandits still attack a hero who has no armor of the bandits, so the hostility
+  // of the guilds (Wld_SetGuildAttitude: GIL_BDT -> GIL_NONE = ATT_HOSTILE) wins over the neutral personal
+  // attitude. FRIENDLY / ANGRY / HOSTILE set by the scripts stay as they are.
+  const bool nb = nbStates.find(this)!=nbStates.end();
   att = npc.tempAttitude();
-  if(att!=ATT_NULL)
+  if(att==ATT_NULL)
+    att = npc.attitude();
+  if(att!=ATT_NULL) {
+    if(nb && att==ATT_NEUTRAL && guildAttitude(p0,p1)==ATT_HOSTILE)
+      return ATT_HOSTILE;
     return att;
-  att = npc.attitude();
-  if(att!=ATT_NULL)
-    return att;
+    }
   att = guildAttitude(p0,p1);
   return att;
   }

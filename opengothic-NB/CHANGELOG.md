@@ -192,11 +192,13 @@ Pliki: przy każdej poprawce jest lista plików. **🆕 NOWY PLIK** oznacza plik
   - `RX_InitAnimations` – w OpenGothic nic nie musi robić (animacje i tak są szukane po nazwie).
 - **Bohater:** jego animacje (rapier, szabla, włócznia, halabarda, kostury, topory, dwie bronie, tarcze) zakładają skrypty NB przy założeniu broni (`RX_ApplyAnim_Weapons`, `EQUIP_*`). To działa także w OpenGothic, dlatego bohater ma np. rapier.
 
-### 24. Bandyci nie atakują bezimiennego (obóz przy wieży Xardasa) – 🔍 diagnostyka (13.11.2026)
+### 24. Bandyci nie atakują bezimiennego w zwykłej zbroi – 🧪 (13.11.2026)
 - **Pliki:** `common/game/gamescript.cpp`
-- **Objaw:** bandyci (Brago, „Bandyta”) stoją obok bohatera w zwykłej zbroi i nie atakują. W NB nie atakują tylko wtedy, gdy bohater ma zbroję bandyty (`C_PlayerIsFakeBandit`).
-- **Trop:** w logu co sekundę `Accessing member "C_NPC.AIVAR" without an instance set (in C_PLAYERISFAKEBANDIT)` – funkcja dostaje pustą postać.
-- **Tymczasowa diagnostyka:** funkcja skryptów jest owinięta. Gdy dostaje pustą postać (najwyżej 5 razy), log dostaje `NB fakebandit: slf=… oth=… self=… other=…` i stos wywołań skryptów (`[zenkit] in … at …`). Poza tym funkcja działa jak dotąd.
+- **Przyczyna (z logu):** `NB trace: B_AssessEnemy | ATT_HOSTILE false` – reakcja na wroga kończy się na `Npc_GetAttitude(self, hero) != ATT_HOSTILE`. NB w `B_SetAttributesToChapter` daje **każdemu** człowiekowi (bandytom też) osobisty stosunek do bohatera ATT_NEUTRAL. OpenGothic stawia stosunek osobisty ponad gildią, więc bandyci byli dla bohatera neutralni. W NB wrogość gildii (bandyci → bohater: wrogo) wygrywa i bandyci atakują, chyba że bohater ma zbroję bandyty (`C_PlayerIsFakeBandit` – to sprawdzają same skrypty).
+- **Poprawka:**
+  - w NB: gdy osobisty stosunek jest tylko „neutralny”, a gildia jest wroga – NPC jest wrogi. Stosunek „przyjazny”, „zły” i „wrogi” ustawiony przez skrypty zostaje bez zmian;
+  - dodane `Npc_GetGuildAttitude` (stosunek gildii) – brakowało go, a skrypty NB pytają o to po walce (`B_CheckHealth`) i zwracało „wrogo” dla wszystkich.
+- **Uwaga:** błąd `Accessing member "C_NPC.AIVAR" without an instance set (in C_PLAYERISFAKEBANDIT)` jest nieszkodliwy – funkcja zagląda do zmiennych Ramona z obozu bandytów (Jarkendar), którego nie ma w Khorinis; w oryginale tak samo. Diagnostyka z wcześniejszej wersji tej poprawki usunięta.
 
 ## Do zrobienia
 - [ ] **Animacje broni NB – sprawdzić, co się za nimi kryje (w toku).** Ustalone do tej pory:
