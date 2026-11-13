@@ -219,6 +219,16 @@ Pliki: przy każdej poprawce jest lista plików. **🆕 NOWY PLIK** oznacza plik
 - **Poprawka:** dla członków drużyny (`AIV_PARTYMEMBER`) to czekanie jest pomijane; pozostałe postacie czekają jak w NB.
 - **Wycofane:** pierwsza próba (pętla stanu co 100 ms) – nie miała wpływu; diagnostyka `NB comp` usunięta.
 
+### 29. Style walki NPC z pluginu NB (część 1: gildie bez własnej tabeli – m.in. Lares) – 🧪 (13.11.2026)
+- **Pliki:** `common/game/gamescript.cpp`
+- **Co robi plugin (UNION_ABI.DLL 0x1024A460, co 100 ms):** dla każdego człowieka w promieniu 1500 od bohatera, który walczy (ma wroga) z dobytą bronią jedno- lub dwuręczną i ma więcej niż 1/15 życia, zdejmuje wszystkie nakładki broni (ok. 45: ST1–3, tarcze, rapier, pirat, włócznie, kostury, halabarda, topory, dwie bronie, „zręcznościowe”…) i zakłada jeden styl walki dobrany wg **gildii**, szansy trafienia i losowania. Zmienna `AIVRX_CHANGE_MOVESET` oznacza „styl wybrany”, `AIVRX_NPC_CHANGEMOVESET3` odlicza 40–80 kroków (4–8 s); potem, gdy wróg jest 500+ dalej, styl jest losowany na nowo.
+- **Zrobione teraz – gildie bez własnej tabeli** (Lares ma gildię GIL_NONE, więc to jego przypadek; też VLK, KDF, NOV, BAU, KDW…):
+  - jedna ręka, szansa ≥ 90%: z tarczą Shield_ST1/ST2/ST2/ST3; bez tarczy losowo: brak nakładki, 1hST1, 1hST2, 1hST3, 1hDexST1–3;
+  - ≥ 60%: z tarczą Shield_ST1/ST2; bez: brak, 1hST1, 1hST2, 1hDexST1, 1hDexST2; poniżej 60%: 1hST1 albo brak;
+  - styl „zręcznościowy” zamieniany na zwykły – zawsze przy toporze, inaczej w 80% (jak w pluginie);
+  - dwie ręce, ≥ 90%: 2hST1/2hST2/2hST3/AxeST2; ≥ 60%: 2hST1/2hST2; poniżej: 2hST1.
+- **Do zrobienia (części 2…):** własne tabele gildii BDT, SLD (m.in. Sentenza, Buster, Fester, Bullco, Raoul – po imieniu; rapier dla broni z bitem rapiera), MIL, PAL, DJG, PIR, OUT i szkieletów. Do tego czasu te gildie zostają przy stylach z poprawki 23.
+
 ## Do zrobienia
 - [ ] **Animacje broni NB – sprawdzić, co się za nimi kryje (w toku).** Ustalone do tej pory:
   - bohater: animacje zakładają skrypty (`RX_ApplyAnim_Weapons` → `RX_ApplyAni_1H_Rapier` / `_DexSword` / `_1H_Sword` / `_2H_Speer` / `_2H_Staff` / `_2H_Hallberd` / `_2H_Common`, tarcze `RX_ApplyShieldAni`, dwie bronie `Humans_1x2ST3` / `2x2ST3`, topory orków `HUMANS_AXEST2`) – w OpenGothic działa;
