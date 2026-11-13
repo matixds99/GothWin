@@ -2126,9 +2126,7 @@ bool Npc::implAttack(uint64_t dt) {
   const uint64_t now       = owner.tickCount();
   const auto     cjIt      = closeJumpTime.find(this);
   const bool     cjReady   = (cjIt==closeJumpTime.end() || now>=cjIt->second+2500);
-  // NB fix 28: the promotion is a trick for the monsters (a wolf that is too close); a human with a weapon
-  // (Lares) jumped back instead of hitting whenever its tactic chose WAIT near the enemy
-  const bool     closeJump = (act==FightAlgo::MV_WAIT && jmp && cjReady && ws==WeaponState::Fist);
+  const bool     closeJump = (act==FightAlgo::MV_WAIT && jmp && cjReady);
   if(act==FightAlgo::MV_JUMPBACK || closeJump) {
     if(closeJump)
       closeJumpTime[this] = now;

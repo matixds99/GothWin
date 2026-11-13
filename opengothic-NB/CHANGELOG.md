@@ -219,15 +219,6 @@ Pliki: przy każdej poprawce jest lista plików. **🆕 NOWY PLIK** oznacza plik
 - **Poprawka:** dla członków drużyny (`AIV_PARTYMEMBER`) to czekanie jest pomijane; pozostałe postacie czekają jak w NB.
 - **Wycofane:** pierwsza próba (pętla stanu co 100 ms) – nie miała wpływu; diagnostyka `NB comp` usunięta.
 
-### 28. Lares (i inni ludzie z bronią) waha się w walce, odskakuje zamiast bić – 🧪 (13.11.2026)
-- **Pliki:** `common/game/fightalgo.cpp`, `common/game/fightalgo.h` (pliki z projektu – podmienić), `common/world/objects/npc.cpp`
-- **Przyczyna (z logu diagnostyki walki Laresa):** Lares bardzo często robił odskok (`T_1HJUMPB`) i paradę zamiast ataku:
-  - reakcja na zamach przeciwnika (`FA_ENEMY_PREHIT` – odskok/parada) była sprawdzana przy każdej decyzji (co ~0,2 s) przez cały zamach zwierzęcia, więc niemal każdy atak wilka kończył się odskokiem Laresa;
-  - sztuczka OpenGothic „czekanie przy wrogu = odskok” (dla wilków, które podchodzą za blisko) działała też na ludzi z bronią.
-- **Poprawka:**
-  - reakcja na zamach przeciwnika najwyżej raz na jeden zamach i z szansą 50% (dotyczy wszystkich – także potworów odskakujących przed bohaterem);
-  - zamiana „czekanie → odskok” tylko dla walczących pięściami/kłami (potwory), najwyżej raz na 2,5 s.
-
 ## Do zrobienia
 - [ ] **Animacje broni NB – sprawdzić, co się za nimi kryje (w toku).** Ustalone do tej pory:
   - bohater: animacje zakładają skrypty (`RX_ApplyAnim_Weapons` → `RX_ApplyAni_1H_Rapier` / `_DexSword` / `_1H_Sword` / `_2H_Speer` / `_2H_Staff` / `_2H_Hallberd` / `_2H_Common`, tarcze `RX_ApplyShieldAni`, dwie bronie `Humans_1x2ST3` / `2x2ST3`, topory orków `HUMANS_AXEST2`) – w OpenGothic działa;
