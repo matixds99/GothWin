@@ -192,6 +192,12 @@ Pliki: przy każdej poprawce jest lista plików. **🆕 NOWY PLIK** oznacza plik
   - `RX_InitAnimations` – w OpenGothic nic nie musi robić (animacje i tak są szukane po nazwie).
 - **Bohater:** jego animacje (rapier, szabla, włócznia, halabarda, kostury, topory, dwie bronie, tarcze) zakładają skrypty NB przy założeniu broni (`RX_ApplyAnim_Weapons`, `EQUIP_*`). To działa także w OpenGothic, dlatego bohater ma np. rapier.
 
+### 24. Bandyci nie atakują bezimiennego (obóz przy wieży Xardasa) – 🔍 diagnostyka (13.11.2026)
+- **Pliki:** `common/game/gamescript.cpp`
+- **Objaw:** bandyci (Brago, „Bandyta”) stoją obok bohatera w zwykłej zbroi i nie atakują. W NB nie atakują tylko wtedy, gdy bohater ma zbroję bandyty (`C_PlayerIsFakeBandit`).
+- **Trop:** w logu co sekundę `Accessing member "C_NPC.AIVAR" without an instance set (in C_PLAYERISFAKEBANDIT)` – funkcja dostaje pustą postać.
+- **Tymczasowa diagnostyka:** funkcja skryptów jest owinięta. Gdy dostaje pustą postać (najwyżej 5 razy), log dostaje `NB fakebandit: slf=… oth=… self=… other=…` i stos wywołań skryptów (`[zenkit] in … at …`). Poza tym funkcja działa jak dotąd.
+
 ## Do zrobienia
 - [ ] **Animacje broni NB – sprawdzić, co się za nimi kryje (w toku).** Ustalone do tej pory:
   - bohater: animacje zakładają skrypty (`RX_ApplyAnim_Weapons` → `RX_ApplyAni_1H_Rapier` / `_DexSword` / `_1H_Sword` / `_2H_Speer` / `_2H_Staff` / `_2H_Hallberd` / `_2H_Common`, tarcze `RX_ApplyShieldAni`, dwie bronie `Humans_1x2ST3` / `2x2ST3`, topory orków `HUMANS_AXEST2`) – w OpenGothic działa;

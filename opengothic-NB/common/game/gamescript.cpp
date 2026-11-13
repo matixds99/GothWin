@@ -965,6 +965,32 @@ void GameScript::initCommon() {
     // re-reads the animation ids of the model after the overlays changed; OpenGothic looks the
     // animations up by name each time, so there is nothing to do
     bindNb("RX_INITANIMATIONS", [](std::shared_ptr<zenkit::INpc>) {});
+    // NB diagnostics (temporary): C_PlayerIsFakeBandit(slf, oth) - "do the bandits take the hero for one of
+    // them" - is called with an empty slf about once a second. The wrapper writes who called it (the call
+    // stack of the scripts) and what slf/oth are, then runs the function of the scripts as before.
+    if(auto* fb = vm.find_symbol_by_name("C_PLAYERISFAKEBANDIT"); fb!=nullptr && !fb->is_external()) {
+      auto seen = std::make_shared<int>(0);
+      vm.override_function("C_PLAYERISFAKEBANDIT", [this,fb,seen](zenkit::DaedalusVm& v) -> zenkit::DaedalusNakedCall {
+        auto oth = v.pop_instance();
+        auto slf = v.pop_instance();
+        if((slf==nullptr || oth==nullptr) && *seen<5) {
+          ++(*seen);
+          const auto nameOf = [this](const std::shared_ptr<zenkit::DaedalusInstance>& i) -> std::string {
+            if(i==nullptr)
+              return "<null>";
+            auto* s = vm.find_symbol_by_index(i->symbol_index());
+            return s!=nullptr ? s->name() : "?";
+            };
+          auto gs = v.global_self()->get_instance();
+          Log::e("NB fakebandit: slf=",nameOf(slf)," oth=",nameOf(oth)," self=",nameOf(gs),
+                 " other=",nameOf(v.global_other()->get_instance()));
+          v.print_stack_trace();
+          }
+        const int32_t r = v.call_function<int32_t>(fb,slf,oth);
+        v.push_int(r);
+        return {};
+        });
+      }
     bindNb("RX_OPENCRAFT", [this](int32_t /*craftType*/) {
       if(auto pl = owner.player()) {
         aiOutOrderId = 0;
