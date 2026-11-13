@@ -2057,7 +2057,11 @@ bool Npc::implAttack(uint64_t dt) {
       const bool atk     = doAttack(atkType, BS_HIT);
 
       if(atk || mvAlgo.isSwim() || mvAlgo.isDive()) {
-        uint64_t aniTime = visual.pose().atkTotalTime()+1;
+        // NB fix 26: atkTotalTime ends at DEF_HIT_END - the window of the combo of a weapon. A monster (and a
+        // fist) has no combo: the next decision came at the end of the hit and the new attack cut the
+        // animation, so the animals bit ~1.5 times faster than in Gothic. They wait for the whole animation.
+        uint64_t aniTime = (ws==WeaponState::Fist ? visual.pose().animationTotalTime()
+                                                  : visual.pose().atkTotalTime())+1;
         implFaiWait(aniTime);
         if(bs==BS_RUN)
           implAniWait(aniTime);

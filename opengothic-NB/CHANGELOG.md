@@ -200,13 +200,18 @@ Pliki: przy każdej poprawce jest lista plików. **🆕 NOWY PLIK** oznacza plik
   - dodane `Npc_GetGuildAttitude` (stosunek gildii) – brakowało go, a skrypty NB pytają o to po walce (`B_CheckHealth`) i zwracało „wrogo” dla wszystkich.
 - **Uwaga:** błąd `Accessing member "C_NPC.AIVAR" without an instance set (in C_PLAYERISFAKEBANDIT)` jest nieszkodliwy – funkcja zagląda do zmiennych Ramona z obozu bandytów (Jarkendar), którego nie ma w Khorinis; w oryginale tak samo. Diagnostyka z wcześniejszej wersji tej poprawki usunięta.
 
-### 25. NPC nie dobywają broni w walce (Lares stoi i obrywa od zwierząt) – 🧪 (13.11.2026)
+### 25. NPC nie dobywają broni w walce (Lares stoi i obrywa od zwierząt) – ✅ (lepiej: Lares wybiera cel i bije) (13.11.2026)
 - **Pliki:** `common/game/gamescript.cpp`
 - **Przyczyna:** `B_SelectWeapon` w NB (wybór broni na początku i w trakcie walki) kończy się wywołaniem pluginu `RX_SelectWeaponNpc(slf, oth)` – to on dobywa miecza lub łuku. OpenGothic tego nie znał, więc NPC w walce (towarzysze, strażnicy, bandyci) nie dobywali broni i stali w miejscu.
 - **Poprawka:** wybór broni jak w zwykłym Gothic 2:
   - dalej niż `FIGHT_DIST_MELEE` (600) i jest łuk/kusza ze strzałami – broń dystansowa, bliżej – broń biała (albo pięści, gdy nie ma broni);
   - z pięści na miecz, gdy NPC ma miecz; z łuku na miecz, gdy wróg podejdzie albo skończą się strzały; z magii na broń, gdy `B_SelectSpell` nie wybrało czaru;
   - polecenie idzie tylko przy pustej kolejce AI (pętla ataku pyta co klatkę).
+
+### 26. Zwierzęta gryzą za szybko, towarzysz (Lares) nie nadąża – 🧪 (13.11.2026)
+- **Pliki:** `common/world/objects/npc.cpp`
+- **Przyczyna:** po ataku NPC czekał na następną decyzję tylko do znacznika `DEF_HIT_END` animacji. To okno kombinacji ciosów broni białej. Potwory (i walka pięściami) kombinacji nie mają, więc następny atak zaczynał się zaraz po trafieniu i ucinał resztę animacji – zwierzęta gryzły ok. 1,5 raza szybciej niż w Gothic. Każde ugryzienie przewraca trafionego (animacja „potknięcia”), więc Lares przy kilku zwierzętach ciągle dostawał i nie zdążał oddać.
+- **Poprawka:** w walce pięściami/kłami (wszystkie potwory) NPC czeka do końca animacji ataku. Ludzie z bronią dalej mogą łączyć ciosy w kombinacje.
 
 ## Do zrobienia
 - [ ] **Animacje broni NB – sprawdzić, co się za nimi kryje (w toku).** Ustalone do tej pory:
