@@ -302,10 +302,132 @@ namespace NbMoveset {
     return pick(sc,{"HUMANS_2HST1.MDS","HUMANS_2HST2.MDS"});
     }
 
+  // 1024BA00: mercenaries, one hand (no table by the hit chance in the plugin)
+  static std::string sld1h(GameScript& sc, Npc& npc) {
+    if(nameHas(sc,npc,{"AL_Boss3"}))
+      return sc.rand(2)==1 ? "HUMANS_BOSS03.MDS" : "HUMANS_BOSS032.MDS";
+    if(nameHas(sc,npc,{"SLD_814_SENTENZA"})) {
+      if(isRapier(npc))
+        return pick(sc,{"HUMANS_RAPIER_ST2.MDS","HUMANS_RAPIER_ST3.MDS","HUMANS_RAPIER_ST2.MDS","HUMANS_RAPIER_ST1.MDS"});
+      return pick(sc,{"HUMANS_1HST3.MDS","HUMANS_1HST3.MDS","HUMANS_1HST2.MDS","HUMANS_1HST1.MDS",
+                      "HUMANS_1HDEXST2.MDS","HUMANS_1HDEXST1.MDS"});
+      }
+    if(nameHas(sc,npc,{"SLD_802_BUSTER","SLD_816_FESTER","SLD_807_BULLCO","SLD_822_RAOUL"})) {
+      if(isRapier(npc))
+        return pick(sc,{"Humans_Pirate.MDS","HUMANS_RAPIER_ST1.MDS",""});
+      return pick(sc,{"HUMANS_1HST1.MDS","HUMANS_1HST2.MDS","HUMANS_1HDEXST1.MDS"});
+      }
+    if(hasShield(npc))
+      return pick(sc,{"SHIELD_ST2.MDS","SHIELD_ST1.MDS","SHIELD_ST1.MDS","SHIELD_ST2.MDS"});
+    if(isRapier(npc))
+      return pick(sc,{"Humans_Pirate.MDS","HUMANS_RAPIER_ST1.MDS","HUMANS_RAPIER_ST2.MDS"});
+    return pick(sc,{"HUMANS_1HST1.MDS","HUMANS_1HST2.MDS","HUMANS_1HST2.MDS","HUMANS_1HDEXST1.MDS"});
+    }
+  // 1024C080: mercenaries, two hands
+  static std::string sld2h(GameScript& sc, Npc&) {
+    return sc.rand(2)==1 ? "HUMANS_AXEST2.MDS" : "HUMANS_2HST2.MDS";
+    }
+
+  // 1024C1D0: militia, one hand (two hands: the common table)
+  static std::string mil1h(GameScript& sc, Npc& npc) {
+    if(nameHas(sc,npc,{"MIL_317_RUGA","MIL_319_PABLO","MIL_324_PECK","MIL_316_WAMBO","MIL_3120_WULFGAR","MIL_312_WULFGAR"}))
+      return pick(sc,{"HUMANS_1HST3.MDS","HUMANS_1HST1.MDS","HUMANS_1HST2.MDS",
+                      "HUMANS_1HDEXST1.MDS","HUMANS_1HDEXST2.MDS","HUMANS_1HDEXST3.MDS"});
+    return pick(sc,{"HUMANS_1HST1.MDS","HUMANS_1HST2.MDS","HUMANS_1HDEXST1.MDS","HUMANS_1HDEXST2.MDS"});
+    }
+
+  // 1024C720 / 1024C8D0: paladins
+  static std::string pal1h(GameScript& sc, Npc& npc) {
+    if(hasShield(npc))
+      return pick(sc,{"SHIELD_ST2.MDS","SHIELD_ST3.MDS","SHIELD_ST3.MDS","SHIELD_ST4.MDS"});
+    return pick(sc,{"HUMANS_1HST3.MDS","HUMANS_1HST2.MDS","HUMANS_1HDEXST3.MDS","HUMANS_1HDEXST2.MDS"});
+    }
+  static std::string pal2h(GameScript& sc, Npc&) {
+    return pick(sc,{"HUMANS_2HST2.MDS","HUMANS_2HST3.MDS","HUMANS_SPST2.MDS"});
+    }
+
+  // 1024CA20 / 1024CBD0: dragon hunters
+  static std::string djg1h(GameScript& sc, Npc& npc) {
+    if(hasShield(npc))
+      return pick(sc,{"SHIELD_ST2.MDS","SHIELD_ST3.MDS","SHIELD_ST4.MDS","SHIELD_ST3.MDS"});
+    return pick(sc,{"HUMANS_1HST3.MDS","HUMANS_1HST2.MDS","HUMANS_1HDEXST2.MDS","HUMANS_1HDEXST3.MDS"});
+    }
+  static std::string djg2h(GameScript& sc, Npc&) {
+    return sc.rand(2)==1 ? "HUMANS_2HST3.MDS" : "HUMANS_2HST2.MDS";
+    }
+
+  // 1024CD20: guild 16 (GIL_TPL in NB), two hands
+  static std::string g16_2h(GameScript& sc, Npc&) {
+    return pick(sc,{"HUMANS_SPST2.MDS","HUMANS_2HST3.MDS","HUMANS_2HST2.MDS"});
+    }
+
+  // 1024CE70 / 1024D300: pirates
+  static std::string pir1h(GameScript& sc, Npc& npc) {
+    if(nameHas(sc,npc,{"PIR_1352_Addon_AlligatorJack"}))
+      return "HUMANS_1HST2.MDS";
+    const int  hc = npc.handle().hitchance[TALENT_1H];
+    const bool sh = hasShield(npc);
+    if(hc>=90) {
+      if(sh)
+        return pick(sc,{"SHIELD_ST3.MDS","SHIELD_ST4.MDS","SHIELD_ST2.MDS","SHIELD_ST3.MDS"});
+      if(isRapier(npc))
+        return pick(sc,{"HUMANS_RAPIER_ST2.MDS","HUMANS_RAPIER_ST1.MDS","HUMANS_RAPIER_ST3.MDS","HUMANS_RAPIER_ST3.MDS"});
+      return pick(sc,{"HUMANS_1HST2.MDS","HUMANS_1HST3.MDS","HUMANS_1HST3.MDS","HUMANS_1HST3.MDS",
+                      "HUMANS_1HDEXST3.MDS","HUMANS_1HDEXST2.MDS"});
+      }
+    if(hc>=60) {
+      if(sh)
+        return pick(sc,{"SHIELD_ST1.MDS","SHIELD_ST2.MDS","SHIELD_ST1.MDS","SHIELD_ST2.MDS"});
+      if(isRapier(npc))
+        return pick(sc,{"HUMANS_RAPIER_ST2.MDS","HUMANS_RAPIER_ST1.MDS","HUMANS_PIRATE.MDS","HUMANS_RAPIER_ST2.MDS"});
+      return pick(sc,{"HUMANS_1HST1.MDS","HUMANS_1HST2.MDS","HUMANS_1HST2.MDS","HUMANS_1HST2.MDS",
+                      "HUMANS_1HDEXST1.MDS","HUMANS_1HDEXST2.MDS"});
+      }
+    if(sh)
+      return sc.rand(2)==1 ? "SHIELD_ST2.MDS" : "SHIELD_ST1.MDS";
+    if(isRapier(npc))
+      return pick(sc,{"HUMANS_PIRATE.MDS","HUMANS_RAPIER_ST1.MDS","HUMANS_RAPIER_ST1.MDS"});
+    return pick(sc,{"HUMANS_1HST1.MDS","HUMANS_1HST1.MDS","HUMANS_1HDEXST1.MDS"});
+    }
+  static std::string pir2h(GameScript& sc, Npc&) {
+    return pick(sc,{"HUMANS_2HST1.MDS","HUMANS_2HST2.MDS","HUMANS_SPST2.MDS"});
+    }
+
+  // 1024D450 / 1024D6D0: outlaws (GIL_OUT)
+  static std::string out1h(GameScript& sc, Npc& npc) {
+    const int  hc = npc.handle().hitchance[TALENT_1H];
+    const bool sh = hasShield(npc);
+    if(hc>=90) {
+      if(sh)
+        return pick(sc,{"SHIELD_ST2.MDS","SHIELD_ST1.MDS","SHIELD_ST2.MDS","SHIELD_ST3.MDS"});
+      return pick(sc,{"","HUMANS_1HST1.MDS","HUMANS_1HST2.MDS","HUMANS_1HST3.MDS",
+                      "HUMANS_1HDEXST1.MDS","HUMANS_1HDEXST2.MDS","HUMANS_1HDEXST3.MDS"});
+      }
+    if(hc>=60) {
+      if(sh)
+        return pick(sc,{"SHIELD_ST2.MDS","SHIELD_ST3.MDS","SHIELD_ST2.MDS","SHIELD_ST1.MDS"});
+      return pick(sc,{"","HUMANS_1HST1.MDS","HUMANS_1HST2.MDS","HUMANS_1HDEXST1.MDS","HUMANS_1HDEXST2.MDS"});
+      }
+    if(sh)
+      return sc.rand(2)==1 ? "SHIELD_ST1.MDS" : "SHIELD_ST2.MDS";
+    return pick(sc,{"","HUMANS_1HST1.MDS","HUMANS_1HDEXST1.MDS"});
+    }
+  static std::string out2h(GameScript& sc, Npc&) {
+    return pick(sc,{"HUMANS_AXEST2.MDS","HUMANS_2HST1.MDS","HUMANS_2HST3.MDS"});
+    }
+
   // the style of the guild; "" = no table done yet for this guild (the styles of the hit chance stay)
   static bool styleFor(GameScript& sc, Npc& npc, int guild, bool oneHand, std::string& out) {
     switch(guild) {
-      case 9: out = oneHand ? bdt1h(sc,npc) : bdt2h(sc,npc); return true;
+      case 9:  out = oneHand ? bdt1h(sc,npc) : bdt2h(sc,npc); return true;
+      case 7:  out = oneHand ? sld1h(sc,npc) : sld2h(sc,npc); return true;
+      case 2:  if(!oneHand) return false; out = mil1h(sc,npc); return true;
+      case 1:  out = oneHand ? pal1h(sc,npc) : pal2h(sc,npc); return true;
+      case 6:  out = oneHand ? djg1h(sc,npc) : djg2h(sc,npc); return true;
+      case 16: if(oneHand) return false; out = g16_2h(sc,npc); return true;
+      case 13: out = oneHand ? pir1h(sc,npc) : pir2h(sc,npc); return true;
+      case 10: out = oneHand ? out1h(sc,npc) : out2h(sc,npc); return true;
+      // GIL_SKELETON (36): long tables by the names of the skeletons - not done yet
       default: return false;
       }
     }

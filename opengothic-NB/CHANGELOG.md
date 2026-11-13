@@ -267,7 +267,7 @@ Pliki: przy każdej poprawce jest lista plików. **🆕 NOWY PLIK** oznacza plik
 - **Pliki:** `common/world/objects/npc.cpp`
 - Każdy potwór walczący pazurami/kłami odskakuje przed zamachem bohatera dopiero po 2 trafieniach od poprzedniego odskoku (dotąd tylko ścierwojad). Dotyczy zwierząt, które mają odskok w swojej taktyce (`FIGHT.DAT`, `FA_ENEMY_PREHIT`): wilk (odskok/unik), krwiopijca, waran, szczur, zębacz, cieniostwór, harpia, jaszczurka, aligator, niedźwiedź, gargulec, smok… Kretoszczur, goblin, golem nie odskakują – u nich nic się nie zmienia.
 
-### 35. Style walki NPC z pluginu NB – gildia bandytów (BDT) – 🧪 (14.11.2026)
+### 35. Style walki NPC z pluginu NB wg gildii (bandyci, najemnicy, straż, paladyni, łowcy smoków, piraci, banici) – 🧪 (14.11.2026)
 - **Pliki:** `common/game/gamescript.cpp`
 - Wraca mechanizm z poprawki 29 (co 100 ms, wróg w pobliżu, broń w ręku, nowe losowanie po 4–8 s), ale **tylko dla gildii z własną tabelą w pluginie** – postacie bez gildii (Lares, VLK, BAU…) zostają przy stylach z poprawki 23, bo te działają dobrze.
 - **Bandyci, jedna ręka (UNION_ABI.DLL 0x1024AD00):**
@@ -276,7 +276,15 @@ Pliki: przy każdej poprawce jest lista plików. **🆕 NOWY PLIK** oznacza plik
   - pozostali, szansa ≥ 60%: tarcza ST1/ST2; rapier ST2/ST3; inaczej 1hST2/ST3, 1hDexST2/ST3; poniżej 60%: tarcza ST1–3; rapier ST1/Pirate; inaczej 1hST1/ST2, 1hDexST1/ST2.
 - **Bandyci, dwie ręce (0x1024B810):** Gor Boba – 2h_b_st1; ≥ 85%: 2hST3/AxeST2/SpST2; ≥ 60%: 2hST1/2hST2/AxeST2; poniżej: 2hST1/2hST2.
 - „Rapier” = broń z bitem `BIT_ITEM_PIERCE_DAMAGE` (2) w `C_ITEM.HP`; styl „zręcznościowy” w 80% zamieniany na zwykły (jak w pluginie).
-- **Kolejne gildie:** najemnicy (SLD), straż (MIL), paladyni (PAL), łowcy smoków (DJG), piraci (PIR), banici (OUT), szkielety, gildia 16 (2H).
+- **Dodane (14.11.2026, część 2) – reszta gildii z tabel pluginu:**
+  - najemnicy (SLD, 0x1024BA00/C080): AL_Boss3 – Boss03/Boss032; Sentenza – rapier ST1–3 albo 1hST1–3/1hDexST1–2; Buster, Fester, Bullco, Raoul – Pirate/Rapier_ST1/brak albo 1hST1–2/1hDexST1; pozostali – tarcza ST1–2, rapier ST1–2/Pirate, inaczej 1hST1–2/1hDexST1; dwie ręce – 2hST2/AxeST2;
+  - straż (MIL, 0x1024C1D0): Ruga, Pablo, Peck, Wambo, Wulfgar – 1hST1–3/1hDexST1–3; pozostali – 1hST1–2/1hDexST1–2 (dwie ręce bez własnej tabeli);
+  - paladyni (PAL, 0x1024C720/C8D0): tarcza ST2–4, inaczej 1hST2–3/1hDexST2–3; dwie ręce – 2hST2–3/SpST2;
+  - łowcy smoków (DJG, 0x1024CA20/CBD0): tarcza ST2–4, inaczej 1hST2–3/1hDexST2–3; dwie ręce – 2hST2–3;
+  - gildia 16 (Templariusze w NB), dwie ręce (0x1024CD20): 2hST2–3/SpST2;
+  - piraci (PIR, 0x1024CE70/D300): Alligator Jack – 1hST2; wg szansy (≥ 90 / ≥ 60 / mniej) tarcze, rapier/Pirate, 1hST/1hDexST; dwie ręce – 2hST1–2/SpST2;
+  - banici (OUT, 0x1024D450/D6D0): wg szansy tarcze ST1–3, 1hST/1hDexST albo brak nakładki; dwie ręce – 2hST1/2hST3/AxeST2.
+- **Jeszcze nie:** szkielety (GIL_SKELETON) – bardzo długa tabela po nazwach szkieletów (rycerze z tarczą, kapitanowie, marynarze, mroczni wojownicy sfer…).
 
 ## Do zrobienia
 - [ ] **Animacje broni NB – sprawdzić, co się za nimi kryje (w toku).** Ustalone do tej pory:
