@@ -219,8 +219,8 @@ Pliki: przy każdej poprawce jest lista plików. **🆕 NOWY PLIK** oznacza plik
 - **Poprawka:** dla członków drużyny (`AIV_PARTYMEMBER`) to czekanie jest pomijane; pozostałe postacie czekają jak w NB.
 - **Wycofane:** pierwsza próba (pętla stanu co 100 ms) – nie miała wpływu; diagnostyka `NB comp` usunięta.
 
-### 29. Style walki NPC z pluginu NB (część 1: gildie bez własnej tabeli – m.in. Lares) – 🧪 (13.11.2026)
-- **Pliki:** `common/game/gamescript.cpp`
+### 29. Style walki NPC z pluginu NB (część 1: gildie bez własnej tabeli – m.in. Lares) – ⏸ wycofane z kodu na życzenie (gra lepiej działała bez tej wersji); opis zostaje do późniejszego powrotu (13.11.2026)
+- **Pliki:** (było) `common/game/gamescript.cpp`
 - **Co robi plugin (UNION_ABI.DLL 0x1024A460, co 100 ms):** dla każdego człowieka w promieniu 1500 od bohatera, który walczy (ma wroga) z dobytą bronią jedno- lub dwuręczną i ma więcej niż 1/15 życia, zdejmuje wszystkie nakładki broni (ok. 45: ST1–3, tarcze, rapier, pirat, włócznie, kostury, halabarda, topory, dwie bronie, „zręcznościowe”…) i zakłada jeden styl walki dobrany wg **gildii**, szansy trafienia i losowania. Zmienna `AIVRX_CHANGE_MOVESET` oznacza „styl wybrany”, `AIVRX_NPC_CHANGEMOVESET3` odlicza 40–80 kroków (4–8 s); potem, gdy wróg jest 500+ dalej, styl jest losowany na nowo.
 - **Zrobione teraz – gildie bez własnej tabeli** (Lares ma gildię GIL_NONE, więc to jego przypadek; też VLK, KDF, NOV, BAU, KDW…):
   - jedna ręka, szansa ≥ 90%: z tarczą Shield_ST1/ST2/ST2/ST3; bez tarczy losowo: brak nakładki, 1hST1, 1hST2, 1hST3, 1hDexST1–3;
@@ -229,19 +229,16 @@ Pliki: przy każdej poprawce jest lista plików. **🆕 NOWY PLIK** oznacza plik
   - dwie ręce, ≥ 90%: 2hST1/2hST2/2hST3/AxeST2; ≥ 60%: 2hST1/2hST2; poniżej: 2hST1.
 - **Do zrobienia (części 2…):** własne tabele gildii BDT, SLD (m.in. Sentenza, Buster, Fester, Bullco, Raoul – po imieniu; rapier dla broni z bitem rapiera), MIL, PAL, DJG, PIR, OUT i szkieletów. Do tego czasu te gildie zostają przy stylach z poprawki 23.
 
-### 28. Lares (i inni ludzie z bronią) waha się w walce, odskakuje zamiast bić – ✅ (13.11.2026; za pierwszym razem test był bez nowego fightalgo.cpp)
-- **Pliki:** `common/game/fightalgo.cpp`, `common/game/fightalgo.h` (pliki z projektu – podmienić), `common/world/objects/npc.cpp`
-- **Przyczyna (z logu diagnostyki walki Laresa):** Lares bardzo często robił odskok (`T_1HJUMPB`) i paradę zamiast ataku:
-  - reakcja na zamach przeciwnika (`FA_ENEMY_PREHIT` – odskok/parada) była sprawdzana przy każdej decyzji (co ~0,2 s) przez cały zamach zwierzęcia, więc niemal każdy atak wilka kończył się odskokiem Laresa;
-  - sztuczka OpenGothic „czekanie przy wrogu = odskok” (dla wilków, które podchodzą za blisko) działała też na ludzi z bronią.
-- **Poprawka:**
-  - reakcja na zamach przeciwnika najwyżej raz na jeden zamach i z szansą 50% (dotyczy wszystkich – także potworów odskakujących przed bohaterem);
-  - zamiana „czekanie → odskok” tylko dla walczących pięściami/kłami (potwory), najwyżej raz na 2,5 s.
+### 28. Lares (i inni ludzie z bronią) odskakuje zamiast bić – ✅ (13.11.2026)
+- **Pliki:** `common/world/objects/npc.cpp`
+- **Przyczyna:** sztuczka OpenGothic „czekanie przy wrogu = odskok” (dla wilków, które podchodzą za blisko) działała też na ludzi z bronią.
+- **Poprawka:** zamiana „czekanie → odskok” tylko dla walczących pięściami/kłami (potwory), najwyżej raz na 2,5 s. (Druga część – reakcja na zamach raz na zamach w `fightalgo.cpp` – wycofana: bez niej gra działa lepiej.)
 
-### 30. NPC bez trafień krytycznych na starym zapisie (Lares bije po 41 zamiast zabić pająka w 2 ciosy) – 🧪 (13.11.2026)
+### 30. NPC bez trafień krytycznych na starym zapisie (Lares bije po 41 zamiast zabić pająka w 2 ciosy) – ✅ (13.11.2026)
 - **Pliki:** `common/game/gamescript.cpp`
 - **Przyczyna:** obrażenia w NB: trafienie krytyczne (szansa = umiejętność walki w %) daje siła + broń − ochrona, zwykłe tylko 1/10 tego. Szanse NPC ustawia `B_SetFightSkills` → `RX_ApplyProperOverlaysForNpc` (poprawka 23) – ale tylko w chwili tworzenia postaci, czyli przy nowej grze. W zapisie zrobionym przed poprawką 23 wszyscy NPC (Lares – mistrz, 100%) mają szansę 0% i nigdy nie trafiają krytycznie.
-- **Poprawka:** skrypty NB zapisały te procenty także w `AIVAR[84..87]` (1H, 2H, łuk, kusza). NPC w pobliżu bohatera, który ma wszystkie szanse 0, a te zmienne większe od 0, dostaje szanse z nich (i poziom umiejętności/nakładkę jak w poprawce 23). Nowa gra tego nie potrzebuje.
+- **Poprawka:** skrypty NB zapisały te procenty także w `AIVAR[84..87]` (1H, 2H, łuk, kusza). NPC w pobliżu bohatera (sprawdzane co 100 ms), który ma wszystkie szanse 0, a te zmienne większe od 0, dostaje szanse z nich (i poziom umiejętności/nakładkę jak w poprawce 23). Nowa gra tego nie potrzebuje.
+- **Wynik:** ✅ wilki, gobliny, topielce i ścierwojady Lares kładzie jednym ciosem.
 
 ### 31. Lares (i inni z łukiem) nie strzela – w NB łuk ma pierwszeństwo przed mieczem – 🧪 (13.11.2026)
 - **Pliki:** `common/game/gamescript.cpp`
@@ -251,6 +248,7 @@ Pliki: przy każdej poprawce jest lista plików. **🆕 NOWY PLIK** oznacza plik
   - NPC, który już strzela, **nie zmienia łuku na miecz przy zwierzętach** (wilki, ścierwojady, szczury, gobliny, krwiopijce, warany, pełzacze, kretoszczury…), nawet z bliska;
   - po zmianie broni następna dopiero po 6 s (`AIVRX_NPC_CHANGEWEAPON_TIMER`), gdy ma strzały;
   - bez broni białej – pięści.
+- **Poprawka do poprawki (13.11.2026, 23:30):** dalej walczył mieczem – `Npc::hasAmmunition` sprawdza strzały tylko do broni trzymanej w ręku, więc z mieczem w dłoni „nie miał strzał”. Strzały liczone teraz do założonego łuku/kuszy.
 
 ## Do zrobienia
 - [ ] **Animacje broni NB – sprawdzić, co się za nimi kryje (w toku).** Ustalone do tej pory:

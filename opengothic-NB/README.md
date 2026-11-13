@@ -26,14 +26,12 @@ Te pliki trzeba **dodać**, nie podmieniać. Bez nich build się nie uda.
 |---|---|---|
 | `common/world/triggers/cscamera.cpp` | kamera filmowa: czarny ekran w scenie z Xardasem | 1 |
 | `common/world/triggers/cscamera.h` | j.w. | 1 |
-| `common/game/gamescript.cpp` | obsługa skryptów NB (Copilot) + stoły rzemieślnicze, `Menu_ReadInt/WriteInt`, domyślne opcje, pętle pluginu (`PerFrame`, `B_GetTime`), komunikaty na ekranie (`AI_PrintQuest`…), opisy przedmiotów w ekwipunku, wagi przedmiotów (`RX_SetWeightValueExt`), wygląd komunikatu o wpisie do dziennika, talenty i animacje walki NPC (`RX_ApplyProperOverlaysForNpc`), bandyci wrodzy bohaterowi (stosunek gildii), `Npc_GetGuildAttitude`, NPC dobywają broni w walce (`RX_SelectWeaponNpc`), towarzysz nie czeka po zmianie stanu, style walki NPC z pluginu, szanse trafienia NPC na starych zapisach, wybór broni NPC jak w pluginie (łuk najpierw) | 0, 2, 4, 5, 6, 9, 12, 13, 19, 23, 24, 25, 27, 29, 30, 31 |
+| `common/game/gamescript.cpp` | obsługa skryptów NB (Copilot) + stoły rzemieślnicze, `Menu_ReadInt/WriteInt`, domyślne opcje, pętle pluginu (`PerFrame`, `B_GetTime`), komunikaty na ekranie (`AI_PrintQuest`…), opisy przedmiotów w ekwipunku, wagi przedmiotów (`RX_SetWeightValueExt`), wygląd komunikatu o wpisie do dziennika, talenty i animacje walki NPC (`RX_ApplyProperOverlaysForNpc`), bandyci wrodzy bohaterowi (stosunek gildii), `Npc_GetGuildAttitude`, NPC dobywają broni w walce (`RX_SelectWeaponNpc`), towarzysz nie czeka po zmianie stanu, szanse trafienia NPC na starych zapisach, wybór broni NPC jak w pluginie (łuk najpierw) | 0, 2, 4, 5, 6, 9, 12, 13, 19, 23, 24, 25, 27, 30, 31 |
 | `common/world/objects/npc.cpp` | zmienne NB postaci, AI potworów (Copilot) + bohater nie wstaje z łóżka przy śnie, diagnostyka zbroi, efekty krwi przy trafieniu, prędkość ruchu przeskalowanych istot, potwory nie odskakują bez przerwy (+ tymczasowy komunikat `[odskok]`), potwory atakują w tempie Gothic | 0, 0a, 7, 16, 17, 20, 21, 22, 26, 28 |
 | `common/gothic.cpp` | ekran wczytywania: obrazki moda `LOADING_<ŚWIAT>_<numer>` | 3, 3a |
 | `common/mainwindow.cpp` | ekran wczytywania: świat z nagłówka save'a, czarne tło zamiast białego, pasek wczytywania dla tekstur HD | 3, 3a, 14 |
 | `common/ui/gamemenu.cpp` | strona „Ustawienia gry” z przełącznikami NB, okno statystyk postaci (B) z 5 zakładkami, zakładki dziennika (zakończone, bestiariusz) | 5, 8, 10, 15 |
 | `common/game/playercontrol.cpp` | „lepki” focus przeciwnika w walce wręcz (bohater sam się do niego obraca) | 18 |
-| `common/game/fightalgo.cpp` | AI walki: reakcja na zamach przeciwnika raz na zamach (50%), nie przy każdej decyzji | 22, 28 |
-| `common/game/fightalgo.h` | j.w. | 22, 28 |
 | `common/ui/gamemenu.h` | nowe funkcje ekranu statystyk i zakładek dziennika | 8, 10, 15 |
 | `common/ui/inventorymenu.cpp` | okienko opisu przedmiotu (dotyk): wiersze nie nachodzą na nazwę i nie wychodzą poza okienko | 12 |
 

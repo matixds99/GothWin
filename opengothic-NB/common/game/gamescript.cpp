@@ -125,7 +125,7 @@ struct NbState {
   zenkit::DaedalusSymbol*  frameTime       = nullptr;
   int                      unionCycle      = 0;
   uint64_t                 nextMenuCheck   = 0;
-  uint64_t                 nextMoveset     = 0;   // NB fix 29: the timer of 100 ms of the styles of the fight of NPC
+  uint64_t                 nextMoveset     = 0;   // the timer of 100 ms of fix 30
   };
 
 std::unordered_map<const GameScript*, NbState> nbStates;
@@ -133,11 +133,7 @@ std::unordered_map<const GameScript*, NbState> nbStates;
 }
 
 
-// NB fix 29: the styles of the fight of the NPC (UNION_ABI.DLL 0x1024A460, a timer of 100 ms).
-// For a human near the hero (1500) in a fight with a drawn 1H/2H weapon the plugin takes all the overlays of the
-// weapons away and puts on one style for its guild, chosen by the hit chance and by chance; AIVRX_CHANGE_MOVESET (9)
-// marks it as done, AIVRX_NPC_CHANGEMOVESET3 (151) counts 40..80 ticks (4-8 s), after that, with the enemy 500 or
-// more away, the style is chosen again. Done: the guilds without an own table (GIL_NONE - Lares, VLK, BAU, KDF...).
+// NB: the hit chances and the fight skills of the NPC (B_SetFightSkills -> RX_ApplyProperOverlaysForNpc, fixes 23 and 30)
 namespace NbMoveset {
 
   // B_SetFightSkills -> RX_ApplyProperOverlaysForNpc (UNION_ABI.DLL 0x10198B20), see the binding
@@ -195,132 +191,18 @@ namespace NbMoveset {
     h.hitchance[TALENT_CROSSBOW] = std::clamp(h.aivar[87],0,100);
     applyFightSkills(npc,0);
     }
-  static const char* const allOverlays[] = {
-    "humans_1hST1.mds","humans_1hST2.mds","humans_1hST3.mds",
-    "Shield_ST1.MDS","Shield_ST2.MDS","Shield_ST3.MDS","Shield_ST4.MDS","Hum_Shield2.MDS","Shield.MDS","PRE_Hum_Shield2.MDS",
-    "Humans_Pirate.mds","Humans_Rapier_ST3.mds","Humans_Rapier_ST2.mds","Humans_Rapier_ST1.mds","PRE_START.mds",
-    "humans_2hST3.mds","humans_2hST2.mds","humans_2hST1.mds","HUMANS_AXEST1.MDS","HUMANS_AXEST2.MDS",
-    "PRE_START_2X2.MDS","HUM_2X2.MDS","Humans_2x2ST3.MDS","Humans_1x2ST3.MDS",
-    "PRE_Humans_O2Hl2.mds","Humans_O2Hl2.mds",
-    "PRE_Humans_Stafx.mds","PRE_Humans_Stafw.mds","PRE_Humans_Stafd.mds","PRE_Humans_Stafg.mds","PRE_Humans_Stafdemon.mds",
-    "Humans_Stafx.mds","Humans_Stafw.mds","Humans_Stafd.mds","Humans_Stafg.mds","Humans_Stafdemon.mds",
-    "PRE_Humans_Speer.mds","Humans_Speer.mds","Humans_SPST1.mds","Humans_SPST2.mds","HUMANS_2h_b_st1.mds",
-    "HUMANS_BOSS03.MDS","HUMANS_BOSS032.MDS","HUMANS_1HDEXST1.MDS","HUMANS_1HDEXST2.MDS","HUMANS_1HDEXST3.MDS",
-    };
-
-  // an equipped shield of NB: ITEM_KAT_NF with ITEM_SHIELD (0x40000), not a weapon of one hand
-  static bool hasShield(const Npc& npc) {
-    for(auto it = npc.inventory().iterator(Inventory::T_Inventory); it.isValid(); ++it) {
-      if(!it.isEquipped())
-        continue;
-      auto& h = it->handle();
-      const uint32_t fl = uint32_t(h.flags);
-      if(h.main_flag==2 /*ITEM_KAT_NF*/ && (fl & 0x40000)!=0 && (fl & 0x40003)!=0x40003)
-        return true;
-      }
-    return false;
+  // every 100 ms: the NPC near the hero (old saves: fix 30)
+  static void tick(GameScript& sc, World& world, int /*sepHum*/) {
+    auto* pl = world.player();
+    if(pl==nullptr)
+      return;
+    world.detectNpc(pl->position(), 1500.f, [pl](Npc& npc) {
+      if(&npc==pl || npc.isPlayer() || npc.isDown())
+        return;
+      restoreFightSkills(npc);
+      });
+    (void)sc;
     }
-
-  // 1024AA90: a style of the weapons of dexterity is replaced by the usual one: always for an axe, else 80 of 101
-  static std::string dexFix(const Npc& npc, std::string name, uint32_t rnd) {
-    static const char* dex[3] = {"HUMANS_1HDEXST1.MDS","HUMANS_1HDEXST2.MDS","HUMANS_1HDEXST3.MDS"};
-    static const char* usu[3] = {"HUMANS_1HST1.MDS","HUMANS_1HST2.MDS","HUMANS_1HST3.MDS"};
-    for(int i=0; i<3; ++i) {
-      if(name!=dex[i])
-        continue;
-      auto* w   = const_cast<Npc&>(npc).currentMeleeWeapon();
-      bool  axe = w!=nullptr && (uint32_t(w->handle().flags) & 0x8000)!=0;
-      if(axe || (rnd%101)<=80)
-        return usu[i];
-      }
-    return name;
-    }
-
-  // 1024F1F0: one hand, the guilds without an own table
-  static std::string default1h(const Npc& npc, GameScript& sc) {
-    const int hc = const_cast<Npc&>(npc).handle().hitchance[TALENT_1H];
-    const bool sh = hasShield(npc);
-    if(hc>=90) {
-      if(sh) {
-        static const char* t[4] = {"SHIELD_ST1.MDS","SHIELD_ST2.MDS","SHIELD_ST2.MDS","SHIELD_ST3.MDS"};
-        return t[sc.rand(4)];
-        }
-      static const char* t[7] = {"","HUMANS_1HST1.MDS","HUMANS_1HST2.MDS","HUMANS_1HST3.MDS",
-                                 "HUMANS_1HDEXST1.MDS","HUMANS_1HDEXST2.MDS","HUMANS_1HDEXST3.MDS"};
-      return t[sc.rand(7)];
-      }
-    if(hc>=60) {
-      if(sh)
-        return sc.rand(3)==2 ? "SHIELD_ST2.MDS" : "SHIELD_ST1.MDS";
-      static const char* t[5] = {"","HUMANS_1HST1.MDS","HUMANS_1HST2.MDS","HUMANS_1HDEXST1.MDS","HUMANS_1HDEXST2.MDS"};
-      return t[sc.rand(5)];
-      }
-    return sc.rand(2)==1 ? "HUMANS_1HST1.MDS" : "";
-    }
-
-  // 1024F420: two hands, the guilds without an own table
-  static std::string default2h(const Npc& npc, GameScript& sc) {
-    const int hc = const_cast<Npc&>(npc).handle().hitchance[TALENT_2H];
-    if(hc>=90) {
-      static const char* t[4] = {"HUMANS_2HST1.MDS","HUMANS_2HST2.MDS","HUMANS_2HST3.MDS","HUMANS_AXEST2.MDS"};
-      return t[sc.rand(4)];
-      }
-    if(hc>=60)
-      return sc.rand(3)==1 ? "HUMANS_2HST2.MDS" : "HUMANS_2HST1.MDS";
-    return "HUMANS_2HST1.MDS";
-    }
-
-  static void tick(GameScript& sc, World& world, int sepHum) {
-  auto* pl = world.player();
-  if(pl==nullptr)
-    return;
-  world.detectNpc(pl->position(), 1500.f, [&sc,pl,sepHum](Npc& npc) {
-    if(&npc==pl || npc.isPlayer() || npc.isDown())
-      return;
-    restoreFightSkills(npc);
-    const int g = int(npc.guild());
-    if(g>=sepHum && g!=36)
-      return;
-    // the guilds with an own table in the plugin are not done yet (BDT 9, SLD 7, MIL 2, PAL 1, DJG 6, PIR 13, OUT 10,
-    // GIL_SKELETON 36, and for two hands also 16): they keep the styles of the hit chance (B_SetFightSkills)
-    const auto ws = npc.weaponState();
-    const bool w1 = (ws==WeaponState::W1H), w2 = (ws==WeaponState::W2H);
-    if(!w1 && !w2)
-      return;
-    if(g==9 || g==7 || g==2 || g==1 || g==6 || g==13 || g==10 || g==36 || (w2 && g==16))
-      return;
-    Npc* enemy = npc.target();
-    if(enemy==nullptr || enemy->isDown())
-      return;
-    auto& h = npc.handle();
-    if(h.attribute[ATR_HITPOINTS] <= h.attribute[ATR_HITPOINTSMAX]/15)
-      return;
-
-    int changed = npc.newBalanceGetNpcVar(9);
-    int count   = npc.newBalanceGetNpcVar(151);
-    if(changed!=0 && count==0 && npc.qDistTo(*enemy)>=500.f*500.f) {
-      changed = 0;
-      npc.newBalanceSetNpcVar(9,0);
-      }
-    if(count>0)
-      npc.newBalanceSetNpcVar(151,count-1);
-    if(changed!=0)
-      return;
-
-    for(auto name:allOverlays)
-      if(auto sk = Resources::loadSkeleton(name))
-        npc.delOverlay(sk);
-    std::string style = w1 ? default1h(npc,sc) : default2h(npc,sc);
-    if(w1)
-      style = dexFix(npc,style,sc.rand(101));
-    if(!style.empty())
-      if(auto sk = Resources::loadSkeleton(style))
-        npc.addOverlay(sk,0);
-
-    npc.newBalanceSetNpcVar(9,1);
-    npc.newBalanceSetNpcVar(151,40+int(sc.rand(41)));
-    });
-  }
 
   }
 
@@ -1141,7 +1023,12 @@ void GameScript::initCommon() {
       const bool  inRange = (ws==WeaponState::Bow || ws==WeaponState::CBow);
       const bool  melee   = slf->currentMeleeWeapon()!=nullptr;
       const bool  ranged  = slf->currentRangedWeapon()!=nullptr;
-      const bool  ammo    = ranged && slf->hasAmmunition();
+      // (Npc::hasAmmunition looks only at the drawn weapon: with the sword in the hands it said "no arrows")
+      bool ammo = false;
+      if(auto* rw = slf->currentRangedWeapon()) {
+        const int32_t mun = rw->handle().munition;
+        ammo = mun>0 && slf->inventory().itemCount(size_t(mun))>0;
+        }
       const float dist    = oth!=nullptr ? std::sqrt(slf->qDistTo(*oth)) : 0.f;
       const int   og      = oth!=nullptr ? int(oth->guild()) : 0;
 
