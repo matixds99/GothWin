@@ -256,7 +256,7 @@ Pliki: przy każdej poprawce jest lista plików. **🆕 NOWY PLIK** oznacza plik
 - **Poprawka:** dodane `Mdl_RemoveOverlayMds_NoUpdate`, `Mdl_ApplyOverlayMds_NoUpdate` (jak zwykłe zdjęcie/założenie nakładki; „NoUpdate” = bez przeładowania modelu, OpenGothic tego nie potrzebuje) i `Mdl_HasOverlayMds` (log pokazywał je jako niezaimplementowane).
 - **Uwaga:** Lares (NPC) ma już prawidłowe animacje miecza – NPC dostają je z poprawki 23.
 
-### 33. Ścierwojad odskakuje od pierwszego zamachu – rytm walki jak w Gothic – 🧪 (14.11.2026)
+### 33. Ścierwojad odskakuje od pierwszego zamachu – rytm walki jak w Gothic – ✅ (14.11.2026)
 - **Pliki:** `common/world/objects/npc.cpp`
 - **Jak jest w NB/Gothic (opis gracza):** ścierwojad ostrzega 3 razy, rzuca się na bohatera; bohater odskakuje, ścierwojad wpada na niego i dostaje 2 ciosy, dopiero wtedy odskakuje – i cykl się powtarza (da się go zabić bez utraty życia).
 - **Przyczyna:** reakcja na zamach (`FA_ENEMY_PREHIT`: ścierwojad – zawsze odskok) jest w oryginale sprawdzana tylko, gdy potwór skończy swoją akcję i przestanie się chwiać po trafieniu. OpenGothic sprawdzał ją co ~0,2 s, więc ścierwojad odskakiwał już od pierwszego zamachu.
