@@ -2140,8 +2140,8 @@ bool Npc::implAttack(uint64_t dt) {
   // NB fix 33: the rhythm of a scavenger in Gothic: it jumps back from the swing of the hero only after it got two
   // hits (the engine lets it decide only when its action ended and its stagger is over). OpenGothic decided every
   // 0.2 s and the scavenger jumped back already from the first swing. Until the second hit it does not jump, it
-  // waits (and runs into the blade). For now only FAI_SCAVENGER (15), to be compared with the original.
-  if(act==FightAlgo::MV_JUMPBACK && !closeJump && hnpc->fight_tactic==15 && currentTarget->isPrehit()) {
+  // waits (and runs into the blade). Fix 34: every monster (a fight with fists/claws), not only FAI_SCAVENGER.
+  if(act==FightAlgo::MV_JUMPBACK && !closeJump && ws==WeaponState::Fist && currentTarget->isPrehit()) {
     auto& hits = nbHitsSinceJump();
     auto  it   = hits.find(this);
     if(it==hits.end() || it->second<2) {

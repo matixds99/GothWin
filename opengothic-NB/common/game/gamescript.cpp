@@ -191,17 +191,178 @@ namespace NbMoveset {
     h.hitchance[TALENT_CROSSBOW] = std::clamp(h.aivar[87],0,100);
     applyFightSkills(npc,0);
     }
+  static const char* const allOverlays[] = {
+    "humans_1hST1.mds","humans_1hST2.mds","humans_1hST3.mds",
+    "Shield_ST1.MDS","Shield_ST2.MDS","Shield_ST3.MDS","Shield_ST4.MDS","Hum_Shield2.MDS","Shield.MDS","PRE_Hum_Shield2.MDS",
+    "Humans_Pirate.mds","Humans_Rapier_ST3.mds","Humans_Rapier_ST2.mds","Humans_Rapier_ST1.mds","PRE_START.mds",
+    "humans_2hST3.mds","humans_2hST2.mds","humans_2hST1.mds","HUMANS_AXEST1.MDS","HUMANS_AXEST2.MDS",
+    "PRE_START_2X2.MDS","HUM_2X2.MDS","Humans_2x2ST3.MDS","Humans_1x2ST3.MDS",
+    "PRE_Humans_O2Hl2.mds","Humans_O2Hl2.mds",
+    "PRE_Humans_Stafx.mds","PRE_Humans_Stafw.mds","PRE_Humans_Stafd.mds","PRE_Humans_Stafg.mds","PRE_Humans_Stafdemon.mds",
+    "Humans_Stafx.mds","Humans_Stafw.mds","Humans_Stafd.mds","Humans_Stafg.mds","Humans_Stafdemon.mds",
+    "PRE_Humans_Speer.mds","Humans_Speer.mds","Humans_SPST1.mds","Humans_SPST2.mds","HUMANS_2h_b_st1.mds",
+    "HUMANS_BOSS03.MDS","HUMANS_BOSS032.MDS","HUMANS_1HDEXST1.MDS","HUMANS_1HDEXST2.MDS","HUMANS_1HDEXST3.MDS",
+    };
+
+  // an equipped shield of NB: ITEM_KAT_NF with ITEM_SHIELD (0x40000), not a weapon of one hand
+  static bool hasShield(const Npc& npc) {
+    for(auto it = npc.inventory().iterator(Inventory::T_Inventory); it.isValid(); ++it) {
+      if(!it.isEquipped())
+        continue;
+      auto& h = it->handle();
+      const uint32_t fl = uint32_t(h.flags);
+      if(h.main_flag==2 /*ITEM_KAT_NF*/ && (fl & 0x40000)!=0 && (fl & 0x40003)!=0x40003)
+        return true;
+      }
+    return false;
+    }
+
+  // 1024AA90: a style of the weapons of dexterity is replaced by the usual one: always for an axe, else 80 of 101
+  static std::string dexFix(const Npc& npc, std::string name, uint32_t rnd) {
+    static const char* dex[3] = {"HUMANS_1HDEXST1.MDS","HUMANS_1HDEXST2.MDS","HUMANS_1HDEXST3.MDS"};
+    static const char* usu[3] = {"HUMANS_1HST1.MDS","HUMANS_1HST2.MDS","HUMANS_1HST3.MDS"};
+    for(int i=0; i<3; ++i) {
+      if(name!=dex[i])
+        continue;
+      auto* w   = const_cast<Npc&>(npc).currentMeleeWeapon();
+      bool  axe = w!=nullptr && (uint32_t(w->handle().flags) & 0x8000)!=0;
+      if(axe || (rnd%101)<=80)
+        return usu[i];
+      }
+    return name;
+    }
+
+  static bool isRapier(Npc& npc) {     // NB: BIT_ITEM_PIERCE_DAMAGE (2) in C_ITEM.HP
+    auto* w = npc.currentMeleeWeapon();
+    return w!=nullptr && (w->handle().hp & 2)!=0;
+    }
+  static bool isAxe(Npc& npc) {        // ITEM_AXE
+    auto* w = npc.currentMeleeWeapon();
+    return w!=nullptr && (uint32_t(w->handle().flags) & 0x8000)!=0;
+    }
+  // the name of the instance contains one of the names (zSTRING::Search in the plugin)
+  static bool nameHas(GameScript& sc, Npc& npc, std::initializer_list<const char*> names) {
+    auto* sym = sc.findSymbol(npc.handle().symbol_index());
+    if(sym==nullptr)
+      return false;
+    for(auto n:names)
+      if(sym->name().find(n)!=std::string::npos)
+        return true;
+    return false;
+    }
+  static const char* pick(GameScript& sc, std::initializer_list<const char*> t) {
+    return t.begin()[sc.rand(uint32_t(t.size()))];
+    }
+
+  // 1024AD00: bandits, one hand
+  static std::string bdt1h(GameScript& sc, Npc& npc) {
+    const bool sh = hasShield(npc);
+    if(nameHas(sc,npc,{"BDT_1460_NESTOR","BDT_1093_ADDON_FRANCO","BDT_1083_ADDON_ESTEBAN"})) {
+      if(isAxe(npc))
+        return sh ? pick(sc,{"SHIELD_ST2.MDS","SHIELD_ST3.MDS","SHIELD_ST1.MDS"})
+                  : pick(sc,{"HUMANS_1HST1.MDS","HUMANS_1HST2.MDS","HUMANS_1HST3.MDS"});
+      if(sh)
+        return pick(sc,{"SHIELD_ST2.MDS","SHIELD_ST3.MDS","SHIELD_ST4.MDS"});
+      if(isRapier(npc))
+        return pick(sc,{"HUMANS_RAPIER_ST1.MDS","HUMANS_RAPIER_ST2.MDS","HUMANS_RAPIER_ST2.MDS","HUMANS_RAPIER_ST3.MDS"});
+      return pick(sc,{"HUMANS_1HST1.MDS","HUMANS_1HST3.MDS","HUMANS_1HST2.MDS"});
+      }
+    if(nameHas(sc,npc,{"BDT_1060_DEXTER","BDT_10620_BANDIT_L","BDT_10621_BANDIT_L","BDT_10622_BANDIT_L",
+                       "BDT_10623_BANDIT_L","BDT_HAART"})) {
+      if(sh)
+        return pick(sc,{"SHIELD_ST1.MDS","SHIELD_ST3.MDS","SHIELD_ST2.MDS"});
+      if(isRapier(npc))
+        return pick(sc,{"HUMANS_RAPIER_ST1.MDS","HUMANS_RAPIER_ST2.MDS","Humans_Pirate.MDS"});
+      return pick(sc,{"HUMANS_1HST3.MDS","HUMANS_1HST2.MDS","HUMANS_1HST1.MDS",
+                      "HUMANS_1HDEXST3.MDS","HUMANS_1HDEXST2.MDS","HUMANS_1HDEXST1.MDS"});
+      }
+    if(npc.handle().hitchance[TALENT_1H]>=60) {
+      if(sh)
+        return pick(sc,{"SHIELD_ST2.MDS","SHIELD_ST1.MDS","SHIELD_ST2.MDS"});
+      if(isRapier(npc))
+        return pick(sc,{"HUMANS_RAPIER_ST2.MDS","HUMANS_RAPIER_ST3.MDS","HUMANS_RAPIER_ST2.MDS"});
+      return pick(sc,{"HUMANS_1HST3.MDS","HUMANS_1HST2.MDS","HUMANS_1HDEXST2.MDS","HUMANS_1HDEXST3.MDS"});
+      }
+    if(sh)
+      return pick(sc,{"SHIELD_ST2.MDS","SHIELD_ST1.MDS","SHIELD_ST2.MDS","SHIELD_ST3.MDS"});
+    if(isRapier(npc))
+      return pick(sc,{"HUMANS_RAPIER_ST1.MDS","Humans_Pirate.MDS","HUMANS_RAPIER_ST1.MDS"});
+    return pick(sc,{"HUMANS_1HST1.MDS","HUMANS_1HST2.MDS","HUMANS_1HDEXST1.MDS","HUMANS_1HDEXST2.MDS"});
+    }
+
+  // 1024B810: bandits, two hands
+  static std::string bdt2h(GameScript& sc, Npc& npc) {
+    if(nameHas(sc,npc,{"TPL_GOR_BOBA"}))
+      return "HUMANS_2h_b_st1.MDS";
+    const int hc = npc.handle().hitchance[TALENT_2H];
+    if(hc>=85)
+      return pick(sc,{"HUMANS_2HST3.MDS","HUMANS_AXEST2.MDS","HUMANS_SPST2.MDS"});
+    if(hc>=60)
+      return pick(sc,{"HUMANS_2HST2.MDS","HUMANS_AXEST2.MDS","HUMANS_2HST1.MDS"});
+    return pick(sc,{"HUMANS_2HST1.MDS","HUMANS_2HST2.MDS"});
+    }
+
+  // the style of the guild; "" = no table done yet for this guild (the styles of the hit chance stay)
+  static bool styleFor(GameScript& sc, Npc& npc, int guild, bool oneHand, std::string& out) {
+    switch(guild) {
+      case 9: out = oneHand ? bdt1h(sc,npc) : bdt2h(sc,npc); return true;
+      default: return false;
+      }
+    }
+
+  // UNION_ABI.DLL 0x1024A460, see the comment at fix 34 in the CHANGELOG
+  static void movesetTick(GameScript& sc, Npc& npc, int sepHum) {
+    const int g = int(npc.guild());
+    if(g>=sepHum && g!=36)
+      return;
+    const auto ws = npc.weaponState();
+    const bool w1 = (ws==WeaponState::W1H), w2 = (ws==WeaponState::W2H);
+    if(!w1 && !w2)
+      return;
+    Npc* enemy = npc.target();
+    if(enemy==nullptr || enemy->isDown())
+      return;
+    auto& h = npc.handle();
+    if(h.attribute[ATR_HITPOINTS] <= h.attribute[ATR_HITPOINTSMAX]/15)
+      return;
+
+    int changed = npc.newBalanceGetNpcVar(9);
+    int count   = npc.newBalanceGetNpcVar(151);
+    if(changed!=0 && count==0 && npc.qDistTo(*enemy)>=500.f*500.f) {
+      changed = 0;
+      npc.newBalanceSetNpcVar(9,0);
+      }
+    if(count>0)
+      npc.newBalanceSetNpcVar(151,count-1);
+    if(changed!=0)
+      return;
+
+    std::string style;
+    if(!styleFor(sc,npc,g,w1,style))
+      return;
+    for(auto name:allOverlays)
+      if(auto sk = Resources::loadSkeleton(name))
+        npc.delOverlay(sk);
+    if(w1)
+      style = dexFix(npc,style,sc.rand(101));
+    if(!style.empty())
+      if(auto sk = Resources::loadSkeleton(style))
+        npc.addOverlay(sk,0);
+    npc.newBalanceSetNpcVar(9,1);
+    npc.newBalanceSetNpcVar(151,40+int(sc.rand(41)));
+    }
+
   // every 100 ms: the NPC near the hero (old saves: fix 30)
-  static void tick(GameScript& sc, World& world, int /*sepHum*/) {
+  static void tick(GameScript& sc, World& world, int sepHum) {
     auto* pl = world.player();
     if(pl==nullptr)
       return;
-    world.detectNpc(pl->position(), 1500.f, [pl](Npc& npc) {
+    world.detectNpc(pl->position(), 1500.f, [&sc,pl,sepHum](Npc& npc) {
       if(&npc==pl || npc.isPlayer() || npc.isDown())
         return;
       restoreFightSkills(npc);
+      movesetTick(sc,npc,sepHum);
       });
-    (void)sc;
     }
 
   }

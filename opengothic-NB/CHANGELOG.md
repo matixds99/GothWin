@@ -263,6 +263,21 @@ Pliki: przy każdej poprawce jest lista plików. **🆕 NOWY PLIK** oznacza plik
 - **Poprawka (na razie tylko ścierwojad, `FAI_SCAVENGER`):** odskok przed zamachem dopiero po 2 trafieniach od poprzedniego odskoku; wcześniej ścierwojad czeka. Jeśli rytm się zgadza, rozszerzę na inne zwierzęta z odskokiem w taktyce (wilk, krwiopijca, waran, szczur, zębacz, cieniostwór, harpia…).
 - **Usunięte:** tymczasowe komunikaty `[odskok] …` na ekranie.
 
+### 34. Rytm walki z poprawki 33 dla wszystkich zwierząt – 🧪 (14.11.2026)
+- **Pliki:** `common/world/objects/npc.cpp`
+- Każdy potwór walczący pazurami/kłami odskakuje przed zamachem bohatera dopiero po 2 trafieniach od poprzedniego odskoku (dotąd tylko ścierwojad). Dotyczy zwierząt, które mają odskok w swojej taktyce (`FIGHT.DAT`, `FA_ENEMY_PREHIT`): wilk (odskok/unik), krwiopijca, waran, szczur, zębacz, cieniostwór, harpia, jaszczurka, aligator, niedźwiedź, gargulec, smok… Kretoszczur, goblin, golem nie odskakują – u nich nic się nie zmienia.
+
+### 35. Style walki NPC z pluginu NB – gildia bandytów (BDT) – 🧪 (14.11.2026)
+- **Pliki:** `common/game/gamescript.cpp`
+- Wraca mechanizm z poprawki 29 (co 100 ms, wróg w pobliżu, broń w ręku, nowe losowanie po 4–8 s), ale **tylko dla gildii z własną tabelą w pluginie** – postacie bez gildii (Lares, VLK, BAU…) zostają przy stylach z poprawki 23, bo te działają dobrze.
+- **Bandyci, jedna ręka (UNION_ABI.DLL 0x1024AD00):**
+  - Nestor, Franco, Esteban: topór → 1hST1–3 (z tarczą Shield_ST1–3); tarcza → Shield_ST2–4; rapier → Rapier_ST1–3; inaczej 1hST1–3;
+  - Dexter, bandyci BDT_10620–10623, Haart: tarcza → Shield_ST1–3; rapier → Rapier_ST1/ST2/Pirate; inaczej 1hST1–3 albo 1hDexST1–3;
+  - pozostali, szansa ≥ 60%: tarcza ST1/ST2; rapier ST2/ST3; inaczej 1hST2/ST3, 1hDexST2/ST3; poniżej 60%: tarcza ST1–3; rapier ST1/Pirate; inaczej 1hST1/ST2, 1hDexST1/ST2.
+- **Bandyci, dwie ręce (0x1024B810):** Gor Boba – 2h_b_st1; ≥ 85%: 2hST3/AxeST2/SpST2; ≥ 60%: 2hST1/2hST2/AxeST2; poniżej: 2hST1/2hST2.
+- „Rapier” = broń z bitem `BIT_ITEM_PIERCE_DAMAGE` (2) w `C_ITEM.HP`; styl „zręcznościowy” w 80% zamieniany na zwykły (jak w pluginie).
+- **Kolejne gildie:** najemnicy (SLD), straż (MIL), paladyni (PAL), łowcy smoków (DJG), piraci (PIR), banici (OUT), szkielety, gildia 16 (2H).
+
 ## Do zrobienia
 - [ ] **Animacje broni NB – sprawdzić, co się za nimi kryje (w toku).** Ustalone do tej pory:
   - bohater: animacje zakładają skrypty (`RX_ApplyAnim_Weapons` → `RX_ApplyAni_1H_Rapier` / `_DexSword` / `_1H_Sword` / `_2H_Speer` / `_2H_Staff` / `_2H_Hallberd` / `_2H_Common`, tarcze `RX_ApplyShieldAni`, dwie bronie `Humans_1x2ST3` / `2x2ST3`, topory orków `HUMANS_AXEST2`) – w OpenGothic działa;
