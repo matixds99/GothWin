@@ -3830,7 +3830,14 @@ void Npc::tickRoutine() {
 
   const bool fastPath = (aiPolicy==NpcProcessPolicy::AiFar2 && routines.empty()); //HACK: don't process far away Npc
   if(aiState.loopNextTime<=owner.tickCount()) {
-    aiState.loopNextTime = owner.tickCount() + perceptionTimeClampt();
+    // NB fix 27: Gothic calls the loop function of a state whenever the AI queue is empty (every frame), the scripts
+    // pace themselves with AI_Wait. Here it was once per perception time (1 s in most states of NB): each change of the
+    // state (end of a fight -> ZS_Attack_End -> routine -> B_ResetAll -> AI_GotoWP, end of a dialog) lost up to a second
+    // per step and a companion stood "frozen" for several seconds. Near the camera: at most every 100 ms.
+    uint64_t loopDt = perceptionTimeClampt();
+    if(aiPolicy==NpcProcessPolicy::AiNormal)
+      loopDt = std::min<uint64_t>(loopDt,100);
+    aiState.loopNextTime = owner.tickCount() + loopDt;
     int loop = LOOP_CONTINUE;
     if(aiState.funcLoop.isValid()) {
       static const float MAX_DIST = 300;
