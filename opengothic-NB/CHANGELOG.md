@@ -208,7 +208,7 @@ Pliki: przy każdej poprawce jest lista plików. **🆕 NOWY PLIK** oznacza plik
   - z pięści na miecz, gdy NPC ma miecz; z łuku na miecz, gdy wróg podejdzie albo skończą się strzały; z magii na broń, gdy `B_SelectSpell` nie wybrało czaru;
   - polecenie idzie tylko przy pustej kolejce AI (pętla ataku pyta co klatkę).
 
-### 26. Zwierzęta gryzą za szybko, towarzysz (Lares) nie nadąża – 🧪 (13.11.2026)
+### 26. Zwierzęta gryzą za szybko, towarzysz (Lares) nie nadąża – ✅ (13.11.2026)
 - **Pliki:** `common/world/objects/npc.cpp`
 - **Przyczyna:** po ataku NPC czekał na następną decyzję tylko do znacznika `DEF_HIT_END` animacji. To okno kombinacji ciosów broni białej. Potwory (i walka pięściami) kombinacji nie mają, więc następny atak zaczynał się zaraz po trafieniu i ucinał resztę animacji – zwierzęta gryzły ok. 1,5 raza szybciej niż w Gothic. Każde ugryzienie przewraca trafionego (animacja „potknięcia”), więc Lares przy kilku zwierzętach ciągle dostawał i nie zdążał oddać.
 - **Poprawka:** w walce pięściami/kłami (wszystkie potwory) NPC czeka do końca animacji ataku. Ludzie z bronią dalej mogą łączyć ciosy w kombinacje.
