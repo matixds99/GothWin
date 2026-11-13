@@ -965,6 +965,59 @@ void GameScript::initCommon() {
     // re-reads the animation ids of the model after the overlays changed; OpenGothic looks the
     // animations up by name each time, so there is nothing to do
     bindNb("RX_INITANIMATIONS", [](std::shared_ptr<zenkit::INpc>) {});
+    // B_SelectWeapon(slf, oth) of NB ends with RX_SelectWeaponNpc(slf, oth): the plugin draws the right
+    // weapon for the fight (B_SelectWeapon of Gothic 2). Without it no NPC drew a weapon in a fight
+    // (Lares, the guards...) and stood still while monsters bit it.
+    bindNb("RX_SELECTWEAPONNPC", [this](std::shared_ptr<zenkit::INpc> slfRef, std::shared_ptr<zenkit::INpc> othRef) {
+      auto* slf = findNpcRaw(slfRef);
+      auto* oth = findNpcRaw(othRef);
+      if(slf==nullptr || slf->isDown())
+        return;
+      // ZS_Attack_Loop asks every frame: the weapon is drawn once, not once per frame
+      if(!slf->isAiQueueEmpty())
+        return;
+      const auto distSym = [this](std::string_view name, int def) {
+        auto* s = vm.find_symbol_by_name(name);
+        return s!=nullptr && s->type()==zenkit::DaedalusDataType::INT ? s->get_int() : def;
+        };
+      const float meleeDist = float(distSym("FIGHT_DIST_MELEE",600));
+      const float dist      = oth!=nullptr ? slf->qDistTo(*oth) : 0.f;
+      const bool  far       = dist > meleeDist*meleeDist;
+      const bool  ranged    = slf->currentRangedWeapon()!=nullptr && slf->hasAmmunition();
+      const auto  st        = slf->weaponState();
+
+      if(st==WeaponState::Mage) {
+        // B_SelectSpell has not chosen a spell: back to the weapon
+        slf->aiPush(AiQueue::aiRemoveWeapon());
+        if(far && ranged)
+          slf->aiPush(AiQueue::aiReadyRangedWeapon()); else
+          slf->aiPush(AiQueue::aiReadyMeleeWeapon());
+        return;
+        }
+      if(st==WeaponState::Fist || st==WeaponState::W1H || st==WeaponState::W2H) {
+        if(far && ranged) {
+          slf->aiPush(AiQueue::aiRemoveWeapon());
+          slf->aiPush(AiQueue::aiReadyRangedWeapon());
+          }
+        else if(st==WeaponState::Fist && slf->currentMeleeWeapon()!=nullptr) {
+          slf->aiPush(AiQueue::aiRemoveWeapon());
+          slf->aiPush(AiQueue::aiReadyMeleeWeapon());
+          }
+        return;
+        }
+      if(st==WeaponState::Bow || st==WeaponState::CBow) {
+        if(!far || !ranged) {
+          slf->aiPush(AiQueue::aiRemoveWeapon());
+          slf->aiPush(AiQueue::aiReadyMeleeWeapon());
+          }
+        return;
+        }
+      // no weapon in the hands
+      if(far && ranged)
+        slf->aiPush(AiQueue::aiReadyRangedWeapon()); else
+        slf->aiPush(AiQueue::aiReadyMeleeWeapon());
+      });
+
     // Npc_GetGuildAttitude(npc, other): the attitude of the guilds (the table of Wld_SetGuildAttitude);
     // the scripts of NB ask it in B_CheckHealth and the reactions to the hero. Without it: 0 = ATT_HOSTILE
     bindNb("NPC_GETGUILDATTITUDE", [this](std::shared_ptr<zenkit::INpc> aRef, std::shared_ptr<zenkit::INpc> bRef) -> int32_t {

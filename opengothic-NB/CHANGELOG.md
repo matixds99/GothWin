@@ -200,6 +200,14 @@ Pliki: przy każdej poprawce jest lista plików. **🆕 NOWY PLIK** oznacza plik
   - dodane `Npc_GetGuildAttitude` (stosunek gildii) – brakowało go, a skrypty NB pytają o to po walce (`B_CheckHealth`) i zwracało „wrogo” dla wszystkich.
 - **Uwaga:** błąd `Accessing member "C_NPC.AIVAR" without an instance set (in C_PLAYERISFAKEBANDIT)` jest nieszkodliwy – funkcja zagląda do zmiennych Ramona z obozu bandytów (Jarkendar), którego nie ma w Khorinis; w oryginale tak samo. Diagnostyka z wcześniejszej wersji tej poprawki usunięta.
 
+### 25. NPC nie dobywają broni w walce (Lares stoi i obrywa od zwierząt) – 🧪 (13.11.2026)
+- **Pliki:** `common/game/gamescript.cpp`
+- **Przyczyna:** `B_SelectWeapon` w NB (wybór broni na początku i w trakcie walki) kończy się wywołaniem pluginu `RX_SelectWeaponNpc(slf, oth)` – to on dobywa miecza lub łuku. OpenGothic tego nie znał, więc NPC w walce (towarzysze, strażnicy, bandyci) nie dobywali broni i stali w miejscu.
+- **Poprawka:** wybór broni jak w zwykłym Gothic 2:
+  - dalej niż `FIGHT_DIST_MELEE` (600) i jest łuk/kusza ze strzałami – broń dystansowa, bliżej – broń biała (albo pięści, gdy nie ma broni);
+  - z pięści na miecz, gdy NPC ma miecz; z łuku na miecz, gdy wróg podejdzie albo skończą się strzały; z magii na broń, gdy `B_SelectSpell` nie wybrało czaru;
+  - polecenie idzie tylko przy pustej kolejce AI (pętla ataku pyta co klatkę).
+
 ## Do zrobienia
 - [ ] **Animacje broni NB – sprawdzić, co się za nimi kryje (w toku).** Ustalone do tej pory:
   - bohater: animacje zakładają skrypty (`RX_ApplyAnim_Weapons` → `RX_ApplyAni_1H_Rapier` / `_DexSword` / `_1H_Sword` / `_2H_Speer` / `_2H_Staff` / `_2H_Hallberd` / `_2H_Common`, tarcze `RX_ApplyShieldAni`, dwie bronie `Humans_1x2ST3` / `2x2ST3`, topory orków `HUMANS_AXEST2`) – w OpenGothic działa;
