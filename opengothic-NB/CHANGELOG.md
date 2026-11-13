@@ -250,7 +250,7 @@ Pliki: przy każdej poprawce jest lista plików. **🆕 NOWY PLIK** oznacza plik
   - bez broni białej – pięści.
 - **Poprawka do poprawki (13.11.2026, 23:30):** dalej walczył mieczem – `Npc::hasAmmunition` sprawdza strzały tylko do broni trzymanej w ręku, więc z mieczem w dłoni „nie miał strzał”. Strzały liczone teraz do założonego łuku/kuszy.
 
-### 32. Bohater walczy nożem i pałką jak rapierem – 🧪 (13.11.2026)
+### 32. Bohater walczy nożem i pałką jak rapierem – ✅ (13.11.2026)
 - **Pliki:** `common/game/gamescript.cpp`
 - **Przyczyna:** przy każdej zmianie broni skrypty NB (`RX_ApplyAnim_Weapons` → `RX_ResetAllOverlays`) zdejmują ok. 60 nakładek animacji funkcją pluginu `Mdl_RemoveOverlayMds_NoUpdate`, której OpenGothic nie znał – nic nie było zdejmowane. Raz założony rapier zostawiał `Humans_Rapier_ST*` na zawsze i każda broń jednoręczna (nóż, pałka) walczyła jak rapier.
 - **Poprawka:** dodane `Mdl_RemoveOverlayMds_NoUpdate`, `Mdl_ApplyOverlayMds_NoUpdate` (jak zwykłe zdjęcie/założenie nakładki; „NoUpdate” = bez przeładowania modelu, OpenGothic tego nie potrzebuje) i `Mdl_HasOverlayMds` (log pokazywał je jako niezaimplementowane).
