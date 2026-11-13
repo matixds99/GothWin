@@ -1018,6 +1018,22 @@ void GameScript::initCommon() {
         slf->aiPush(AiQueue::aiReadyMeleeWeapon());
       });
 
+    // B_CheckHealth of NB runs at the start of every state of a human (AIV_TAPOSITION = NOTINPOS) and calls
+    // B_Npc_Desynchronize(npc, nCycleChar): AI_WaitMS with a global counter 250, 500 ... 3000 ms, so that the
+    // characters of a place do not all move at the same moment. In ZS_Guide_Player / ZS_Follow_Player the
+    // position is never reached, so a companion waited up to 3 s after every fight, dialog and stop before it
+    // went on. For the members of the party (AIV_PARTYMEMBER) the wait is skipped, the others wait as in NB.
+    if(auto* ds = vm.find_symbol_by_name("B_NPC_DESYNCHRONIZE"); ds!=nullptr && !ds->is_external()) {
+      vm.override_function("B_NPC_DESYNCHRONIZE", [this](std::shared_ptr<zenkit::INpc> slf, int32_t ncycle) {
+        auto* npc = findNpcRaw(slf);
+        if(npc==nullptr || ncycle<=0)
+          return;
+        if(owner.version().game==2 && npc->handle().aivar[15]!=0)
+          return;
+        npc->aiPush(AiQueue::aiWait(uint64_t(ncycle)));
+        });
+      }
+
     // Npc_GetGuildAttitude(npc, other): the attitude of the guilds (the table of Wld_SetGuildAttitude);
     // the scripts of NB ask it in B_CheckHealth and the reactions to the hero. Without it: 0 = ATT_HOSTILE
     bindNb("NPC_GETGUILDATTITUDE", [this](std::shared_ptr<zenkit::INpc> aRef, std::shared_ptr<zenkit::INpc> bRef) -> int32_t {

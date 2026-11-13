@@ -2994,40 +2994,6 @@ void Npc::tick(uint64_t dt) {
 
   tickAnimationTags();
 
-  // NB diagnostics (temporary): a companion (AIV_PARTYMEMBER) that stands still - what it waits for.
-  // "NB comp" in the log, twice a second while it is near the hero (also while it waits or walks).
-  if(!isPlayer() && owner.version().game==2 && hnpc->aivar[15]!=0 && !isDown()) {
-    struct CompTrace { uint64_t next=0; Tempest::Vec3 pos; };
-    static std::unordered_map<const Npc*,CompTrace> trace;
-    auto* pl = owner.player();
-    const uint64_t now = owner.tickCount();
-    auto& t = trace[this];
-    if(pl!=nullptr && now>=t.next && qDistTo(*pl)<3000.f*3000.f) {
-      const float moved = (position()-t.pos).length();
-      t.next = now+500;
-      t.pos  = position();
-      auto* st = owner.script().findSymbol(aiState.funcIni.ptr);
-      std::vector<Pose::LayerInfo> lay;
-      visual.pose().layerInfo(lay,now);
-      std::string anims;
-      for(auto& l:lay)
-        if(l.seq!=nullptr) {
-          anims += l.seq->name;
-          anims += " ";
-          }
-      const auto left = [now](uint64_t t) { return int(t>now ? int64_t(t-now) : 0); };
-      Log::i("NB comp: ",displayName().data(),
-             " state=",(aiState.funcIni.isValid() && st!=nullptr ? st->name().c_str() : "<none>"),
-             " loopIn=",left(aiState.loopNextTime),
-             " wait=",left(waitTime)," aniWait=",left(aniWaitTime)," outWait=",left(outWaitTime)," faiWait=",left(faiWaitTime),
-             " moved=",int(moved)," bs=",int(bodyStateMasked())," ws=",int(weaponState()),
-             " go2=",int(go2.flag)," walk=",int(walkMode()),
-             " talk=",int(isTalk())," out=",int(outputPipe->isFinished() ? 0 : 1),
-             " target=",(currentTarget!=nullptr ? currentTarget->displayName().data() : "-"),
-             " anim=[",anims.c_str(),"] queue=[",aiQueue.describe(6).c_str(),"]");
-      }
-    }
-
   if(!visual.pose().hasAnim())
     setAnim(AnimationSolver::Idle);
 
@@ -3864,14 +3830,7 @@ void Npc::tickRoutine() {
 
   const bool fastPath = (aiPolicy==NpcProcessPolicy::AiFar2 && routines.empty()); //HACK: don't process far away Npc
   if(aiState.loopNextTime<=owner.tickCount()) {
-    // NB fix 27: Gothic calls the loop function of a state whenever the AI queue is empty (every frame), the scripts
-    // pace themselves with AI_Wait. Here it was once per perception time (1 s in most states of NB): each change of the
-    // state (end of a fight -> ZS_Attack_End -> routine -> B_ResetAll -> AI_GotoWP, end of a dialog) lost up to a second
-    // per step and a companion stood "frozen" for several seconds. Near the camera: at most every 100 ms.
-    uint64_t loopDt = perceptionTimeClampt();
-    if(aiPolicy==NpcProcessPolicy::AiNormal)
-      loopDt = std::min<uint64_t>(loopDt,100);
-    aiState.loopNextTime = owner.tickCount() + loopDt;
+    aiState.loopNextTime = owner.tickCount() + perceptionTimeClampt();
     int loop = LOOP_CONTINUE;
     if(aiState.funcLoop.isValid()) {
       static const float MAX_DIST = 300;
