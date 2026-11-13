@@ -15,10 +15,6 @@ class FightAlgo final {
     void load(Serialize& fin);
     void save(Serialize& fout);
 
-    // NB fix 22: "too close" jump-back (WAIT promoted to JUMPBACK) at most once per 2.5s
-    bool closeJumpReady(uint64_t now) const { return now>=closeJumpTime+2500; }
-    void onCloseJump   (uint64_t now)       { closeJumpTime = now; }
-
     enum Action : uint8_t {
       MV_NULL     = 0,
       MV_MOVEG    = 1,
@@ -73,6 +69,5 @@ class FightAlgo final {
     zenkit::FightAiMove queueId = zenkit::FightAiMove::NOP;
     Action              tr   [MV_MAX]={};
     bool                hitFlg=false;
-    uint64_t            closeJumpTime=0;
     bool                prehitSeen=false; // NB fix 22: react once per enemy swing
   };

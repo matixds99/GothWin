@@ -213,11 +213,20 @@ Pliki: przy każdej poprawce jest lista plików. **🆕 NOWY PLIK** oznacza plik
 - **Przyczyna:** po ataku NPC czekał na następną decyzję tylko do znacznika `DEF_HIT_END` animacji. To okno kombinacji ciosów broni białej. Potwory (i walka pięściami) kombinacji nie mają, więc następny atak zaczynał się zaraz po trafieniu i ucinał resztę animacji – zwierzęta gryzły ok. 1,5 raza szybciej niż w Gothic. Każde ugryzienie przewraca trafionego (animacja „potknięcia”), więc Lares przy kilku zwierzętach ciągle dostawał i nie zdążał oddać.
 - **Poprawka:** w walce pięściami/kłami (wszystkie potwory) NPC czeka do końca animacji ataku. Ludzie z bronią dalej mogą łączyć ciosy w kombinacje.
 
-### 27. Towarzysz (Lares) stoi 0,25–3 s po każdej walce, dialogu i postoju – 🧪 (13.11.2026)
+### 27. Towarzysz (Lares) stoi 0,25–3 s po każdej walce, dialogu i postoju – ✅ (13.11.2026)
 - **Pliki:** `common/game/gamescript.cpp` (+ `common/world/objects/npc.cpp`: wycofana pierwsza próba i diagnostyka)
 - **Przyczyna (z logu diagnostyki):** po zmianie stanu Lares dostawał w kolejce `AI_Wait` ~2,5 s przed `SetWalkMode GoToPoint`. Źródło to skrypt NB: `B_CheckHealth` na początku każdego stanu człowieka (dopóki nie stanie na swoim miejscu – `AIV_TAPOSITION`) woła `B_Npc_Desynchronize(npc, nCycleChar)` = `AI_WaitMS` z globalnym licznikiem 250, 500 … 3000 ms, żeby postacie w jednym miejscu nie ruszały wszystkie naraz. W stanach towarzysza (`ZS_Guide_Player`, `ZS_Follow_Player`) miejsca nigdy nie osiąga, więc czekał przy każdej zmianie stanu. Do tego po walce mówi kwestię końca walki (~3 s) – to normalne.
 - **Poprawka:** dla członków drużyny (`AIV_PARTYMEMBER`) to czekanie jest pomijane; pozostałe postacie czekają jak w NB.
 - **Wycofane:** pierwsza próba (pętla stanu co 100 ms) – nie miała wpływu; diagnostyka `NB comp` usunięta.
+
+### 28. Lares (i inni ludzie z bronią) waha się w walce, odskakuje zamiast bić – 🧪 (13.11.2026)
+- **Pliki:** `common/game/fightalgo.cpp`, `common/game/fightalgo.h` (pliki z projektu – podmienić), `common/world/objects/npc.cpp`
+- **Przyczyna (z logu diagnostyki walki Laresa):** Lares bardzo często robił odskok (`T_1HJUMPB`) i paradę zamiast ataku:
+  - reakcja na zamach przeciwnika (`FA_ENEMY_PREHIT` – odskok/parada) była sprawdzana przy każdej decyzji (co ~0,2 s) przez cały zamach zwierzęcia, więc niemal każdy atak wilka kończył się odskokiem Laresa;
+  - sztuczka OpenGothic „czekanie przy wrogu = odskok” (dla wilków, które podchodzą za blisko) działała też na ludzi z bronią.
+- **Poprawka:**
+  - reakcja na zamach przeciwnika najwyżej raz na jeden zamach i z szansą 50% (dotyczy wszystkich – także potworów odskakujących przed bohaterem);
+  - zamiana „czekanie → odskok” tylko dla walczących pięściami/kłami (potwory), najwyżej raz na 2,5 s.
 
 ## Do zrobienia
 - [ ] **Animacje broni NB – sprawdzić, co się za nimi kryje (w toku).** Ustalone do tej pory:
