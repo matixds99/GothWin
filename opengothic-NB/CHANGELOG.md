@@ -213,11 +213,12 @@ Pliki: przy każdej poprawce jest lista plików. **🆕 NOWY PLIK** oznacza plik
 - **Przyczyna:** po ataku NPC czekał na następną decyzję tylko do znacznika `DEF_HIT_END` animacji. To okno kombinacji ciosów broni białej. Potwory (i walka pięściami) kombinacji nie mają, więc następny atak zaczynał się zaraz po trafieniu i ucinał resztę animacji – zwierzęta gryzły ok. 1,5 raza szybciej niż w Gothic. Każde ugryzienie przewraca trafionego (animacja „potknięcia”), więc Lares przy kilku zwierzętach ciągle dostawał i nie zdążał oddać.
 - **Poprawka:** w walce pięściami/kłami (wszystkie potwory) NPC czeka do końca animacji ataku. Ludzie z bronią dalej mogą łączyć ciosy w kombinacje.
 
-### 27. NPC „zamarza” na kilka sekund po walce i po dialogu (Lares) – 🧪 (13.11.2026)
+### 27. NPC „zamarza” na kilka sekund po walce i po dialogu (Lares) – 🔍 sama zmiana pętli nie pomogła, diagnostyka (13.11.2026)
 - **Pliki:** `common/world/objects/npc.cpp`
 - **Przyczyna:** w Gothic funkcja pętli stanu NPC (`ZS_..._Loop`) jest wywoływana za każdym razem, gdy kolejka AI jest pusta (co klatkę) – skrypty same wstawiają przerwy (`AI_Wait`). OpenGothic wywoływał ją raz na „czas percepcji”, a NB ustawia go w większości stanów na 1 s. Każda zmiana stanu (koniec walki → `ZS_Attack_End` → powrót do rutyny → `B_ResetAll` z losowym czekaniem do 1 s → `AI_GotoWP`, koniec dialogu → nowa rutyna „Podążaj za mną”) traciła do sekundy na każdym kroku, razem kilka sekund stania w miejscu.
 - **Poprawka:** NPC w pobliżu kamery wywołują pętlę stanu co najwyżej co 100 ms (dalej tylko przy pustej kolejce AI, jak w Gothic). Dalekie NPC bez zmian (oszczędność wydajności).
 - **Do obserwacji:** wydajność w miejscach z dużą liczbą NPC (miasto).
+- **Wynik:** bez zmian – Lares dalej stoi. **Tymczasowa diagnostyka:** towarzysz (AIV_PARTYMEMBER) w pobliżu bohatera zapisuje w logu 2 razy na sekundę `NB comp: <imię> state=… started=… loopIn=… bs=… ws=… go2=… busy=… talk=… out=… target=… queue=[…]` – stan, kolejkę poleceń AI i to, czy jeszcze „mówi”.
 
 ## Do zrobienia
 - [ ] **Animacje broni NB – sprawdzić, co się za nimi kryje (w toku).** Ustalone do tej pory:
