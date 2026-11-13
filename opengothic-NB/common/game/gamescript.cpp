@@ -1022,7 +1022,6 @@ void GameScript::initCommon() {
       const auto  ws      = slf->weaponState();
       const bool  inRange = (ws==WeaponState::Bow || ws==WeaponState::CBow);
       const bool  melee   = slf->currentMeleeWeapon()!=nullptr;
-      const bool  ranged  = slf->currentRangedWeapon()!=nullptr;
       // (Npc::hasAmmunition looks only at the drawn weapon: with the sword in the hands it said "no arrows")
       bool ammo = false;
       if(auto* rw = slf->currentRangedWeapon()) {
