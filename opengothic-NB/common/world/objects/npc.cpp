@@ -2121,10 +2121,15 @@ bool Npc::implAttack(uint64_t dt) {
 
   // NB fix 22: WAIT->JUMPBACK promotion (too close) limited by a cooldown, so W_FOCUS={ATTACK,WAIT}
   // does not turn into a jump-back every second decision
-  const bool closeJump = (act==FightAlgo::MV_WAIT && jmp && fghAlgo.closeJumpReady(owner.tickCount()));
+  // (kept here, not in FightAlgo, so npc.cpp builds with the fightalgo.h of the project)
+  static std::unordered_map<const Npc*,uint64_t> closeJumpTime;
+  const uint64_t now       = owner.tickCount();
+  const auto     cjIt      = closeJumpTime.find(this);
+  const bool     cjReady   = (cjIt==closeJumpTime.end() || now>=cjIt->second+2500);
+  const bool     closeJump = (act==FightAlgo::MV_WAIT && jmp && cjReady);
   if(act==FightAlgo::MV_JUMPBACK || closeJump) {
     if(closeJump)
-      fghAlgo.onCloseJump(owner.tickCount());
+      closeJumpTime[this] = now;
     if(isSwim()) {
       fghAlgo.consumeAction();
       return true;
