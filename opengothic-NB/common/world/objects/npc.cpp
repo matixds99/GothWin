@@ -48,6 +48,14 @@ static bool nbAiTraceDue(const void* npc, uint64_t now) {
   return true;
   }
 
+/// NB fix 33: the hits a character got since its last jump back
+static std::unordered_map<const void*,int>& nbHitsSinceJump() {
+  static std::unordered_map<const void*,int> m;
+  if(m.size()>4096)
+    m.clear();
+  return m;
+  }
+
 /// how long AI_WaitTillEnd waits for a character before the scene goes on (ms)
 static constexpr uint64_t WAIT_TILL_END_MAX = 30000;
 
@@ -2129,6 +2137,19 @@ bool Npc::implAttack(uint64_t dt) {
   // NB fix 28: the promotion is a trick for the monsters (a wolf that is too close); a human with a weapon
   // (Lares) jumped back instead of hitting whenever its tactic chose WAIT near the enemy
   const bool     closeJump = (act==FightAlgo::MV_WAIT && jmp && cjReady && ws==WeaponState::Fist);
+  // NB fix 33: the rhythm of a scavenger in Gothic: it jumps back from the swing of the hero only after it got two
+  // hits (the engine lets it decide only when its action ended and its stagger is over). OpenGothic decided every
+  // 0.2 s and the scavenger jumped back already from the first swing. Until the second hit it does not jump, it
+  // waits (and runs into the blade). For now only FAI_SCAVENGER (15), to be compared with the original.
+  if(act==FightAlgo::MV_JUMPBACK && !closeJump && hnpc->fight_tactic==15 && currentTarget->isPrehit()) {
+    auto& hits = nbHitsSinceJump();
+    auto  it   = hits.find(this);
+    if(it==hits.end() || it->second<2) {
+      fghAlgo.consumeAction();
+      implFaiWait(200);
+      return true;
+      }
+    }
   if(act==FightAlgo::MV_JUMPBACK || closeJump) {
     if(closeJump)
       closeJumpTime[this] = now;
@@ -2147,13 +2168,7 @@ bool Npc::implAttack(uint64_t dt) {
       return true;
       }
     if(setAnim(Npc::Anim::MoveBack)) {
-      // NB diagnostics (temporary): why a monster backs off from the hero
-      if(currentTarget->isPlayer()) {
-        const char* why = closeJump ? "za blisko" :
-                          currentTarget->isPrehit() ? "zamach gracza (FA_ENEMY_PREHIT)" : "taktyka/po trafieniu";
-        string_frm msg("[odskok] ",handle().name[0]," : ",why);
-        Gothic::inst().onPrint(msg);
-        }
+      nbHitsSinceJump().erase(this);
       implFaiWait(visual.pose().animationTotalTime());
       fghAlgo.consumeAction();
       }
@@ -2477,6 +2492,7 @@ void Npc::takeDamage(Npc& other, const Bullet* b, const CollideMask bMask, int32
     }
 
   if(hitResult.hasHit) {
+    ++nbHitsSinceJump()[this];   // NB fix 33
     auto state = bodyStateMasked();
     if(interactive()==nullptr && ((state&BS_FLAG_INTERRUPTABLE)!=BS_NONE || state==BS_RUN || state==BS_NONE)) {
       //NONE/RUN requires for monsters like waran

@@ -256,6 +256,13 @@ Pliki: przy każdej poprawce jest lista plików. **🆕 NOWY PLIK** oznacza plik
 - **Poprawka:** dodane `Mdl_RemoveOverlayMds_NoUpdate`, `Mdl_ApplyOverlayMds_NoUpdate` (jak zwykłe zdjęcie/założenie nakładki; „NoUpdate” = bez przeładowania modelu, OpenGothic tego nie potrzebuje) i `Mdl_HasOverlayMds` (log pokazywał je jako niezaimplementowane).
 - **Uwaga:** Lares (NPC) ma już prawidłowe animacje miecza – NPC dostają je z poprawki 23.
 
+### 33. Ścierwojad odskakuje od pierwszego zamachu – rytm walki jak w Gothic – 🧪 (14.11.2026)
+- **Pliki:** `common/world/objects/npc.cpp`
+- **Jak jest w NB/Gothic (opis gracza):** ścierwojad ostrzega 3 razy, rzuca się na bohatera; bohater odskakuje, ścierwojad wpada na niego i dostaje 2 ciosy, dopiero wtedy odskakuje – i cykl się powtarza (da się go zabić bez utraty życia).
+- **Przyczyna:** reakcja na zamach (`FA_ENEMY_PREHIT`: ścierwojad – zawsze odskok) jest w oryginale sprawdzana tylko, gdy potwór skończy swoją akcję i przestanie się chwiać po trafieniu. OpenGothic sprawdzał ją co ~0,2 s, więc ścierwojad odskakiwał już od pierwszego zamachu.
+- **Poprawka (na razie tylko ścierwojad, `FAI_SCAVENGER`):** odskok przed zamachem dopiero po 2 trafieniach od poprzedniego odskoku; wcześniej ścierwojad czeka. Jeśli rytm się zgadza, rozszerzę na inne zwierzęta z odskokiem w taktyce (wilk, krwiopijca, waran, szczur, zębacz, cieniostwór, harpia…).
+- **Usunięte:** tymczasowe komunikaty `[odskok] …` na ekranie.
+
 ## Do zrobienia
 - [ ] **Animacje broni NB – sprawdzić, co się za nimi kryje (w toku).** Ustalone do tej pory:
   - bohater: animacje zakładają skrypty (`RX_ApplyAnim_Weapons` → `RX_ApplyAni_1H_Rapier` / `_DexSword` / `_1H_Sword` / `_2H_Speer` / `_2H_Staff` / `_2H_Hallberd` / `_2H_Common`, tarcze `RX_ApplyShieldAni`, dwie bronie `Humans_1x2ST3` / `2x2ST3`, topory orków `HUMANS_AXEST2`) – w OpenGothic działa;
