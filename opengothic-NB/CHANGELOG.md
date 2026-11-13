@@ -192,7 +192,7 @@ Pliki: przy każdej poprawce jest lista plików. **🆕 NOWY PLIK** oznacza plik
   - `RX_InitAnimations` – w OpenGothic nic nie musi robić (animacje i tak są szukane po nazwie).
 - **Bohater:** jego animacje (rapier, szabla, włócznia, halabarda, kostury, topory, dwie bronie, tarcze) zakładają skrypty NB przy założeniu broni (`RX_ApplyAnim_Weapons`, `EQUIP_*`). To działa także w OpenGothic, dlatego bohater ma np. rapier.
 
-### 24. Bandyci nie atakują bezimiennego w zwykłej zbroi – 🧪 (13.11.2026)
+### 24. Bandyci nie atakują bezimiennego w zwykłej zbroi – ✅ (13.11.2026)
 - **Pliki:** `common/game/gamescript.cpp`
 - **Przyczyna (z logu):** `NB trace: B_AssessEnemy | ATT_HOSTILE false` – reakcja na wroga kończy się na `Npc_GetAttitude(self, hero) != ATT_HOSTILE`. NB w `B_SetAttributesToChapter` daje **każdemu** człowiekowi (bandytom też) osobisty stosunek do bohatera ATT_NEUTRAL. OpenGothic stawia stosunek osobisty ponad gildią, więc bandyci byli dla bohatera neutralni. W NB wrogość gildii (bandyci → bohater: wrogo) wygrywa i bandyci atakują, chyba że bohater ma zbroję bandyty (`C_PlayerIsFakeBandit` – to sprawdzają same skrypty).
 - **Poprawka:**
