@@ -139,6 +139,62 @@ std::unordered_map<const GameScript*, NbState> nbStates;
 // marks it as done, AIVRX_NPC_CHANGEMOVESET3 (151) counts 40..80 ticks (4-8 s), after that, with the enemy 500 or
 // more away, the style is chosen again. Done: the guilds without an own table (GIL_NONE - Lares, VLK, BAU, KDF...).
 namespace NbMoveset {
+
+  // B_SetFightSkills -> RX_ApplyProperOverlaysForNpc (UNION_ABI.DLL 0x10198B20), see the binding
+  static void applyFightSkills(Npc& npc, int32_t percent) {
+    auto& h = npc.handle();
+    for(int t=TALENT_1H; t<=TALENT_CROSSBOW; ++t)
+      h.hitchance[t] = std::clamp(h.hitchance[t]+percent, 0, 100);
+
+    static const char* all[] = {
+      "HUMANS_1HST1.MDS","HUMANS_1HST2.MDS","HUMANS_1HST3.MDS",
+      "HUMANS_2HST1.MDS","HUMANS_2HST2.MDS","HUMANS_2HST3.MDS",
+      "HUMANS_BOWT1.MDS","HUMANS_BOWT2.MDS","HUMANS_CBOWT1.MDS","HUMANS_CBOWT2.MDS",
+      "HUMANS_2X2ST3.MDS",
+      };
+    for(auto name:all)
+      if(auto sk = Resources::loadSkeleton(name))
+        npc.delOverlay(sk);
+
+    const auto apply = [&npc](Talent t, int lvl, const char* mds) {
+      npc.setTalentSkill(t,lvl);
+      if(mds!=nullptr)
+        if(auto sk = Resources::loadSkeleton(mds))
+          npc.addOverlay(sk,0);
+      };
+    const auto melee = [&](Talent t, const char* st1, const char* st2, const char* st3) {
+      const int hc = h.hitchance[t];
+      if(hc>=90)      apply(t,3,st3);
+      else if(hc>=60) apply(t,2,st2);
+      else if(hc>=30) apply(t,1,st1);
+      else            apply(t,0,nullptr);
+      };
+    const auto range = [&](Talent t, const char* t1, const char* t2) {
+      const int hc = h.hitchance[t];
+      if(hc>=60)      apply(t,2,t2);
+      else if(hc>=30) apply(t,1,t1);
+      else            apply(t,0,nullptr);
+      };
+    melee(TALENT_1H,"HUMANS_1HST1.MDS","HUMANS_1HST2.MDS","HUMANS_1HST3.MDS");
+    melee(TALENT_2H,"HUMANS_2HST1.MDS","HUMANS_2HST2.MDS","HUMANS_2HST3.MDS");
+    range(TALENT_BOW,     "HUMANS_BOWT1.MDS", "HUMANS_BOWT2.MDS");
+    range(TALENT_CROSSBOW,"HUMANS_CBOWT1.MDS","HUMANS_CBOWT2.MDS");
+    }
+
+  // NB fix 30: a save made before fix 23 keeps the hit chances 0 of every NPC (B_SetFightSkills runs only when the
+  // character is made). The scripts wrote the percents also into AIVAR 84..87 (1H, 2H, bow, crossbow): take them.
+  static void restoreFightSkills(Npc& npc) {
+    auto& h = npc.handle();
+    if(h.hitchance[TALENT_1H]!=0 || h.hitchance[TALENT_2H]!=0 || h.hitchance[TALENT_BOW]!=0 || h.hitchance[TALENT_CROSSBOW]!=0)
+      return;
+    if(h.aivar[84]<=0 && h.aivar[85]<=0 && h.aivar[86]<=0 && h.aivar[87]<=0)
+      return;
+    h.hitchance[TALENT_1H]       = std::clamp(h.aivar[84],0,100);
+    h.hitchance[TALENT_2H]       = std::clamp(h.aivar[85],0,100);
+    h.hitchance[TALENT_BOW]      = std::clamp(h.aivar[86],0,100);
+    h.hitchance[TALENT_CROSSBOW] = std::clamp(h.aivar[87],0,100);
+    applyFightSkills(npc,0);
+    }
   static const char* const allOverlays[] = {
     "humans_1hST1.mds","humans_1hST2.mds","humans_1hST3.mds",
     "Shield_ST1.MDS","Shield_ST2.MDS","Shield_ST3.MDS","Shield_ST4.MDS","Hum_Shield2.MDS","Shield.MDS","PRE_Hum_Shield2.MDS",
@@ -221,6 +277,7 @@ namespace NbMoveset {
   world.detectNpc(pl->position(), 1500.f, [&sc,pl,sepHum](Npc& npc) {
     if(&npc==pl || npc.isPlayer() || npc.isDown())
       return;
+    restoreFightSkills(npc);
     const int g = int(npc.guild());
     if(g>=sepHum && g!=36)
       return;
@@ -1057,46 +1114,8 @@ void GameScript::initCommon() {
     // ST1 from 30% (bow/crossbow: T2 from 60%, T1 from 30%). Without it every NPC of NB stayed at 0%:
     // the untrained animations of a beginner and no critical hits (UNION_ABI.DLL 0x10198B20)
     bindNb("RX_APPLYPROPEROVERLAYSFORNPC", [this](std::shared_ptr<zenkit::INpc> npcRef, int32_t percent) {
-      auto npc = findNpc(npcRef);
-      if(npc==nullptr)
-        return;
-      auto& h = npc->handle();
-      for(int t=TALENT_1H; t<=TALENT_CROSSBOW; ++t)
-        h.hitchance[t] = std::clamp(h.hitchance[t]+percent, 0, 100);
-
-      static const char* all[] = {
-        "HUMANS_1HST1.MDS","HUMANS_1HST2.MDS","HUMANS_1HST3.MDS",
-        "HUMANS_2HST1.MDS","HUMANS_2HST2.MDS","HUMANS_2HST3.MDS",
-        "HUMANS_BOWT1.MDS","HUMANS_BOWT2.MDS","HUMANS_CBOWT1.MDS","HUMANS_CBOWT2.MDS",
-        "HUMANS_2X2ST3.MDS",
-        };
-      for(auto name:all)
-        if(auto sk = Resources::loadSkeleton(name))
-          npc->delOverlay(sk);
-
-      const auto apply = [npc](Talent t, int lvl, const char* mds) {
-        npc->setTalentSkill(t,lvl);
-        if(mds!=nullptr)
-          if(auto sk = Resources::loadSkeleton(mds))
-            npc->addOverlay(sk,0);
-        };
-      const auto melee = [&](Talent t, const char* st1, const char* st2, const char* st3) {
-        const int hc = h.hitchance[t];
-        if(hc>=90)      apply(t,3,st3);
-        else if(hc>=60) apply(t,2,st2);
-        else if(hc>=30) apply(t,1,st1);
-        else            apply(t,0,nullptr);
-        };
-      const auto range = [&](Talent t, const char* t1, const char* t2) {
-        const int hc = h.hitchance[t];
-        if(hc>=60)      apply(t,2,t2);
-        else if(hc>=30) apply(t,1,t1);
-        else            apply(t,0,nullptr);
-        };
-      melee(TALENT_1H,"HUMANS_1HST1.MDS","HUMANS_1HST2.MDS","HUMANS_1HST3.MDS");
-      melee(TALENT_2H,"HUMANS_2HST1.MDS","HUMANS_2HST2.MDS","HUMANS_2HST3.MDS");
-      range(TALENT_BOW,     "HUMANS_BOWT1.MDS", "HUMANS_BOWT2.MDS");
-      range(TALENT_CROSSBOW,"HUMANS_CBOWT1.MDS","HUMANS_CBOWT2.MDS");
+      if(auto npc = findNpc(npcRef))
+        NbMoveset::applyFightSkills(*npc,percent);
       });
     // re-reads the animation ids of the model after the overlays changed; OpenGothic looks the
     // animations up by name each time, so there is nothing to do
