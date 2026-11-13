@@ -1098,6 +1098,27 @@ void GameScript::initCommon() {
       auto* b = findNpcRaw(bRef);
       return a!=nullptr && b!=nullptr ? int32_t(guildAttitude(*a,*b)) : int32_t(ATT_NEUTRAL);
       });
+    // NB fix 32: the overlays of the weapons of the hero: RX_ResetAllOverlays (RX_ApplyAnim_Weapons, at every change of
+    // the weapon) takes ~60 overlays away with Mdl_RemoveOverlayMds_NoUpdate - an external of the plugin, unknown here.
+    // Nothing was taken away: once a rapier was in the hands, Humans_Rapier_ST* stayed for ever and every one-handed
+    // weapon (a knife, a club) fought like a rapier. NoUpdate = without the re-init of the model (OpenGothic needs none).
+    bindNb("MDL_REMOVEOVERLAYMDS_NOUPDATE", [this](std::shared_ptr<zenkit::INpc> npcRef, std::string_view name) {
+      if(auto npc = findNpc(npcRef))
+        if(auto sk = Resources::loadSkeleton(name))
+          npc->delOverlay(sk);
+      });
+    bindNb("MDL_APPLYOVERLAYMDS_NOUPDATE", [this](std::shared_ptr<zenkit::INpc> npcRef, std::string_view name) {
+      if(auto npc = findNpc(npcRef))
+        if(auto sk = Resources::loadSkeleton(name))
+          npc->addOverlay(sk,0);
+      });
+    bindNb("MDL_HASOVERLAYMDS", [this](std::shared_ptr<zenkit::INpc> npcRef, std::string_view name) -> int32_t {
+      auto npc = findNpc(npcRef);
+      if(npc==nullptr)
+        return 0;
+      auto sk = Resources::loadSkeleton(name);
+      return sk!=nullptr && npc->hasOverlay(sk) ? 1 : 0;
+      });
     bindNb("RX_OPENCRAFT", [this](int32_t /*craftType*/) {
       if(auto pl = owner.player()) {
         aiOutOrderId = 0;

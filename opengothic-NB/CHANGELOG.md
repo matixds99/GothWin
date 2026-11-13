@@ -240,7 +240,7 @@ Pliki: przy każdej poprawce jest lista plików. **🆕 NOWY PLIK** oznacza plik
 - **Poprawka:** skrypty NB zapisały te procenty także w `AIVAR[84..87]` (1H, 2H, łuk, kusza). NPC w pobliżu bohatera (sprawdzane co 100 ms), który ma wszystkie szanse 0, a te zmienne większe od 0, dostaje szanse z nich (i poziom umiejętności/nakładkę jak w poprawce 23). Nowa gra tego nie potrzebuje.
 - **Wynik:** ✅ wilki, gobliny, topielce i ścierwojady Lares kładzie jednym ciosem.
 
-### 31. Lares (i inni z łukiem) nie strzela – w NB łuk ma pierwszeństwo przed mieczem – 🧪 (13.11.2026)
+### 31. Lares (i inni z łukiem) nie strzela – w NB łuk ma pierwszeństwo przed mieczem – ✅ (Lares wyciąga łuk, zwierzęta na jedno trafienie) (13.11.2026)
 - **Pliki:** `common/game/gamescript.cpp`
 - **Przyczyna:** poprawka 25 wybierała broń jak zwykły Gothic 2 (łuk tylko dalej niż 600, z bliska od razu miecz). Plugin NB (`RX_SelectWeaponNpc`, UNION_ABI.DLL 0x1017F840) ma własne zasady – w oryginale Lares prawie całą drogę strzela z łuku.
 - **Poprawka – zasady z pluginu:**
@@ -249,6 +249,12 @@ Pliki: przy każdej poprawce jest lista plików. **🆕 NOWY PLIK** oznacza plik
   - po zmianie broni następna dopiero po 6 s (`AIVRX_NPC_CHANGEWEAPON_TIMER`), gdy ma strzały;
   - bez broni białej – pięści.
 - **Poprawka do poprawki (13.11.2026, 23:30):** dalej walczył mieczem – `Npc::hasAmmunition` sprawdza strzały tylko do broni trzymanej w ręku, więc z mieczem w dłoni „nie miał strzał”. Strzały liczone teraz do założonego łuku/kuszy.
+
+### 32. Bohater walczy nożem i pałką jak rapierem – 🧪 (13.11.2026)
+- **Pliki:** `common/game/gamescript.cpp`
+- **Przyczyna:** przy każdej zmianie broni skrypty NB (`RX_ApplyAnim_Weapons` → `RX_ResetAllOverlays`) zdejmują ok. 60 nakładek animacji funkcją pluginu `Mdl_RemoveOverlayMds_NoUpdate`, której OpenGothic nie znał – nic nie było zdejmowane. Raz założony rapier zostawiał `Humans_Rapier_ST*` na zawsze i każda broń jednoręczna (nóż, pałka) walczyła jak rapier.
+- **Poprawka:** dodane `Mdl_RemoveOverlayMds_NoUpdate`, `Mdl_ApplyOverlayMds_NoUpdate` (jak zwykłe zdjęcie/założenie nakładki; „NoUpdate” = bez przeładowania modelu, OpenGothic tego nie potrzebuje) i `Mdl_HasOverlayMds` (log pokazywał je jako niezaimplementowane).
+- **Uwaga:** Lares (NPC) ma już prawidłowe animacje miecza – NPC dostają je z poprawki 23.
 
 ## Do zrobienia
 - [ ] **Animacje broni NB – sprawdzić, co się za nimi kryje (w toku).** Ustalone do tej pory:
