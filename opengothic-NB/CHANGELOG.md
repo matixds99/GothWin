@@ -286,12 +286,21 @@ Pliki: przy każdej poprawce jest lista plików. **🆕 NOWY PLIK** oznacza plik
   - banici (OUT, 0x1024D450/D6D0): wg szansy tarcze ST1–3, 1hST/1hDexST albo brak nakładki; dwie ręce – 2hST1/2hST3/AxeST2.
 - **Jeszcze nie:** szkielety (GIL_SKELETON) – bardzo długa tabela po nazwach szkieletów (rycerze z tarczą, kapitanowie, marynarze, mroczni wojownicy sfer…).
 
-### 36. Zacinanie się dźwięku na ekranie wczytywania – 🧪 (14.11.2026)
+### 36. Zacinanie się dźwięku na ekranie wczytywania – ⏸ nie pomogło samo (14.11.2026), zostaje razem z 37
 - **Pliki:** `common/gamemusic.cpp` (zmieniony plik z projektu – podmienić)
 - **Z nagrania:** przez cały czas ekran wczytywania „KHORINIS”; w dźwięku między 5,5 a 10,5 s kilkanaście przerw po 0,1–0,6 s.
 - **Przyczyna:** muzykę (GothicKit/DirectMusic) generuje funkcja wywoływana przez OpenAL w jego wątku miksowania. Przy zmianie motywu ta funkcja sama ładowała segment muzyki razem z instrumentami (DLS) – pod blokadą zasobów, którą w tym czasie trzyma wczytywanie świata. Wątek OpenAL czekał, a z nim cały dźwięk (muzyka i efekty).
 - **Poprawka:** segment nowego motywu jest ładowany w wątku gry w chwili wyboru motywu; wątek dźwięku tylko go odtwarza. Gdy coś się nie zgadza (inny plik), działa jak dotąd.
 - **Jeśli dalej się zacina:** druga możliwa przyczyna to zajęty procesor w czasie wczytywania (wątek dźwięku nie dostaje czasu) – wtedy pomoże większy bufor OpenAL.
+- **Test:** zacinki zostały → poprawka 37.
+
+### 37. Zacinanie się dźwięku – priorytet wątku dźwięku i dłuższy bufor – 🧪 (14.11.2026)
+- **Pliki:** `common/gamemusic.cpp` (zmieniony plik z projektu – podmienić), `game/main.cpp` (zmieniony plik z projektu – podmienić; folder `game/` w głównym katalogu projektu, nie w `common/`)
+- **Przyczyna:** na Androidzie OpenAL miksuje dźwięk (OpenSL ES) we własnym wątku, a ten wątek chodzi ze zwykłym priorytetem – OpenAL próbuje ustawić priorytet czasu rzeczywistego (SCHED_RR), ale Android nie pozwala na to aplikacji. Bufor to 3 porcje po 20 ms (60 ms). Przy wczytywaniu świata wątki robocze zajmują wszystkie rdzenie i wątek dźwięku nie zdąża przygotować kolejnej porcji – przerwa.
+- **Poprawka:**
+  - `gamemusic.cpp`: przy pierwszym wywołaniu w wątku miksowania (funkcja generująca muzykę jest wywoływana właśnie w nim) podnosi jego priorytet do priorytetu audio Androida (−16, jak `THREAD_PRIORITY_AUDIO`; gdy się nie da, −10);
+  - `main.cpp`: przed pierwszym użyciem OpenAL zapisuje `alsoft.conf` (w folderze danych aplikacji) z `period_size = 960`, `periods = 6` i wskazuje go zmienną `ALSOFT_CONF` – bufor 120 ms zamiast 60 ms.
+- **Do sprawdzenia:** czy dźwięki w grze (ciosy, kroki) nie wydają się spóźnione – wtedy zmniejszyć `periods` do 4–5.
 
 ## Do zrobienia
 

@@ -12,12 +12,31 @@
 #include <atomic>
 #include <cstring>
 #include <cstdio>
+#if defined(__ANDROID__)
+#include <sys/resource.h>
+#include <unistd.h>
+#endif
 #ifdef OPENGOTHIC_RECORDED_MUSIC
 #define OV_EXCLUDE_STATIC_CALLBACKS
 #include <minivorbis/minivorbis.h>
 #endif
 
 using namespace Tempest;
+
+// NB fix 37: renderSound is called on the mixer thread of OpenAL, which mixes the music and all the effects. On Android
+// OpenAL can not give that thread a real-time priority (SCHED_RR is not allowed for an app), so it ran at the usual
+// priority and during the loading of the world the workers took the processor from it - the sound stopped for a moment.
+// The first call on that thread raises its priority to the one Android gives to audio (THREAD_PRIORITY_AUDIO = -16).
+static void boostAudioThread() {
+#if defined(__ANDROID__)
+  static thread_local bool done = false;
+  if(done)
+    return;
+  done = true;
+  if(setpriority(PRIO_PROCESS, gettid(), -16)!=0)
+    setpriority(PRIO_PROCESS, gettid(), -10);
+#endif
+  }
 
 static constexpr uint16_t SAMPLE_RATE = 44100;
 
@@ -101,6 +120,7 @@ struct GameMusic::RecordedMusic : Tempest::SoundProducer {
     }
 
   void renderSound(int16_t* out, size_t frames) override {
+    boostAudioThread();
     if(const int ms = fadeOut.exchange(-1); ms>=0) {
       target = 0.f;
       ramp = std::max(uint64_t(1),uint64_t(ms)*uint64_t(source->rate)/1000);
@@ -140,7 +160,7 @@ struct GameMusic::RecordedMusic : Tempest::SoundProducer {
     }
 #else
   RecordedMusic() : SoundProducer(SAMPLE_RATE,2) {}
-  void renderSound(int16_t* out, size_t frames) override { std::fill(out,out+frames*2,int16_t(0)); }
+  void renderSound(int16_t* out, size_t frames) override { boostAudioThread(); std::fill(out,out+frames*2,int16_t(0)); }
 #endif
   };
 
@@ -241,6 +261,7 @@ struct GameMusic::OpenGothicMusicProvider : GameMusic::MusicProvider {
   using GameMusic::MusicProvider::MusicProvider;
 
   void renderSound(int16_t *out, size_t n) override {
+    boostAudioThread();
     if(!isEnabled()) {
       std::memset(out, 0, n * sizeof(out[0]) * 2);
       return;
@@ -395,6 +416,7 @@ struct GameMusic::GothicKitMusicProvider : GameMusic::MusicProvider {
     }
 
   void renderSound(int16_t *out, size_t n) override {
+    boostAudioThread();
     if(!isEnabled()) {
       std::memset(out, 0, n * sizeof(out[0]) * 2);
       return;
