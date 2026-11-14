@@ -399,9 +399,16 @@ Pliki: przy każdej poprawce jest lista plików. **🆕 NOWY PLIK** oznacza plik
 - **Co robi:** przełącznik **„Jasna noc (do testów)”** na końcu strony „Ustawienia gry” (zapis w Gothic.ini: `[NB_OG] bNightAsDay=1`). Gdy włączony, światło słońca i niebo zostają między 8:00 a 18:00 – w nocy jest jasno jak za dnia. Czas gry płynie dalej normalnie: NPC śpią, zmieniają zajęcia, nocne zdarzenia i potwory są jak w nocy – zmienia się tylko oświetlenie. Działa od razu, bez wczytywania gry.
 - **Uwaga:** o północy słońce przeskakuje z pozycji 18:00 na 8:00 (z zachodu na wschód) – przy testach bez znaczenia.
 
+### 54. Czarny goblin stoi w miejscu – 🧪 (14.11.2026)
+- **Pliki:** `common/world/objects/npc.cpp`
+- **Z logu (14.11, 22:01):** goblin spał → groził (`ZS_MM_ThreatenEnemy`) → przeszedł w atak (`ZS_MM_ATTACK`, cel: bohater), ale z jedną czynnością w kolejce AI, która się nie kończyła. Atak (`AI_Attack`) czeka, aż kolejka będzie pusta.
+- **Przyczyna (najbardziej prawdopodobna):** gobliny trzymają maczugę – skrypt od razu stawia je w trybie walki (`Npc_SetToFightMode`). Skrypty potworów każą im grozić animacją `T_WARN` (`AI_PlayAni`); model ją ma, ale z bronią w ręce nie da się jej teraz zacząć. OpenGothic odkładał ją z powrotem do kolejki bez końca → kolejka nigdy pusta → goblin stoi.
+- **Poprawka:** animacja z `AI_PlayAni`, która istnieje, ale nie chce się zacząć, jest próbowana 1,5 s, potem pominięta (w logu: `NB ai: … cannot start T_WARN … - skipped`). Działa dla każdej postaci, nie tylko goblina.
+- **Diagnostyka:** linie `NB ai` mają teraz broń (`weapon=`) i kolejkę AI (`ai=[…]`), cel bohatera jako `hero` (bohater NB nie ma imienia); gdy kolejka potwora przy bohaterze stoi 5 s bez zmian – `NB ai: … STUCK 5 s: …` z tym, co ją blokuje.
+
 ## Do zrobienia
 
-- [ ] Czarny goblin nie atakuje, stoi w miejscu (14.11.2026). Z logu: wrogi (attitude=0), czuje bohatera (sense=5 przy ~1100), ale zostaje w `ZS_MM_RTN_ROAM` bez celu – reakcja na wroga (`B_MM_AssessEnemy`) nie przełącza go na atak; raz pojawia się `ZS_MM_ThreatenEnemy`. `RX_GobboClan` (niezaimplementowane) jest tylko w `AI_OnDead_Gobbo_Black_Clan` – przy śmierci, nie przy ataku. Do zbadania z włączonymi śladami `B_MM_AssessEnemy` (więcej niż 3 na komunikat).
+- [ ] Czarny goblin nie atakuje, stoi w miejscu (14.11.2026) – poprawka 54 do sprawdzenia. Z logu: wrogi (attitude=0), czuje bohatera (sense=5 przy ~1100), ale zostaje w `ZS_MM_RTN_ROAM` bez celu – reakcja na wroga (`B_MM_AssessEnemy`) nie przełącza go na atak; raz pojawia się `ZS_MM_ThreatenEnemy`. `RX_GobboClan` (niezaimplementowane) jest tylko w `AI_OnDead_Gobbo_Black_Clan` – przy śmierci, nie przy ataku. Do zbadania z włączonymi śladami `B_MM_AssessEnemy` (więcej niż 3 na komunikat).
 - [ ] **Animacje broni NB – sprawdzić, co się za nimi kryje (w toku).** Ustalone do tej pory:
   - bohater: animacje zakładają skrypty (`RX_ApplyAnim_Weapons` → `RX_ApplyAni_1H_Rapier` / `_DexSword` / `_1H_Sword` / `_2H_Speer` / `_2H_Staff` / `_2H_Hallberd` / `_2H_Common`, tarcze `RX_ApplyShieldAni`, dwie bronie `Humans_1x2ST3` / `2x2ST3`, topory orków `HUMANS_AXEST2`) – w OpenGothic działa;
   - NPC: talenty i nakładki ST1–3 z pluginu – poprawka 23;

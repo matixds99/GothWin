@@ -59,6 +59,24 @@ static bool nbAiTraceChanged(const void* npc, std::string key) {
   return true;
   }
 
+/// NB fix 54: an animation of AI_PlayAni that the model has but cannot start now (e.g. T_WARN of a goblin that holds its
+/// club - the goblins are in the fight mode from Npc_SetToFightMode) was put back to the queue without end: the queue
+/// never got empty and the monster stood still (AI_Attack waits for an empty queue). It is tried 1.5 s, then dropped.
+static bool nbAniRetry(const void* npc, const std::string& ani, uint64_t now) {
+  static std::unordered_map<const void*,std::pair<std::string,uint64_t>> since;
+  if(since.size()>4096)
+    since.clear();
+  auto it = since.find(npc);
+  if(it==since.end() || it->second.first!=ani) {
+    since[npc] = {ani,now};
+    return true;
+    }
+  if(now<it->second.second+1500)
+    return true;
+  since.erase(it);
+  return false;
+  }
+
 /// NB fix 33: the hits a character got since its last jump back
 static std::unordered_map<const void*,int>& nbHitsSinceJump() {
   static std::unordered_map<const void*,int> m;
@@ -3265,8 +3283,12 @@ void Npc::nextAiAction(AiQueue& queue, uint64_t dt) {
         } else {
         if(act.s0.compare(0,14,"T_CUTSCENEJUMP")==0)
           Log::i("[",displayName().data(),"] the animation ",act.s0," was not found");
-        if(visual.hasAnim(act.s0))
-          queue.pushFront(std::move(act));
+        if(visual.hasAnim(act.s0)) {
+          if(nbAniRetry(this,act.s0,owner.tickCount()))
+            queue.pushFront(std::move(act)); else
+            Log::i("NB ai: ",displayName().data()," cannot start ",act.s0," (weapon=",int(weaponState()),
+                   ", body=",int(bodyStateMasked()),") - skipped, the AI goes on");
+          }
         }
       break;
       }
@@ -5198,7 +5220,24 @@ bool Npc::perceptionProcess(Npc &pl) {
            " attitude=",int(owner.script().personAttitude(*this,pl)),
            " sense=",int(canSenseNpc(pl,true)),
            " dist=",int(std::sqrt(quadDist))," range=",int(range),
-           " target=",(currentTarget!=nullptr ? currentTarget->displayName().data() : "-"));
+           " target=",(currentTarget!=nullptr ? (currentTarget->isPlayer() ? "hero" : currentTarget->displayName().data()) : "-"),
+           " weapon=",int(weaponState())," ai=[",aiQueue.describe(4),"]");
+    // NB fix 54: the same not empty AI queue for 5 s near the hero - what blocks the monster
+    if(aiQueue.size()>0) {
+      static std::unordered_map<const void*,std::tuple<std::string,uint64_t,bool>> stall;
+      if(stall.size()>4096)
+        stall.clear();
+      auto  desc = aiQueue.describe(4);
+      auto& e    = stall[this];
+      if(std::get<0>(e)!=desc) {
+        e = {desc,owner.tickCount(),false};
+        }
+      else if(!std::get<2>(e) && owner.tickCount()>std::get<1>(e)+5000) {
+        std::get<2>(e) = true;
+        Log::i("NB ai: ",displayName().data()," STUCK 5 s: state=",stName," weapon=",int(weaponState()),
+               " body=",int(bodyStateMasked())," ai=[",desc,"]");
+        }
+      }
     }
   if(hasPerc(PERC_ASSESSPLAYER) && canSenseNpc(pl,false)!=SensesBit::SENSE_NONE) {
     if(perceptionProcess(pl,nullptr,quadDist,PERC_ASSESSPLAYER)) {
