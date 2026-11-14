@@ -1978,7 +1978,25 @@ bool Npc::implAttack(uint64_t dt) {
 
   // vanilla behavior, required for orcs in G1 orcgraveyard
   if(ws==WeaponState::NoWeapon && isAiQueueEmpty() && canSwitchWeapon()) {
-    drawWeaponMelee();
+    // NB fix 54: a goblin (a monster with a club, Npc_SetToFightMode) that put the club away to sleep has no animation
+    // to take it again: drawWeaponMelee failed every frame and the goblin stood in ZS_MM_Attack (weapon=0, the queue
+    // empty). In Gothic it has the club in the hand at once - here after 1 s of failures too.
+    static std::unordered_map<const Npc*,uint64_t> drawFail;
+    if(drawWeaponMelee()) {
+      drawFail.erase(this);
+      }
+    else if(!isHuman() && invent.currentMeleeWeapon()!=nullptr) {
+      if(drawFail.size()>4096)
+        drawFail.clear();
+      auto it = drawFail.find(this);
+      if(it==drawFail.end())
+        drawFail[this] = owner.tickCount(); else
+      if(owner.tickCount()>it->second+1000) {
+        drawFail.erase(it);
+        Log::i("NB ai: ",displayName().data()," cannot draw its weapon - it takes it at once");
+        setToFightMode(invent.currentMeleeWeapon()->clsId());
+        }
+      }
     return true;
     }
 
@@ -3284,7 +3302,8 @@ void Npc::nextAiAction(AiQueue& queue, uint64_t dt) {
         if(act.s0.compare(0,14,"T_CUTSCENEJUMP")==0)
           Log::i("[",displayName().data(),"] the animation ",act.s0," was not found");
         if(visual.hasAnim(act.s0)) {
-          if(nbAniRetry(this,act.s0,owner.tickCount()))
+          // a human waits (e.g. T_STAND_2_LGUARD until it has put away the item in its hand), as before
+          if(isHuman() || nbAniRetry(this,act.s0,owner.tickCount()))
             queue.pushFront(std::move(act)); else
             Log::i("NB ai: ",displayName().data()," cannot start ",act.s0," (weapon=",int(weaponState()),
                    ", body=",int(bodyStateMasked()),") - skipped, the AI goes on");

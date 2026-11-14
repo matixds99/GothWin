@@ -400,11 +400,12 @@ Pliki: przy każdej poprawce jest lista plików. **🆕 NOWY PLIK** oznacza plik
 - **Uwaga:** o północy słońce przeskakuje z pozycji 18:00 na 8:00 (z zachodu na wschód) – przy testach bez znaczenia.
 
 ### 54. Czarny goblin stoi w miejscu – 🧪 (14.11.2026)
-- **Pliki:** `common/world/objects/npc.cpp`
-- **Z logu (14.11, 22:01):** goblin spał → groził (`ZS_MM_ThreatenEnemy`) → przeszedł w atak (`ZS_MM_ATTACK`, cel: bohater), ale z jedną czynnością w kolejce AI, która się nie kończyła. Atak (`AI_Attack`) czeka, aż kolejka będzie pusta.
-- **Przyczyna (najbardziej prawdopodobna):** gobliny trzymają maczugę – skrypt od razu stawia je w trybie walki (`Npc_SetToFightMode`). Skrypty potworów każą im grozić animacją `T_WARN` (`AI_PlayAni`); model ją ma, ale z bronią w ręce nie da się jej teraz zacząć. OpenGothic odkładał ją z powrotem do kolejki bez końca → kolejka nigdy pusta → goblin stoi.
-- **Poprawka:** animacja z `AI_PlayAni`, która istnieje, ale nie chce się zacząć, jest próbowana 1,5 s, potem pominięta (w logu: `NB ai: … cannot start T_WARN … - skipped`). Działa dla każdej postaci, nie tylko goblina.
-- **Diagnostyka:** linie `NB ai` mają teraz broń (`weapon=`) i kolejkę AI (`ai=[…]`), cel bohatera jako `hero` (bohater NB nie ma imienia); gdy kolejka potwora przy bohaterze stoi 5 s bez zmian – `NB ai: … STUCK 5 s: …` z tym, co ją blokuje.
+- **Pliki:** `common/world/objects/npc.cpp`, `common/game/gamescript.cpp`
+- **Z logów (14.11, 22:01 i 22:16):** goblin budzi się, grozi i przechodzi w atak (`ZS_MM_ATTACK`, cel: bohater), kolejka AI pusta, ale **broń schowana** (`weapon=0`) – i tak stoi, aż zginie (bez oddania ciosu).
+- **Przyczyna:** gobliny walczą maczugą – skrypt daje im ją od razu w ręce (`Npc_SetToFightMode`). Do snu chowają ją, a model goblina nie ma animacji ponownego wyciągnięcia broni. Silnik przed atakiem próbuje dobyć broni (`drawWeaponMelee`) – to się nie udawało, więc próbował w kółko co klatkę zamiast atakować. W Gothicu goblin ma maczugę w ręce od razu.
+- **Poprawka:** gdy potwór (nie człowiek) przez 1 s nie może dobyć broni, dostaje ją od razu do ręki (jak przy `Npc_SetToFightMode`); w logu: `NB ai: Czarny goblin cannot draw its weapon - it takes it at once`.
+- **Dodatkowo:** animacja z `AI_PlayAni`, której potwór nie może zacząć, jest próbowana 1,5 s i pomijana (`cannot start … skipped`) – kolejka AI potwora nie stoi bez końca. Ludzie czekają jak dotąd (np. magowie Kręgu Wody z `T_STAND_2_LGUARD`, póki trzymają coś w ręce).
+- **Diagnostyka:** linie `NB ai` z bronią (`weapon=`) i kolejką AI (`ai=[…]`), cel bohatera jako `hero`; `NB ai: … STUCK 5 s: …`, gdy kolejka potwora przy bohaterze stoi; `[ctx] death: … killer: hero`.
 
 ## Do zrobienia
 

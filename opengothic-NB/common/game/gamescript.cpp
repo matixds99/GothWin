@@ -1866,7 +1866,7 @@ void GameScript::initCommon() {
       call(vm.find_symbol_by_name("AI_ONDEAD_COMMON"));
       auto* killer = findNpcRaw(otherRef);
       nbCtx("death: ",self->displayName(),(own!=nullptr ? " (" : ""),(own!=nullptr ? own->name() : std::string()),
-            (own!=nullptr ? ")" : "")," killer: ",(killer!=nullptr ? killer->displayName() : std::string_view("-")));
+            (own!=nullptr ? ")" : "")," killer: ",(killer==nullptr ? std::string_view("-") : killer->isPlayer() ? std::string_view("hero") : killer->displayName()));
       });
     // NB fix 51: an information (a dialog) that goes to another NPC (UNION_ABI.DLL 0x1017A3E0: oCInfo::npc = the instance);
     // ZS_Talk gives so the dialogs of the poker, Xardas the mask of the sleeper...
