@@ -286,6 +286,13 @@ Pliki: przy każdej poprawce jest lista plików. **🆕 NOWY PLIK** oznacza plik
   - banici (OUT, 0x1024D450/D6D0): wg szansy tarcze ST1–3, 1hST/1hDexST albo brak nakładki; dwie ręce – 2hST1/2hST3/AxeST2.
 - **Jeszcze nie:** szkielety (GIL_SKELETON) – bardzo długa tabela po nazwach szkieletów (rycerze z tarczą, kapitanowie, marynarze, mroczni wojownicy sfer…).
 
+### 36. Zacinanie się dźwięku na ekranie wczytywania – 🧪 (14.11.2026)
+- **Pliki:** `common/gamemusic.cpp` (zmieniony plik z projektu – podmienić)
+- **Z nagrania:** przez cały czas ekran wczytywania „KHORINIS”; w dźwięku między 5,5 a 10,5 s kilkanaście przerw po 0,1–0,6 s.
+- **Przyczyna:** muzykę (GothicKit/DirectMusic) generuje funkcja wywoływana przez OpenAL w jego wątku miksowania. Przy zmianie motywu ta funkcja sama ładowała segment muzyki razem z instrumentami (DLS) – pod blokadą zasobów, którą w tym czasie trzyma wczytywanie świata. Wątek OpenAL czekał, a z nim cały dźwięk (muzyka i efekty).
+- **Poprawka:** segment nowego motywu jest ładowany w wątku gry w chwili wyboru motywu; wątek dźwięku tylko go odtwarza. Gdy coś się nie zgadza (inny plik), działa jak dotąd.
+- **Jeśli dalej się zacina:** druga możliwa przyczyna to zajęty procesor w czasie wczytywania (wątek dźwięku nie dostaje czasu) – wtedy pomoże większy bufor OpenAL.
+
 ## Do zrobienia
 
 - [ ] Czarny goblin nie atakuje, stoi w miejscu (14.11.2026). Z logu: wrogi (attitude=0), czuje bohatera (sense=5 przy ~1100), ale zostaje w `ZS_MM_RTN_ROAM` bez celu – reakcja na wroga (`B_MM_AssessEnemy`) nie przełącza go na atak; raz pojawia się `ZS_MM_ThreatenEnemy`. `RX_GobboClan` (niezaimplementowane) jest tylko w `AI_OnDead_Gobbo_Black_Clan` – przy śmierci, nie przy ataku. Do zbadania z włączonymi śladami `B_MM_AssessEnemy` (więcej niż 3 na komunikat).
