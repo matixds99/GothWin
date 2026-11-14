@@ -1,7 +1,6 @@
 #include <Tempest/Window>
 #include <Tempest/Application>
 #include <Tempest/Log>
-
 #include <zenkit/Logger.hh>
 
 #include <Tempest/VulkanApi>
@@ -21,6 +20,10 @@
 #include <cstdio>
 #endif
 
+#if defined(__ANDROID__)
+#include <Tempest/TextCodec>
+#endif
+
 #include "utils/crashlog.h"
 #include "utils/gamelog.h"
 #include "graphics/safegpu.h"
@@ -36,20 +39,24 @@ std::string_view selectDevice(const Tempest::AbstractGraphicsApi& api) {
 
   static Tempest::Device::Props p;
   for(auto& i:d)
-    // if(i.type==Tempest::DeviceType::Integrated) {
     if(i.type==Tempest::DeviceType::Discrete) {
       p = i;
       return p.name;
       }
+
   if(d.size()>0) {
     p = d[0];
     return p.name;
     }
+
   return "";
   }
 
 std::unique_ptr<Tempest::AbstractGraphicsApi> mkApi(const CommandLine& g) {
-  Tempest::ApiFlags flg = g.isValidationMode() ? Tempest::ApiFlags::Validation : Tempest::ApiFlags::NoFlags;
+  Tempest::ApiFlags flg = g.isValidationMode()
+      ? Tempest::ApiFlags::Validation
+      : Tempest::ApiFlags::NoFlags;
+
   switch(g.graphicsApi()) {
     case CommandLine::DirectX12:
 #if defined(_MSC_VER)
@@ -57,6 +64,7 @@ std::unique_ptr<Tempest::AbstractGraphicsApi> mkApi(const CommandLine& g) {
 #else
       break;
 #endif
+
     case CommandLine::Vulkan:
 #if !defined(__APPLE__)
       return std::make_unique<Tempest::VulkanApi>(flg);
@@ -73,22 +81,39 @@ std::unique_ptr<Tempest::AbstractGraphicsApi> mkApi(const CommandLine& g) {
   }
 
 #if defined(__ANDROID__)
-static Tempest::WFile* appLogFile = nullptr; // the log of this run, to be flushed when the process ends
+static Tempest::WFile* appLogFile = nullptr;
 #endif
 
-int main(int argc,const char** argv) {
+int main(int argc, const char** argv) {
 #if defined(__ANDROID__)
   {
-    auto appdir = InstallDetect::androidInternalDataPath();
-    std::filesystem::current_path(appdir);
+    InstallDetect install;
+    const auto game = install.detectG2();
+
+    if(game.empty()) {
+      std::fprintf(stderr, "OpenGothic: game folder is missing or inaccessible\n");
+      return 1;
+      }
+
+    std::error_code ec;
+    std::filesystem::current_path(
+        std::filesystem::path(Tempest::TextCodec::toUtf8(game)), ec);
+
+    if(ec) {
+      std::fprintf(stderr, "OpenGothic: cannot use game folder: %s\n",
+                   ec.message().c_str());
+      return 1;
+      }
+
     // NB fix 37: a longer buffer of the sound. OpenAL mixes 3 portions of 20 ms ahead (60 ms) and during the loading of the
-    // world it did not keep up: the sound stopped for a moment. 6 portions (120 ms) - the config is read once, at the first
-    // call of OpenAL, so it is written before anything opens the sound device.
+    // world it did not keep up: the sound stopped for a moment. 6 portions (120 ms). The config is read once, at the first
+    // call of OpenAL, so it is written here (in the folder of the game, next to log.txt), before anything opens the sound device.
     if(std::FILE* f = std::fopen("alsoft.conf","wb")) {
       std::fputs("[general]\nperiod_size = 960\nperiods = 6\n",f);
       std::fclose(f);
-      const auto conf = (appdir/"alsoft.conf").string();
-      setenv("ALSOFT_CONF",conf.c_str(),1);
+      const auto conf = (std::filesystem::current_path(ec)/"alsoft.conf").string();
+      if(!ec)
+        setenv("ALSOFT_CONF",conf.c_str(),1);
       }
   }
 #elif defined(__IOS__)
@@ -99,20 +124,29 @@ int main(int argc,const char** argv) {
 #endif
 
   try {
+    // Android: katalog roboczy jest juz ustawiony na folder gry (wyzej),
+    // wiec log.txt laduje obok crash.log w folderze gry.
     static Tempest::WFile logFile("log.txt");
+
 #if defined(__ANDROID__)
     appLogFile = &logFile;
 #endif
+
     Tempest::Log::setOutputCallback([](Tempest::Log::Mode mode, const char* text) {
-      GameLog::push(mode==Tempest::Log::Error ? GameLog::Error : mode==Tempest::Log::Debug ? GameLog::Debug : GameLog::Info, text);
+      GameLog::push(
+          mode==Tempest::Log::Error ? GameLog::Error :
+          mode==Tempest::Log::Debug ? GameLog::Debug :
+                                     GameLog::Info,
+          text);
+
       logFile.write(text,std::strlen(text));
       logFile.write("\n",1);
+
       if(mode==Tempest::Log::Error)
         logFile.flush();
+
 #if defined(__ANDROID__)
-      // the engine reports a pipeline before the driver compiles it: if the driver takes the process down, the line is the last one
       if(mode==Tempest::Log::Debug) {
-        // ... and the safe GPU mode keeps its name in the lock for the next start
         SafeGpu::onLog(text);
         logFile.flush();
         }
@@ -120,43 +154,57 @@ int main(int argc,const char** argv) {
       });
     }
   catch(...) {
-    // the log is kept in the memory anyway, for the menu of the developer
     Tempest::Log::setOutputCallback([](Tempest::Log::Mode mode, const char* text) {
-      GameLog::push(mode==Tempest::Log::Error ? GameLog::Error : mode==Tempest::Log::Debug ? GameLog::Debug : GameLog::Info, text);
+      GameLog::push(
+          mode==Tempest::Log::Error ? GameLog::Error :
+          mode==Tempest::Log::Debug ? GameLog::Debug :
+                                     GameLog::Info,
+          text);
       std::fprintf(stderr,"%s\n",text);
       });
+
     Tempest::Log::e("unable to setup logfile - fallback to console log");
     }
+
   CrashLog::setup();
 
-  zenkit::Logger::set(zenkit::LogLevel::INFO, [] (zenkit::LogLevel lvl, const char* cat, const char* message) {
-    (void)cat;
-    switch (lvl) {
-      case zenkit::LogLevel::ERROR:
-        Tempest::Log::e("[zenkit] ", message);
-        break;
-      case zenkit::LogLevel::WARNING:
-        Tempest::Log::e("[zenkit] ", message);
-        break;
-      case zenkit::LogLevel::INFO:
-        Tempest::Log::i("[zenkit] ", message);
-        break;
-      case zenkit::LogLevel::DEBUG:
-      case zenkit::LogLevel::TRACE:
-        Tempest::Log::d("[zenkit] ", message); // unused
-        break;
-      }
-    });
+  zenkit::Logger::set(
+      zenkit::LogLevel::INFO,
+      [] (zenkit::LogLevel lvl, const char* cat, const char* message) {
+        (void)cat;
+
+        switch(lvl) {
+          case zenkit::LogLevel::ERROR:
+            Tempest::Log::e("[zenkit] ", message);
+            break;
+
+          case zenkit::LogLevel::WARNING:
+            Tempest::Log::e("[zenkit] ", message);
+            break;
+
+          case zenkit::LogLevel::INFO:
+            Tempest::Log::i("[zenkit] ", message);
+            break;
+
+          case zenkit::LogLevel::DEBUG:
+          case zenkit::LogLevel::TRACE:
+            Tempest::Log::d("[zenkit] ", message);
+            break;
+          }
+      });
+
   Dm_setLogger(DmLogLevel_INFO, [](void* ctx, DmLogLevel lvl, char const* msg) {
-    switch (lvl) {
+    switch(lvl) {
       case DmLogLevel_FATAL:
       case DmLogLevel_ERROR:
       case DmLogLevel_WARN:
         Tempest::Log::e("[dmusic] ", msg);
         break;
+
       case DmLogLevel_INFO:
         Tempest::Log::i("[dmusic] ", msg);
         break;
+
       case DmLogLevel_DEBUG:
       case DmLogLevel_TRACE:
         Tempest::Log::d("[dmusic] ", msg);
@@ -168,7 +216,7 @@ int main(int argc,const char** argv) {
   Workers::setThreadName("Main thread");
 
   CommandLine          cmd{argc,argv};
-  auto                 api     = mkApi(cmd);
+  auto                 api = mkApi(cmd);
   const auto           gpuName = selectDevice(*api);
   CrashLog::setGpu(gpuName);
 
@@ -183,14 +231,13 @@ int main(int argc,const char** argv) {
   MainWindow           wx(device);
   Tempest::Application app;
   const int ret = app.exec();
+
 #if defined(__ANDROID__)
-  // The game runs in a process of its own and the process ends with it: the objects above do not have to be taken apart one by one.
-  // Their destruction crashed after the game had ended (SIGSEGV in zenkit::Vfs::~Vfs from ~Resources, Mali-G720, Android 16) and the launcher
-  // took it for a crash of the game. Nothing is kept in them that is not written already (the settings are flushed when they change).
   Tempest::Log::i("exit ",ret);
   if(appLogFile!=nullptr)
     appLogFile->flush();
   std::_Exit(ret);
 #endif
+
   return ret;
   }
