@@ -6,6 +6,7 @@
 #include <algorithm>
 #include "game/definitions/cameradefinitions.h"
 #include "utils/dbgpainter.h"
+#include "world/objects/npc.h"
 #include "gothic.h"
 
 using namespace Tempest;
@@ -229,7 +230,8 @@ CsCamera::CsCamera(Vob* parent, World& world, const zenkit::VCutsceneCamera& cam
   Log::i("CsCamera: \"", cam.vob_name, "\" duration=", cam.total_duration,
          " pos=", posSpline.size(), " target=", targetSpline.size(),
          " autoUntrigger=", int(autoUntrigger), " delay=", cam.auto_untrigger_last_delay,
-         " lerp=", int(cam.lerp_mode), " keyDirections=", int(posSpline.hasDirection()));
+         " lerp=", int(cam.lerp_mode), " keyDirections=", int(posSpline.hasDirection()),
+         " focus=\"", cam.auto_focus_vob, "\"");
   }
 
 bool CsCamera::isPlayerMovable() const {
@@ -359,6 +361,13 @@ PointF CsCamera::spin(Tempest::Vec3& d) {
   if(targetSpline.size()==0 && posSpline.hasDirection()) {
     const uint64_t time = std::min(world.tickCount() - timeTrigger, duration);
     d = posSpline.direction(time);
+    }
+  else if(targetSpline.size()==0 && Gothic::inst().player()!=nullptr &&
+          (Gothic::inst().player()->centerPosition()-d).length()<5000.f) {
+    // NB fix 55: no target and no turned keys (EVT_START_CAM: lerp=PATH, keyDirections=0) - the camera looks at the hero
+    // nearby, as in Gothic (the start of the game: it circles around the pentagram, where the hero appears).
+    // OpenGothic looked along the way: at the walls and the grates
+    d = Gothic::inst().player()->centerPosition() - d;
     }
   else if(targetSpline.size()==0)
     d = d - Gothic::inst().camera()->originLwc();

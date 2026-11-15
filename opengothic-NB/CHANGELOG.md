@@ -412,12 +412,12 @@ Pliki: przy każdej poprawce jest lista plików. **🆕 NOWY PLIK** oznacza plik
 - **Dodatkowo:** animacja z `AI_PlayAni`, której potwór nie może zacząć, jest próbowana 1,5 s i pomijana (`cannot start … skipped`) – kolejka AI potwora nie stoi bez końca. Ludzie czekają jak dotąd (np. magowie Kręgu Wody z `T_STAND_2_LGUARD`, póki trzymają coś w ręce).
 - **Diagnostyka:** linie `NB ai` z bronią (`weapon=`) i kolejką AI (`ai=[…]`), cel bohatera jako `hero`; `NB ai: … STUCK 5 s: …`, gdy kolejka potwora przy bohaterze stoi; `[ctx] death: … killer: hero`.
 
-### 55. Kamera na początku gry patrzy w ściany – 🧪 (15.11.2026)
+### 55. Kamera na początku gry patrzy w ściany – 🧪 (15.11.2026, druga wersja)
 - **Pliki:** `common/world/triggers/cscamera.cpp`, `common/world/triggers/cscamera.h`
 - **Z nagrań (oryginał vs OpenGothic):** w NB kamera wstępu (`EVT_START_CAM`, 15 s, 8 punktów, bez punktów celu) krąży po komnacie Xardasa i patrzy na środek – na pentagram, Xardasa i bohatera. W OpenGothic leci tą samą trasą, ale patrzy w ściany i kraty.
-- **Przyczyna:** kamera bez punktów celu ma kierunek zapisany w każdym punkcie trasy (obrót klatki kluczowej – tryb „rotation samples” ZenGina). OpenGothic go nie czytał i ustawiał kamerę w kierunku jej ruchu – przy krążeniu po komnacie to bok, czyli ściana.
-- **Poprawka:** kierunek z obrotu każdego punktu trasy (`originalPose`, wektor „at”), między punktami płynne przejście. Kamery z punktami celu – bez zmian; kamery, których punkty nie są obrócone – po staremu.
-- **W logu:** linia `CsCamera: …` ma teraz `lerp=` (tryb kamery z ZenGina) i `keyDirections=1`, gdy kamera używa kierunków z punktów.
+- **Pierwsza wersja (nie pomogła):** kierunek z obrotu punktów trasy. Log pokazał, że punkty tej kamery nie są obrócone (`lerp=1` – tryb PATH, `keyDirections=0`), więc nic się nie zmieniło. Kod zostaje dla kamer, które mają obrócone punkty.
+- **Druga wersja:** kamera bez punktów celu i bez obróconych punktów patrzy na bohatera, gdy jest blisko (do 5000 – w komnacie Xardasa jest zawsze). OpenGothic ustawiał ją w kierunku ruchu – przy krążeniu to bok, czyli ściana. Kamery daleko od bohatera – po staremu.
+- **W logu:** linia `CsCamera: …` ma `lerp=`, `keyDirections=` i `focus="…"` (obiekt, na który kamera ma patrzeć według świata).
 
 ## Do zrobienia
 
