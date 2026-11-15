@@ -122,12 +122,13 @@ struct NbState {
   zenkit::DaedalusSymbol*  cycle           = nullptr;
   uint64_t                 lastCycleSecond = uint64_t(-1);
   // the loops that the Union plugin calls by the name (UNION_ABI.DLL):
-  // a timer of 1000 ms: RX_Main_CycleTrigger, the next second b_gettime, and again; PerFrame every frame
+  // a timer of 500 ms: RX_Main_CycleTrigger, at the next tick b_gettime, and again; PerFrame every frame
   zenkit::DaedalusSymbol*  getTime         = nullptr;
   zenkit::DaedalusSymbol*  perFrame        = nullptr;
   zenkit::DaedalusSymbol*  checkMenu       = nullptr;
   zenkit::DaedalusSymbol*  frameTime       = nullptr;
   int                      unionCycle      = 0;
+  uint64_t                 nextCycle       = 0;   // the next tick of the timer of the plugin (NB fix 57)
   uint64_t                 nextMenuCheck   = 0;
   uint64_t                 nextMoveset     = 0;   // the timer of 100 ms of fix 30
   std::vector<std::weak_ptr<zenkit::INpc>> regen;  // RX_RestoreNpcHealthSlow (NB fix 50)
@@ -3696,8 +3697,28 @@ void GameScript::tick(uint64_t dt) {
       }),st.regen.end());
     }
 
-  // the timer of 1000 ms of the plugin: RX_Main_CycleTrigger, the next second b_gettime
-  // (b_gettime: the world events, e.g. the quest of the rune stone near the tower of Xardas)
+  // the timer of the plugin (UNION_ABI.DLL 0x10261040): RX_Main_CycleTrigger, at the next tick b_gettime, and again.
+  // NB fix 57: the tick is 500 ms (each of the two once a second), and 16 ms while PrologCount==0 (the first moment of
+  // a new game). It was 1000 ms here: everything of the two ran at the half speed - the prologue (PrologCount in
+  // Hero_Poisoned, 58 steps) took ~2 minutes and the camera of the tower (60 s) ended in the middle of the speech
+  {
+    auto*   pc       = vm.find_symbol_by_name("PROLOGCOUNT");
+    const uint64_t interval = (pc!=nullptr && pc->type()==zenkit::DaedalusDataType::INT && pc->get_int()>0) ? 500 : 16;
+    if(st.nextCycle>tickCount()+1000)
+      st.nextCycle = 0;   // a loaded save has another time
+    if(tickCount()>=st.nextCycle) {
+      st.nextCycle = tickCount()+interval;
+      ++st.unionCycle;
+      if(st.unionCycle==1) {
+        callNb(st.cycle);
+        }
+      if(st.unionCycle>=2) {
+        st.unionCycle = 0;
+        callNb(st.getTime);
+        }
+      }
+  }
+
   const uint64_t currentSecond = tickCount()/1000;
   if(currentSecond==st.lastCycleSecond)
     return;
@@ -3709,14 +3730,6 @@ void GameScript::tick(uint64_t dt) {
     if(st.nextMissingLog!=0)
       nbMissingReport(st,"5 min");
     st.nextMissingLog = currentSecond+300;
-    }
-  ++st.unionCycle;
-  if(st.unionCycle==1) {
-    callNb(st.cycle);
-    }
-  if(st.unionCycle>=2) {
-    st.unionCycle = 0;
-    callNb(st.getTime);
     }
   }
 
