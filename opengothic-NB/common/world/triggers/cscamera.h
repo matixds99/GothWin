@@ -20,6 +20,7 @@ class CsCamera : public AbstractTrigger {
       float         time = 0;
       Tempest::Vec3 c[4] = {};
       zenkit::CameraMotion motionType = zenkit::CameraMotion::LINEAR;
+      Tempest::Vec3 at   = {};   // the direction of the key (its "at" vector), NB fix 55
 
       auto          position(float u) const -> Tempest::Vec3;
       float         arcLength() const;
@@ -33,6 +34,8 @@ class CsCamera : public AbstractTrigger {
       void                  fixupTimes(const float duration, std::string_view vobName);
       size_t                size() const { return keyframe.size(); }
       auto                  position(const uint64_t time) const -> Tempest::Vec3;
+      auto                  direction(const uint64_t time) const -> Tempest::Vec3;
+      bool                  hasDirection() const;
       };
 
     void onTrigger(const TriggerEvent& evt) override;

@@ -39,6 +39,9 @@ CsCamera::KbSpline::KbSpline(const std::vector<std::shared_ptr<zenkit::VCameraTr
   for(auto& f : frames) {
     KeyFrame kF;
     kF.c[3]  = Vec3(f->original_pose[3][0],f->original_pose[3][1],f->original_pose[3][2]);
+    kF.at    = Vec3(f->original_pose[2][0],f->original_pose[2][1],f->original_pose[2][2]);
+    if(kF.at==Vec3(0,0,1) || kF.at.length()<1e-3f)
+      kF.at  = Vec3(f->rotation[2][0],f->rotation[2][1],f->rotation[2][2]);   // the key turned only as a vob
     kF.time  = f->time;
     kF.motionType = f->motion_type;
     if(kF.time<0) {
@@ -165,6 +168,46 @@ Vec3 CsCamera::KbSpline::position(const uint64_t time) const {
   }
 
 
+bool CsCamera::KbSpline::hasDirection() const {
+  // keys that were never turned (all straight along +Z) give nothing: then the old way
+  for(auto& k:keyframe)
+    if(isFiniteVec(k.at) && k.at.length()>1e-3f && !(k.at==Vec3(0,0,1)))
+      return true;
+  return false;
+  }
+
+// NB fix 55: a camera without target keys (EVT_START_CAM of the start of the game) looks as its keys are turned in
+// the world (the rotation of every key, between them a smooth turn), as ZenGin does it. OpenGothic looked along the
+// way of the camera and showed the walls and the grates instead of the room
+Vec3 CsCamera::KbSpline::direction(const uint64_t time) const {
+  if(keyframe.empty())
+    return Vec3();
+  const float t = float(time)/1000.f;
+  if(keyframe.size()==1 || t<=keyframe.front().time)
+    return keyframe.front().at;
+  if(t>=keyframe.back().time)
+    return keyframe.back().at;
+
+  uint32_t n = 0;
+  while(n+1<keyframe.size() && t>=keyframe[n+1].time)
+    ++n;
+  auto& kF0 = keyframe[n];
+  auto& kF1 = keyframe[n+1];
+  const float span = kF1.time - kF0.time;
+  float u = span>1e-5f ? (t - kF0.time) / span : 1.f;
+  u = std::clamp(u, 0.f, 1.f);
+  u = u*u*(3.f-2.f*u);   // smooth at the keys
+
+  Vec3 a = kF0.at, b = kF1.at;
+  const float la = a.length(), lb = b.length();
+  if(la>1e-5f) a = a/la;
+  if(lb>1e-5f) b = b/lb;
+  const Vec3 ret = a*(1.f-u) + b*u;
+  if(!isFiniteVec(ret) || ret.length()<1e-3f)
+    return (u<0.5f ? a : b);
+  return ret;
+  }
+
 CsCamera::CsCamera(Vob* parent, World& world, const zenkit::VCutsceneCamera& cam, Flags flags)
   :AbstractTrigger(parent,world,cam,flags) {
   if(cam.position_count<1 || cam.total_duration<=0)
@@ -185,7 +228,8 @@ CsCamera::CsCamera(Vob* parent, World& world, const zenkit::VCutsceneCamera& cam
 
   Log::i("CsCamera: \"", cam.vob_name, "\" duration=", cam.total_duration,
          " pos=", posSpline.size(), " target=", targetSpline.size(),
-         " autoUntrigger=", int(autoUntrigger), " delay=", cam.auto_untrigger_last_delay);
+         " autoUntrigger=", int(autoUntrigger), " delay=", cam.auto_untrigger_last_delay,
+         " lerp=", int(cam.lerp_mode), " keyDirections=", int(posSpline.hasDirection()));
   }
 
 bool CsCamera::isPlayerMovable() const {
@@ -312,7 +356,11 @@ Vec3 CsCamera::position() {
   }
 
 PointF CsCamera::spin(Tempest::Vec3& d) {
-  if(targetSpline.size()==0)
+  if(targetSpline.size()==0 && posSpline.hasDirection()) {
+    const uint64_t time = std::min(world.tickCount() - timeTrigger, duration);
+    d = posSpline.direction(time);
+    }
+  else if(targetSpline.size()==0)
     d = d - Gothic::inst().camera()->originLwc();
   else if(targetSpline.size()==1)
     d = targetSpline.keyframe[0].c[3] - d;

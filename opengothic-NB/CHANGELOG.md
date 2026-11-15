@@ -412,6 +412,13 @@ Pliki: przy każdej poprawce jest lista plików. **🆕 NOWY PLIK** oznacza plik
 - **Dodatkowo:** animacja z `AI_PlayAni`, której potwór nie może zacząć, jest próbowana 1,5 s i pomijana (`cannot start … skipped`) – kolejka AI potwora nie stoi bez końca. Ludzie czekają jak dotąd (np. magowie Kręgu Wody z `T_STAND_2_LGUARD`, póki trzymają coś w ręce).
 - **Diagnostyka:** linie `NB ai` z bronią (`weapon=`) i kolejką AI (`ai=[…]`), cel bohatera jako `hero`; `NB ai: … STUCK 5 s: …`, gdy kolejka potwora przy bohaterze stoi; `[ctx] death: … killer: hero`.
 
+### 55. Kamera na początku gry patrzy w ściany – 🧪 (15.11.2026)
+- **Pliki:** `common/world/triggers/cscamera.cpp`, `common/world/triggers/cscamera.h`
+- **Z nagrań (oryginał vs OpenGothic):** w NB kamera wstępu (`EVT_START_CAM`, 15 s, 8 punktów, bez punktów celu) krąży po komnacie Xardasa i patrzy na środek – na pentagram, Xardasa i bohatera. W OpenGothic leci tą samą trasą, ale patrzy w ściany i kraty.
+- **Przyczyna:** kamera bez punktów celu ma kierunek zapisany w każdym punkcie trasy (obrót klatki kluczowej – tryb „rotation samples” ZenGina). OpenGothic go nie czytał i ustawiał kamerę w kierunku jej ruchu – przy krążeniu po komnacie to bok, czyli ściana.
+- **Poprawka:** kierunek z obrotu każdego punktu trasy (`originalPose`, wektor „at”), między punktami płynne przejście. Kamery z punktami celu – bez zmian; kamery, których punkty nie są obrócone – po staremu.
+- **W logu:** linia `CsCamera: …` ma teraz `lerp=` (tryb kamery z ZenGina) i `keyDirections=1`, gdy kamera używa kierunków z punktów.
+
 ## Do zrobienia
 
 - [x] Czarny goblin nie atakuje, stoi w miejscu – naprawione (poprawka 54). Z logu: wrogi (attitude=0), czuje bohatera (sense=5 przy ~1100), ale zostaje w `ZS_MM_RTN_ROAM` bez celu – reakcja na wroga (`B_MM_AssessEnemy`) nie przełącza go na atak; raz pojawia się `ZS_MM_ThreatenEnemy`. `RX_GobboClan` (niezaimplementowane) jest tylko w `AI_OnDead_Gobbo_Black_Clan` – przy śmierci, nie przy ataku. Do zbadania z włączonymi śladami `B_MM_AssessEnemy` (więcej niż 3 na komunikat).
