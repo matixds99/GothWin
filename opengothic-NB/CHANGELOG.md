@@ -388,18 +388,21 @@ Pliki: przy każdej poprawce jest lista plików. **🆕 NOWY PLIK** oznacza plik
 - **Odłożone (widać w nowym logu):** `UpdateKarma` (karma bogów to cały system pluginu z komunikatami i osiągnięciami – osobna poprawka), `RX_KeyPressed` (klawisze skrótów NB z ini – mikstury, strzały, pochodnia…), `RX_CanReattack`, `RX_IsWaiting`, `RX_NpcIsStrafing`, `RX_ResetSummons`, `RX_RemoveItemsOnNpcBeat`, mieszek/torba.
 - **Znalezione przy okazji (do osobnej poprawki):** plugin woła też dla postaci `AI_OnTick_<instancja>`, `AI_OnHit_…`, `AI_OnGetDamage_…`, `AI_OnBreak_…` (mechaniki bossów, ok. 200 funkcji) – w OpenGothic nie działają.
 
-### 52. Rozszerzony log – 🧪 (14.11.2026)
+### 52. Rozszerzony log – ✅ (14.11.2026)
+- **Sprawdzone (14.11.2026):** w logach z 22:01 i 22:16 widać skąd i z czym wołane są brakujące funkcje, `[ctx]`, `NB missing` przy zapisie, mniej powtórzeń.
 - **Pliki:** `common/game/gamescript.cpp`, `common/world/objects/npc.cpp`
 - **Brakujące funkcje:** `not implemented call [NAZWA] from FUNKCJA_SKRYPTU (argumenty)` – skąd skrypt ją woła i z czym (np. który klawisz, który plik dźwięku). Co 5 minut i przy zapisie gry linia `NB missing (…)`: ile razy każda brakująca funkcja była wołana – od najczęstszej.
 - **`[ctx]` – co robił gracz:** wybrana opcja dialogu (`dialog: Lares -> DIA_LARES_…`), użyty przedmiot, wpis w dzienniku, użyty obiekt (skrzynia, stół…), śmierć postaci i zabójca, otwarta notatka/książka, zapis gry. Błędy w logu mają przez to miejsce w grze.
 - **Mniej śmieci:** ta sama linia `RX_WriteLog` (np. `RX_Main_CycleTrigger {` co 2 s – ok. 600 linii na log) tylko 3 razy, potem przy 100/1000; `Mdl_Apply/RemoveOverlayMds` tylko, gdy plik się nie wczytał (było ok. 900 linii); `NB ai` tylko przy zmianie stanu lub celu potwora (było co 3 s dla każdego).
 
-### 53. Jasna noc (do testów) – 🧪 (14.11.2026)
+### 53. Jasna noc (do testów) – ✅ (14.11.2026)
+- **Sprawdzone (14.11.2026):** działa.
 - **Pliki:** `common/graphics/sky/sky.cpp` (nowy w repo, w projekcie borsuczyny jest – podmienić), `common/game/nboptions.h`, `common/ui/gamemenu.cpp`
 - **Co robi:** przełącznik **„Jasna noc (do testów)”** na końcu strony „Ustawienia gry” (zapis w Gothic.ini: `[NB_OG] bNightAsDay=1`). Gdy włączony, światło słońca i niebo zostają między 8:00 a 18:00 – w nocy jest jasno jak za dnia. Czas gry płynie dalej normalnie: NPC śpią, zmieniają zajęcia, nocne zdarzenia i potwory są jak w nocy – zmienia się tylko oświetlenie. Działa od razu, bez wczytywania gry.
 - **Uwaga:** o północy słońce przeskakuje z pozycji 18:00 na 8:00 (z zachodu na wschód) – przy testach bez znaczenia.
 
-### 54. Czarny goblin stoi w miejscu – 🧪 (14.11.2026)
+### 54. Czarny goblin stoi w miejscu – ✅ (14.11.2026)
+- **Sprawdzone (15.11.2026):** goblin atakuje.
 - **Pliki:** `common/world/objects/npc.cpp`, `common/game/gamescript.cpp`
 - **Z logów (14.11, 22:01 i 22:16):** goblin budzi się, grozi i przechodzi w atak (`ZS_MM_ATTACK`, cel: bohater), kolejka AI pusta, ale **broń schowana** (`weapon=0`) – i tak stoi, aż zginie (bez oddania ciosu).
 - **Przyczyna:** gobliny walczą maczugą – skrypt daje im ją od razu w ręce (`Npc_SetToFightMode`). Do snu chowają ją, a model goblina nie ma animacji ponownego wyciągnięcia broni. Silnik przed atakiem próbuje dobyć broni (`drawWeaponMelee`) – to się nie udawało, więc próbował w kółko co klatkę zamiast atakować. W Gothicu goblin ma maczugę w ręce od razu.
@@ -409,7 +412,7 @@ Pliki: przy każdej poprawce jest lista plików. **🆕 NOWY PLIK** oznacza plik
 
 ## Do zrobienia
 
-- [ ] Czarny goblin nie atakuje, stoi w miejscu (14.11.2026) – poprawka 54 do sprawdzenia. Z logu: wrogi (attitude=0), czuje bohatera (sense=5 przy ~1100), ale zostaje w `ZS_MM_RTN_ROAM` bez celu – reakcja na wroga (`B_MM_AssessEnemy`) nie przełącza go na atak; raz pojawia się `ZS_MM_ThreatenEnemy`. `RX_GobboClan` (niezaimplementowane) jest tylko w `AI_OnDead_Gobbo_Black_Clan` – przy śmierci, nie przy ataku. Do zbadania z włączonymi śladami `B_MM_AssessEnemy` (więcej niż 3 na komunikat).
+- [x] Czarny goblin nie atakuje, stoi w miejscu – naprawione (poprawka 54). Z logu: wrogi (attitude=0), czuje bohatera (sense=5 przy ~1100), ale zostaje w `ZS_MM_RTN_ROAM` bez celu – reakcja na wroga (`B_MM_AssessEnemy`) nie przełącza go na atak; raz pojawia się `ZS_MM_ThreatenEnemy`. `RX_GobboClan` (niezaimplementowane) jest tylko w `AI_OnDead_Gobbo_Black_Clan` – przy śmierci, nie przy ataku. Do zbadania z włączonymi śladami `B_MM_AssessEnemy` (więcej niż 3 na komunikat).
 - [ ] **Animacje broni NB – sprawdzić, co się za nimi kryje (w toku).** Ustalone do tej pory:
   - bohater: animacje zakładają skrypty (`RX_ApplyAnim_Weapons` → `RX_ApplyAni_1H_Rapier` / `_DexSword` / `_1H_Sword` / `_2H_Speer` / `_2H_Staff` / `_2H_Hallberd` / `_2H_Common`, tarcze `RX_ApplyShieldAni`, dwie bronie `Humans_1x2ST3` / `2x2ST3`, topory orków `HUMANS_AXEST2`) – w OpenGothic działa;
   - NPC: talenty i nakładki ST1–3 z pluginu – poprawka 23;
