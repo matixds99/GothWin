@@ -412,7 +412,8 @@ Pliki: przy każdej poprawce jest lista plików. **🆕 NOWY PLIK** oznacza plik
 - **Dodatkowo:** animacja z `AI_PlayAni`, której potwór nie może zacząć, jest próbowana 1,5 s i pomijana (`cannot start … skipped`) – kolejka AI potwora nie stoi bez końca. Ludzie czekają jak dotąd (np. magowie Kręgu Wody z `T_STAND_2_LGUARD`, póki trzymają coś w ręce).
 - **Diagnostyka:** linie `NB ai` z bronią (`weapon=`) i kolejką AI (`ai=[…]`), cel bohatera jako `hero`; `NB ai: … STUCK 5 s: …`, gdy kolejka potwora przy bohaterze stoi; `[ctx] death: … killer: hero`.
 
-### 55. Kamera na początku gry patrzy w ściany – 🧪 (15.11.2026, druga wersja)
+### 55. Kamera na początku gry patrzy w ściany – ✅ (15.11.2026, druga wersja)
+- **Sprawdzone (15.11.2026, nagranie 339416):** kamera krąży wokół pentagramu i trzyma w kadrze Xardasa i bohatera, jak w oryginale.
 - **Pliki:** `common/world/triggers/cscamera.cpp`, `common/world/triggers/cscamera.h`
 - **Z nagrań (oryginał vs OpenGothic):** w NB kamera wstępu (`EVT_START_CAM`, 15 s, 8 punktów, bez punktów celu) krąży po komnacie Xardasa i patrzy na środek – na pentagram, Xardasa i bohatera. W OpenGothic leci tą samą trasą, ale patrzy w ściany i kraty.
 - **Pierwsza wersja (nie pomogła):** kierunek z obrotu punktów trasy. Log pokazał, że punkty tej kamery nie są obrócone (`lerp=1` – tryb PATH, `keyDirections=0`), więc nic się nie zmieniło. Kod zostaje dla kamer, które mają obrócone punkty.
