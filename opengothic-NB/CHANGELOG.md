@@ -182,7 +182,8 @@ Pliki: przy każdej poprawce jest lista plików. **🆕 NOWY PLIK** oznacza plik
 - **Przyczyna:** ten napis rysuje plugin Union (`AI_PrintQuest`, `AI_PrintQuestComplete`, `AI_PrintQuestFail` z UNION_ABI.DLL), nie silnik gry. W poprawce 9 był wypisywany jak zwykły komunikat (biały, w liście u góry). W pluginie: po lewej stronie, na ok. 29% wysokości ekranu, tytuł czcionką ze skryptu `RX_QuestTitleFont` (`FONT_OLD_20_ZHITE.TGA`) w kolorze: nowy wpis – złoty, zadanie nieudane – czerwony, zakończone – zielony, a pod nim nazwa tematu białą `FONT_OLD_20_WHITE`.
 - **Poprawka:** tak samo: tytuł po lewej czcionką `RX_QuestTitleFont`, pod nim temat, przez 5 s. Kolory: nowy wpis żółty, nieudane czerwone, zakończone białe (OpenGothic ma tylko takie kolory czcionek – zielonego brak).
 
-### 23. NPC walczą jak nowicjusze: brak talentów i animacji walki (cały świat NB) – 🧪 (13.11.2026)
+### 23. NPC walczą jak nowicjusze: brak talentów i animacji walki (cały świat NB) – ✅ (13.11.2026)
+- **Sprawdzone (15.11.2026):** NPC walczą pełnymi animacjami, trafienia krytyczne wchodzą (czasem tak, czasem nie – jak w NB).
 - **Pliki:** `common/game/gamescript.cpp`
 - **Przyczyna:** każda postać NB w swojej definicji wywołuje `B_SetFightSkills(npc, procent)`. Skrypt zapisuje tylko zmienne pomocnicze i całą resztę zostawia pluginowi: `RX_ApplyProperOverlaysForNpc`. OpenGothic nie zna tej funkcji, więc u **wszystkich NPC** (Brago, bandyci, strażnicy, najemnicy …) talent 1H/2H/łuk/kusza zostawał na 0%. Skutki: animacje nieszkolonego nowicjusza (bez `humans_1hST1–3` / `2hST1–3`), żadnych trafień krytycznych (obrażenia zawsze ÷10, minimum 5), słabsze strzelanie.
 - **Poprawka:** przepisany kod z UNION_ABI.DLL (0x10198B20):
@@ -263,7 +264,8 @@ Pliki: przy każdej poprawce jest lista plików. **🆕 NOWY PLIK** oznacza plik
 - **Poprawka (na razie tylko ścierwojad, `FAI_SCAVENGER`):** odskok przed zamachem dopiero po 2 trafieniach od poprzedniego odskoku; wcześniej ścierwojad czeka. Jeśli rytm się zgadza, rozszerzę na inne zwierzęta z odskokiem w taktyce (wilk, krwiopijca, waran, szczur, zębacz, cieniostwór, harpia…).
 - **Usunięte:** tymczasowe komunikaty `[odskok] …` na ekranie.
 
-### 34. Rytm walki z poprawki 33 dla wszystkich zwierząt – 🧪 (14.11.2026)
+### 34. Rytm walki z poprawki 33 dla wszystkich zwierząt – ✅ (14.11.2026)
+- **Sprawdzone (15.11.2026):** zwierzęta odskakują jak w NB, walka zbalansowana skryptami NB.
 - **Pliki:** `common/world/objects/npc.cpp`
 - Każdy potwór walczący pazurami/kłami odskakuje przed zamachem bohatera dopiero po 2 trafieniach od poprzedniego odskoku (dotąd tylko ścierwojad). Dotyczy zwierząt, które mają odskok w swojej taktyce (`FIGHT.DAT`, `FA_ENEMY_PREHIT`): wilk (odskok/unik), krwiopijca, waran, szczur, zębacz, cieniostwór, harpia, jaszczurka, aligator, niedźwiedź, gargulec, smok… Kretoszczur, goblin, golem nie odskakują – u nich nic się nie zmienia.
 
