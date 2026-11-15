@@ -27,6 +27,7 @@
 #include "gothic.h"
 #include "game/dialogtest.h"
 #include "gamemusic.h"
+#include "resources.h"
 
 using namespace Tempest;
 
@@ -143,6 +144,16 @@ struct NbState {
   uint64_t                                    nextMissingLog  = 0;
   std::vector<std::pair<uint32_t,uint32_t>>   fnAddr;    // the code of the functions: address, symbol (sorted)
   std::unordered_map<std::string,uint32_t>    writeLogSeen; // RX_WriteLog: the same line, not without end
+  // NB fix 56: the parts of the world that the scripts insert (RX_InsertVobTree): the world, the file, the objects.
+  // The objects are never deleted with the world (the world may be gone before GameScript): only RX_RemoveVobTree
+  // deletes them, while their world lives. They are in the save ("nb/vobtrees") and inserted again after a load
+  struct VobTree {
+    std::string                          world;
+    std::string                          file;
+    std::vector<std::unique_ptr<Vob>>*   vobs = nullptr;
+    };
+  std::vector<VobTree>                        vobTrees;
+  const World*                                vobWorld = nullptr;
   };
 
 // "[ctx]" in the log: what the player did, so the errors around it have a place in the game (NB fix 52)
@@ -230,6 +241,45 @@ void nbMissingReport(NbState& st, const char* why) {
       line += ", ";
     }
   Log::i("NB missing (",why,"): ",int(st.missing.size())," functions, ",int(st.missingTotal)," calls: ",line);
+  }
+
+/// the name of the file without the folders (VOBTREE/X.ZEN -> X.ZEN): the files of the game are found by the name
+std::string nbFileName(std::string_view path) {
+  const size_t p = path.find_last_of("/\\");
+  std::string ret(p==std::string_view::npos ? path : path.substr(p+1));
+  for(auto& c:ret)
+    c = char(std::toupper(static_cast<unsigned char>(c)));
+  return ret;
+  }
+
+/// a .ZEN with objects put into the world. Startup: the first time (the items and the contents of the chests come with
+/// it); None: again after a load - the items are in the save already, they would be there twice
+std::vector<std::unique_ptr<Vob>>* nbLoadVobTree(World& world, const std::string& file, Vob::Flags flags) {
+  auto* tree = Resources::loadVobBundle(file);
+  if(tree==nullptr || tree->empty()) {
+    Log::e("NB: RX_InsertVobTree: the file \"",file,"\" is not in the game or is empty");
+    return nullptr;
+    }
+  auto* ret = new std::vector<std::unique_ptr<Vob>>();
+  for(auto& v:*tree)
+    if(v!=nullptr)
+      if(auto p = Vob::load(nullptr,world,*v,flags))
+        ret->emplace_back(std::move(p));
+  return ret;
+  }
+
+/// another world or a loaded save: the parts of this world again (the old objects stay with the old world)
+void nbVobTreesSync(NbState& st, World& world) {
+  if(st.vobWorld==&world)
+    return;
+  st.vobWorld = &world;
+  for(auto& t:st.vobTrees) {
+    t.vobs = nullptr;
+    if(t.world==world.name()) {
+      t.vobs = nbLoadVobTree(world,t.file,Vob::None);
+      Log::i("NB: the part of the world \"",t.file,"\" inserted again");
+      }
+    }
   }
 
 std::unordered_map<const GameScript*, NbState> nbStates;
@@ -1883,6 +1933,106 @@ void GameScript::initCommon() {
       return itm!=nullptr && ((uint32_t(itm->hp)>>26) & 1u)!=0 ? 1 : 0;
       });
     bindNb("GAME_PLAY3DSOUND", [this](std::shared_ptr<zenkit::INpc> npcRef, std::string_view file) { snd_play3d(npcRef,file); });
+    // NB fix 56 (batch 4): the world. RX_InsertVobTree puts the objects of a .ZEN into the world (137 calls: beds, chests,
+    // decorations, items of the quests), RX_RemoveVobTree takes them away again
+    bindNb("RX_INSERTVOBTREE", [this](std::string_view path) {
+      auto& st   = nbStates[this];
+      auto& wrld = world();
+      nbVobTreesSync(st,wrld);
+      const auto file = nbFileName(path);
+      for(auto& t:st.vobTrees)
+        if(t.world==wrld.name() && t.file==file)
+          return;
+      NbState::VobTree t;
+      t.world = std::string(wrld.name());
+      t.file  = file;
+      t.vobs  = nbLoadVobTree(wrld,file,Vob::Startup);
+      if(t.vobs==nullptr)
+        return;
+      nbCtx("part of the world: ",file," (",int(t.vobs->size())," objects)");
+      st.vobTrees.push_back(std::move(t));
+      });
+    bindNb("RX_REMOVEVOBTREE", [this](std::string_view path) {
+      auto& st   = nbStates[this];
+      auto& wrld = world();
+      nbVobTreesSync(st,wrld);
+      const auto file = nbFileName(path);
+      for(size_t i=0; i<st.vobTrees.size(); ++i) {
+        auto& t = st.vobTrees[i];
+        if(t.world!=wrld.name() || t.file!=file)
+          continue;
+        delete t.vobs;   // its world lives: the objects leave it
+        st.vobTrees.erase(st.vobTrees.begin()+int(i));
+        nbCtx("part of the world removed: ",file);
+        return;
+        }
+      // a part of the .ZEN of the world itself: OpenGothic cannot take it away
+      Log::i("NB: RX_RemoveVobTree: \"",file,"\" was not inserted by the scripts - skipped");
+      });
+    // the chests (the containers) of the world by their name
+    const auto nbMobs = [this](std::string_view tag, auto fn) {
+      for(uint32_t i=0; auto* mob = world().mobsiById(i); ++i) {
+        const auto name = mob->tag();
+        const bool same = name.size()==tag.size() && std::equal(name.begin(),name.end(),tag.begin(),[](char a, char b) {
+          return std::toupper(static_cast<unsigned char>(a))==std::toupper(static_cast<unsigned char>(b));
+          });
+        if(same)
+          fn(*mob);
+        }
+      };
+    bindNb("MOB_REMOVEALLITEMS", [this,nbMobs](std::string_view tag) {
+      nbMobs(tag,[this](Interactive& mob) {
+        if(mob.isContainer())
+          mob.inventory().clear(*this,mob,true);
+        });
+      });
+    // a locked chest/door opened by the scripts (0) or closed again (1): only what the world has made with a lock
+    const auto nbLock = [nbMobs](std::string_view tag, int32_t lock) {
+      nbMobs(tag,[lock](Interactive& mob) { mob.setAsCracked(lock==0); });
+      };
+    bindNb("RX_LOCKCHEST", [nbLock](std::string_view tag, int32_t lock) { nbLock(tag,lock); });
+    bindNb("RX_LOCKDOOR",  [nbLock](std::string_view tag, int32_t lock) { nbLock(tag,lock); });
+    // a trigger on (1) or off (0), e.g. the change of the level to the secret island after the key of Hagen
+    bindNb("RX_ENABLETRIGGER", [this](std::string_view name, int32_t on) {
+      TriggerEvent e(std::string(name),"",on!=0 ? TriggerEvent::T_Enable : TriggerEvent::T_Disable);
+      world().triggerEvent(e);
+      });
+    // the goods of a trader (C_Item.hp & BIT_ITEM_REMOVE_TRADE, 1<<25) leave his body; not the bows and crossbows
+    // (UNION_ABI.DLL 0x1017F1C0)
+    bindNb("RX_REMOVEITEMSONNPCBEAT", [this](std::shared_ptr<zenkit::INpc> npcRef) {
+      auto* npc = findNpc(npcRef);
+      if(npc==nullptr)
+        return;
+      std::vector<std::pair<size_t,size_t>> del;
+      for(auto it = npc->inventory().iterator(Inventory::T_Inventory); it.isValid(); ++it) {
+        auto& itm = *it;
+        const int32_t fl = int32_t(itm.handle().flags);
+        if((fl & (ITM_BOW | ITM_CROSSBOW))!=0)
+          continue;
+        if((uint32_t(itm.handle().hp) & (1u<<25))!=0)
+          del.emplace_back(itm.clsId(),it.count());
+        }
+      for(auto& [cls,cnt]:del)
+        npc->delItem(cls,uint32_t(cnt));
+      });
+    // the crafting of the plugin: the item just made (CRAFT_ITEM)
+    bindNb("RX_ISITEMCRAFT", [this](int32_t id) -> int32_t {
+      auto* s = vm.find_symbol_by_name("CRAFT_ITEM");
+      return s!=nullptr && s->type()==zenkit::DaedalusDataType::INT && s->get_int()==id ? 1 : 0;
+      });
+    // a character that steps aside in the fight (the monsters attack it then, B_MM_AssessEnemy)
+    bindNb("RX_NPCISSTRAFING", [this](std::shared_ptr<zenkit::INpc> npcRef) -> int32_t {
+      auto* npc = findNpc(npcRef);
+      if(npc==nullptr)
+        return 0;
+      for(auto& l:npc->animationLayers())
+        if(l.name.find("STRAFE")!=std::string::npos)
+          return 1;
+      return 0;
+      });
+    // the waits of the plugin (its own queue of the AI) - OpenGothic has none of them
+    bindNb("RX_ISWAITING", [](std::shared_ptr<zenkit::INpc>) -> int32_t { return 0; });
+
     // the plugin refreshes the texts of its window of the inventory; the summons of the multiplayer
     bindNb("UPDATEITEMSINFOININV", []() {});
     bindNb("RX_ISREMOTESUMMON",    [](std::shared_ptr<zenkit::INpc>) -> int32_t { return 0; });
@@ -2372,6 +2522,15 @@ void GameScript::saveQuests(Serialize &fout) {
     fout.write(uint32_t(i.first),uint32_t(i.second));
 
   fout.write(gilAttitudes);
+
+  if(auto it = nbStates.find(this); it!=nbStates.end()) {
+    // NB fix 56: the parts of the world inserted by the scripts (the caller sets its next entry after this)
+    fout.setEntry("nb/vobtrees");
+    auto& vt = it->second.vobTrees;
+    fout.write(uint32_t(vt.size()));
+    for(auto& t:vt)
+      fout.write(t.world,t.file);
+    }
   }
 
 void GameScript::loadQuests(Serialize& fin) {
@@ -2385,6 +2544,19 @@ void GameScript::loadQuests(Serialize& fin) {
     }
 
   fin.read(gilAttitudes);
+
+  if(fin.setEntry("nb/vobtrees")) {
+    auto& st = nbStates[this];
+    uint32_t cnt = 0;
+    fin.read(cnt);
+    st.vobTrees.clear();
+    for(uint32_t i=0; i<cnt; ++i) {
+      NbState::VobTree t;
+      fin.read(t.world,t.file);
+      st.vobTrees.push_back(std::move(t));
+      }
+    st.vobWorld = nullptr;   // inserted again at the next tick, into the loaded world
+    }
   }
 
 void GameScript::saveVar(Serialize &fout) {
@@ -3530,6 +3702,7 @@ void GameScript::tick(uint64_t dt) {
   if(currentSecond==st.lastCycleSecond)
     return;
   st.lastCycleSecond = currentSecond;
+  nbVobTreesSync(st,world());
   if(st.nextMissingLog>currentSecond+300)
     st.nextMissingLog = 0;   // a loaded save has another time
   if(currentSecond>=st.nextMissingLog) {
